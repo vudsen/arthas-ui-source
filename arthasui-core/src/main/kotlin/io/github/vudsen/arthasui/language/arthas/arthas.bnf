@@ -1,0 +1,198 @@
+{
+    extends(".*[statement|expression]")=command
+    parserClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasParser"
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+    psiClassPrefix="Arthas"
+    psiImplClassSuffix="Impl"
+    psiPackage="io.github.vudsen.arthasui.language.arthas.psi"
+    psiImplPackage="io.github.vudsen.arthasui.language.arthas.psi.impl"
+
+    elementTypeHolderClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes"
+    elementTypeClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasElementType"
+    tokenTypeClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasTokenType"
+
+    tokens=[
+        semicolon=';'
+        dot='.'
+        space='regexp:\s+'
+        EOL='regexp:\n'
+        string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
+
+        COMMAND_AUTH='auth'
+        COMMAND_BASE64='base64'
+        COMMAND_CAT='cat'
+        COMMAND_CLASSLOADER='classloader'
+        COMMAND_CLS='cls'
+        COMMAND_DASHBOARD='dashboard'
+        COMMAND_DUMP='dump'
+        COMMAND_ECHO='echo'
+        COMMAND_GETSTATIC='getstatic'
+        COMMAND_GREP='grep'
+        COMMAND_HEAPDUMP='heapdump'
+        COMMAND_HELP='help'
+        COMMAND_HISTORY='history'
+        COMMAND_JAD='jad'
+        COMMAND_JFR='jfr'
+        COMMAND_JVM='jvm'
+        COMMAND_KEYMAP='keymap'
+        COMMAND_LOGGER='logger'
+        COMMAND_MBEAN='mbean'
+        COMMAND_MC='mc'
+        COMMAND_MEMORY='memory'
+        COMMAND_OPTIONS='options'
+        COMMAND_OGNL='ognl'
+        COMMAND_PERFCOUNTER='perfcounter'
+        COMMAND_PROFILER='profiler'
+        COMMAND_PWD='pwd'
+        COMMAND_QUIT='quit'
+        COMMAND_REDEFINE='redefine'
+        COMMAND_RESET='reset'
+        COMMAND_RETRANSFORM='retransform'
+        COMMAND_SC='sc'
+        COMMAND_SESSION='session'
+        COMMAND_SM='sm'
+        COMMAND_STACK='stack'
+        COMMAND_STOP='stop'
+        COMMAND_SYSENV='sysenv'
+        COMMAND_SYSPROP='sysprop'
+        COMMAND_TEE='tee'
+        COMMAND_THREAD='thread'
+        COMMAND_TRACE='trace'
+        COMMAND_TT='tt'
+        COMMAND_VERSION='version'
+        COMMAND_VMOPTIONS='vmoptions'
+        COMMAND_VMTOOL='vmtool'
+        COMMAND_WATCH='watch'
+
+        line_comment="regexp://.*"
+        ARGS='regexp:-[a-zA-Z]+'
+        CLASS_PATTERN='regexp:[a-zA-Z\d]+(\.[a-zA-Z\d]+)*'
+        IDENTIFIER='regexp:[a-zA-Z\d]+'
+        NON_WHITESPACE_SEQUENCE='regexp:[^\n ]+'
+    ]
+}
+
+
+root ::= root_item*
+private root_item ::= !<<eof>> command {pin=1}
+
+private recover ::= !(
+    'auth' | 'base64' | 'cat' | 'classloader' | 'cls' |
+    'dashboard' | 'dump' | 'echo' | 'getstatic' | 'grep' | 'heapdump' | 'history' | 'jad' | 'jfr' | 'jvm' | 'keymap' |
+    'logger' | 'mbean' | 'mc' | 'memory' | 'monitor' | 'ognl' | 'options' | 'perfcounter' | 'help' |
+    'profiler' | 'pwd' | 'quit' | 'redefine' | 'reset' | 'retransform' | 'sc' | 'session' | 'sm' | 'stack' |
+    'stop' | 'sysenv' | 'sysprop' | 'tee' | 'thread' | 'trace' | 'tt' | 'version' | 'vmoptions' | 'vmtool' | 'watch'
+)
+command ::= auth_expression
+    | unhandled_base64_expression
+    | cat_expression
+    | classloader_expression
+    | cls_statement
+    | dashboard_statement
+    | unhandled_dump_statement
+    | echo_expression
+    | unhandled_getstatic_expression
+    | unhandled_grep_expression
+    | heapdump_statement
+    | history_expression
+    | help_expression
+    | jad_expression
+    | unhandled_jfr_statement
+    | jvm_expression
+    | keymap_expression
+    | logger_expression
+    | unhandled_mbean_statement
+    | mc_statement
+    | memory_expression
+    | unhandled_monitor_statement
+    | ognl_statement
+    | unhandled_options_statement
+    | unhandled_perfcounter_expression
+    | unhandled_profiler_statement
+    | pwd_expression
+    | quit_statement
+    | unhandled_redefine_statement
+    | unhandled_reset_statement
+    | retransform_statement
+    | sc_expression
+    | session_expression
+    | sm_expression
+    | stack_statement
+    | stop_statement
+    | sysenv_expression
+    | sysprop_expression
+    | unhandled_tee_expression
+    | thread_expression
+    | trace_statement
+    | tt_t_statement
+    | tt_expression
+    | version_expression
+    | vmoption_expression
+    | unhandled_vmtool_statement
+    | watch_statement{recoverWhile=recover name="Command"}
+
+
+// alias
+private ognl_item ::= string {name='Ognl Expression'}
+private any_sequence ::= NON_WHITESPACE_SEQUENCE | IDENTIFIER | ARGS {name='String'}
+
+
+// common
+clazz ::= CLASS_PATTERN {name="Class"}
+ognl ::= ognl_item
+method ::= IDENTIFIER {name='Method'}
+argument ::= ARGS IDENTIFIER? {name='Argument'}
+
+// expressions
+auth_expression ::= 'auth' argument* any_sequence argument* {pin=1}
+watch_statement ::= 'watch' argument* clazz method ognl? argument* {pin=1}
+help_expression ::= 'help'
+cat_expression ::= 'cat' any_sequence
+classloader_expression ::= 'classloader' argument*
+cls_statement ::= 'cls'
+dashboard_statement ::= 'dashboard' argument*
+echo_expression ::= 'echo' string
+heapdump_statement ::= 'headpdump' argument* any_sequence? argument*
+history_expression ::= 'history' argument?
+jad_expression ::= 'jad' argument* clazz argument*
+jvm_expression ::= 'jvm'
+keymap_expression ::= 'keymap'
+logger_expression ::= 'logger'
+mc_statement ::= 'mc' argument* any_sequence argument*
+memory_expression ::= 'memory'
+ognl_statement ::= 'ognl' argument* ognl argument* {pin=1}
+pwd_expression ::= 'pwd'
+quit_statement ::= 'quit'
+retransform_statement ::= 'retransform' argument* any_sequence argument*
+sc_expression ::= 'sc' argument* clazz method method? argument*
+session_expression ::= 'session'
+sm_expression ::= 'sm' argument* clazz method? argument*
+stack_statement ::= 'stack' argument* clazz method ognl argument*
+stop_statement ::= 'stop'
+sysenv_expression ::= 'sysenv' any_sequence?
+sysprop_expression ::= 'sysprop' (any_sequence | any_sequence any_sequence)?
+thread_expression ::= 'thread' argument* any_sequence argument*
+trace_statement ::= 'trace' argument* clazz method ognl? argument*
+tt_t_statement ::= 'tt' '-t' argument* clazz method argument*
+tt_expression ::= 'tt' argument*
+version_expression ::= 'version'
+vmoption_expression ::= 'vmoptions' (any_sequence | any_sequence any_sequence)?
+
+
+
+// temporary unhandled expressions
+unhandled_base64_expression ::= 'base64' any_sequence*
+unhandled_dump_statement ::= 'dump' any_sequence*
+unhandled_getstatic_expression ::= 'getstatic' any_sequence*
+unhandled_grep_expression ::= 'grep' any_sequence*
+unhandled_jfr_statement ::= 'jfr' any_sequence*
+unhandled_mbean_statement ::= 'mbean' any_sequence*
+unhandled_monitor_statement ::= 'monitor' any_sequence*
+unhandled_options_statement ::= 'options' any_sequence*
+unhandled_perfcounter_expression ::= 'perfcounter' any_sequence*
+unhandled_profiler_statement ::= 'unhandled' any_sequence*
+unhandled_redefine_statement ::= 'redefine' any_sequence*
+unhandled_reset_statement ::= 'reset' any_sequence*
+unhandled_tee_expression ::= 'tee' any_sequence*
+unhandled_vmtool_statement ::= 'vmtool' any_sequence*

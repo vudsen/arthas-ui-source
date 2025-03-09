@@ -1,0 +1,53 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+apply plugin: 'base'
+
+task renamePackage {
+    doLast {
+        def oldPackage = 'io.github.vudsen.arthasui'
+        def newPackage = 'io.github.vudsen.arthasui'
+
+        def oldPath = oldPackage.replace('.', '/')
+        def newPath = newPackage.replace('.', '/')
+
+        def srcDirs = [
+                'arthasui-api/src/main/kotlin',
+                'arthasui-bridge-impl/src/main/kotlin',
+                'arthasui-common/src/main/kotlin',
+                'arthasui-core/src/main/kotlin',
+        ]
+
+        srcDirs.each { srcDir ->
+            def oldPackagePath = file("${srcDir}/${oldPath}")
+            def newPackagePath = file("${srcDir}/${newPath}")
+
+            if (oldPackagePath.exists()) {
+                println "Moving package: ${oldPackagePath} -> ${newPackagePath}"
+
+                newPackagePath.mkdirs()
+
+                oldPackagePath.eachFileRecurse { file ->
+                    def relativePath = file.path.replace(oldPackagePath.path, '')
+                    def targetFile = new File(newPackagePath, relativePath)
+                    Files.move(file.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+
+                oldPackagePath.deleteDir()
+            }
+        }
+
+        // 更新代码文件中的包名声明
+        fileTree('.') {
+            include '**/*.java', '**/*.kt', '**/*.kts'
+        }.each { file ->
+            def content = file.text
+            def updatedContent = content.replaceAll(oldPackage, newPackage)
+            file.text = updatedContent
+        }
+
+        println "Package name updated from '${oldPackage}' to '${newPackage}'"
+    }
+}
+
+// 用法：执行 `gradle renamePackage` 来运行脚本

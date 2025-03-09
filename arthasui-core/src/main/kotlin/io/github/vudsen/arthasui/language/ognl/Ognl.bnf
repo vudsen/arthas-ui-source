@@ -1,0 +1,69 @@
+{
+    parserClass="io.github.vudsen.arthasui.language.ognl.psi.OgnlParser"
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+    psiClassPrefix="Ognl"
+    psiImplClassSuffix="Impl"
+    psiPackage="io.github.vudsen.arthasui.language.ognl.psi"
+    psiImplPackage="io.github.vudsen.arthasui.language.ognl.psi.impl"
+
+    elementTypeHolderClass="io.github.vudsen.arthasui.language.ognl.psi.OgnlTypes"
+    elementTypeClass="io.github.vudsen.arthasui.language.ognl.psi.OgnlElementType"
+    tokenTypeClass="io.github.vudsen.arthasui.language.ognl.psi.OgnlTokenType"
+
+    extends(".*expression")=expression
+    tokens=[
+        SEMI=';'
+        EQ='='
+        LP='('
+        RP=')'
+        DOT='.'
+        AT='@'
+        LEFT_SQUARE_BRACKET='['
+        RIGHT_SQUARE_BRACKET=']'
+
+        KEY_WORD_COMMA=','
+        KEY_WORD_NEW='new'
+        number='regexp:\d+(\.\d*)?'
+        string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
+
+        IDENTIFIER='regexp:[a-zA-Z\d]+'
+        OPERATION='regexp:[+\-*/&~!]'
+
+        EOL='regexp:\n'
+        NON_ESCAPE_CHARACTER='regexp:[^"\\]'
+    ]
+}
+
+
+
+root ::= root_item*
+
+private root_item ::= EOL | expression EOL?
+
+expression ::= method_call_expression
+    | reference_expression
+    | new_expression
+    | static_ref_expression
+    | literal_expression
+    | identifier_expression {recoverWhile=expression_recover}
+
+private expression_recover ::= !(EOL | 'new' | '[' | '@' clazz '@' | string | number)
+
+// identifier.props | identifier['props']
+reference_expression ::= expression ('.' identifier_expression | dynamic_expression_list) {pin=2}
+// identifier()
+method_call_expression ::= expression expression_list {pin=2}
+
+
+dynamic_expression_list ::= '[' (expression (',' expression)*) ']' {pin=1}
+expression_list ::= '(' (expression (',' expression)*)? ')' {pin=1}
+static_ref_expression ::= '@' clazz '@' identifier_expression {pin=1}
+new_expression ::= 'new' clazz expression_list {pin=1}
+clazz ::= clazz_package* class_name {pin=2}
+
+clazz_package ::= IDENTIFIER '.'
+class_name ::= IDENTIFIER
+
+literal_expression ::= string | number
+identifier_expression ::= IDENTIFIER

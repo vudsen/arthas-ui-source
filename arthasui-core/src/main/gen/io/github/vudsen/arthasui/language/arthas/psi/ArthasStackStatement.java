@@ -1,0 +1,22 @@
+// This is a generated file. Not intended for manual editing.
+package io.github.vudsen.arthasui.language.arthas.psi;
+
+import java.util.List;
+import org.jetbrains.annotations.*;
+import com.intellij.psi.PsiElement;
+
+public interface ArthasStackStatement extends ArthasCommand {
+
+  @NotNull
+  List<ArthasArgument> getArgumentList();
+
+  @NotNull
+  ArthasClazz getClazz();
+
+  @NotNull
+  ArthasMethod getMethod();
+
+  @NotNull
+  ArthasOgnl getOgnl();
+
+}

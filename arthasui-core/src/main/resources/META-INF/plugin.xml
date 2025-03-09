@@ -1,0 +1,83 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>io.github.vudsen.arthas-ui</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Arthas-ui</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    Enter short description for your plugin here.<br>
+    <em>most HTML tags may be used</em>
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <fileEditorProvider id="ArthasQueryConsoleEditorProvider" implementation="io.github.vudsen.arthasui.core.ArthasQueryConsoleEditorProvider" />
+        <fileType
+                name="Ognl File"
+                implementationClass="io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType"
+                fieldName="INSTANCE"
+                language="Ognl"
+                extensions="ognl"/>
+        <lang.parserDefinition
+                language="Ognl"
+                implementationClass="io.github.vudsen.arthasui.language.ognl.OgnlParserDefinition"/>
+        <fileType name="Arthas File"
+                  fieldName="INSTANCE"
+                  language="Arthas"
+                  extensions="arthas"
+                  implementationClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType"/>
+        <lang.parserDefinition
+                language="Arthas"
+                implementationClass="io.github.vudsen.arthasui.language.arthas.ArthasParserDefinition"/>
+
+        <completion.contributor language="Ognl"
+                                implementationClass="io.github.vudsen.arthasui.language.ognl.completion.OgnlCompletionContributor"/>
+
+        <projectConfigurable id="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"
+                                 displayName="Arthas UI"
+                                 parentId="tools"
+                                 instance="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"/>
+
+        <configurationType implementation="io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl"/>
+        <toolWindow id="ArthasUI"
+                    anchor="right"
+                    factoryClass="io.github.vudsen.arthasui.core.HostMachineToolWindowFactory"/>
+
+        <completion.contributor language="Arthas" implementationClass="io.github.vudsen.arthasui.language.arthas.completion.ArthasCompletionContributor"/>
+
+        <languageInjectionContributor
+                implementationClass="io.github.vudsen.arthasui.language.arthas.completion.ArthasOgnlInjector"
+                language="Arthas"/>
+
+        <applicationService
+                serviceInterface="io.github.vudsen.arthasui.api.HostMachineFactory"
+                serviceImplementation="io.github.vudsen.arthasui.bridge.HostMachineFactoryImpl"/>
+        <projectService serviceImplementation="io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl"
+                        serviceInterface="io.github.vudsen.arthasui.api.ArthasExecutionManager"/>
+    </extensions>
+
+
+    <actions>
+        <action id="io.github.vudsen.arthasui.StartDebugAction"
+                class="io.github.vudsen.arthasui.StartDebugAction" text="TEST"
+                description="Clear all remark">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
+
+    </actions>
+</idea-plugin>
