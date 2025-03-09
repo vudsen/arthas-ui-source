@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.core
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
+import com.intellij.openapi.fileEditor.impl.text.PsiAwareTextEditorImpl
 import com.intellij.openapi.fileEditor.impl.text.TextEditorProvider
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -18,7 +19,8 @@ class ArthasQueryConsoleEditorProvider : FileEditorProvider, DumbAware {
 
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {
-        return ArthasQueryConsoleEditor(project, file, TextEditorProvider.getInstance())
+        val psiAwareTextEditorImpl = PsiAwareTextEditorImpl(project, file, TextEditorProvider.getInstance())
+        return PsiAwareTextEditorImplWrapper(psiAwareTextEditorImpl, project)
     }
 
     override fun getEditorTypeId(): String {

@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.conf
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.conf.ui.RootConfigUI
 import javax.swing.JComponent
 
@@ -34,4 +35,9 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
     override fun getDisplayName(): String {
         return "Arthas UI Settings"
     }
+
+    override fun disposeUIResources() {
+        lastUI?.let {  Disposer.dispose(it) }
+    }
+
 }
