@@ -7,6 +7,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
+import io.github.vudsen.arthasui.bridge.util.ok
 import io.github.vudsen.arthasui.common.ArthasBridgeImpl
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
@@ -48,11 +49,11 @@ class ArthasAttachHelper {
             return ArthasBridgeFactory {
                 ArthasBridgeImpl(
                     InteractiveShell2ArthasProcessAdapter(hostMachine.createInteractiveShell(
-                    "${localJvmProviderConfig.jdkHome}/bin/java",
-                    "-jar",
-                    "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                    jvm.getId()
-                ))
+                        "${localJvmProviderConfig.jdkHome}/bin/java",
+                        "-jar",
+                        "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
+                        jvm.getId()
+                    ))
                 )
             }
         }
@@ -78,10 +79,36 @@ class ArthasAttachHelper {
         }
     }
 
+    /**
+     * 连接 docker 容器中的 jvm。除非开启 [JvmInDockerProviderConfig.useToolsInContainer]，否则不支持 docker desktop.
+     */
+    private fun createDockerFactory(hostMachine: HostMachine, jvm: JVM, config: JvmInDockerProviderConfig): ArthasBridgeFactory {
+        if (hostMachine.getOS() == OS.WINDOWS && !config.useToolsInContainer) {
+            throw IllegalStateException("Docker desktop is not supported. Please embed your jdk and arthas to your image and enable `useToolsInContainer` feature.")
+        }
+        return ArthasBridgeFactory {
+            val jdkHome: String
+            val arthasHome: String
+            if (config.useToolsInContainer) {
+                jdkHome = config.jdkHome
+                arthasHome = config.arthasHome
+            } else {
+                hostMachine.execute("docker", "cp", config.arthasHome, "${jvm.getId()}:/tmp/arthas").ok()
+                hostMachine.execute("docker", "cp", config.jdkHome, "${jvm.getId()}:/tmp/jdk").ok()
+                jdkHome = "/tmp/jdk"
+                arthasHome = "/tmp/arthas"
+            }
+            return@ArthasBridgeFactory ArthasBridgeImpl(InteractiveShell2ArthasProcessAdapter(
+                // TODO, support switch pid.
+                hostMachine.createInteractiveShell("docker", "exec", "-it", jvm.getId(), "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
+            ))
+        }
+    }
+
     fun createArthasBridgeFactory(hostMachine: HostMachine, jvm: JVM, jvmProviderConfig: JvmProviderConfig): ArthasBridgeFactory {
         return when(jvmProviderConfig::class) {
             LocalJvmProviderConfig::class -> createLocalFactory(hostMachine, jvm, jvmProviderConfig as LocalJvmProviderConfig)
-            JvmInDockerProviderConfig::class -> TODO("Support docker")
+            JvmInDockerProviderConfig::class -> createDockerFactory(hostMachine, jvm, jvmProviderConfig as JvmInDockerProviderConfig)
             else -> throw IllegalStateException("Unreachable code.")
         }
     }

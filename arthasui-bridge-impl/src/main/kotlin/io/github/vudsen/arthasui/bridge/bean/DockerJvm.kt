@@ -12,7 +12,7 @@ class DockerJvm(private val containerId: String, name: String, image: String) : 
     }
 
     override fun getMainClass(): String {
-        return "Unknown"
+        return displayName
     }
 
     override fun getId(): String {

@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge
 
+import com.intellij.openapi.progress.ProgressManager
 import com.jetbrains.rd.generator.nova.util.joinToOptString
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
@@ -62,12 +63,13 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
         channel.invertedIn.flush()
         return InteractiveShell(channel.invertedOut, channel.invertedIn, { !channel.isClosed && !channel.isClosing }) {
             if (channel.isClosed) {
-                return@InteractiveShell channel.exitStatus
+                return@InteractiveShell 0
             }
-            try {
-                channel.close()
-            } catch (_: Exception) { }
-            return@InteractiveShell channel.exitStatus
+            val closeFuture = channel.close(true)
+            while (!closeFuture.await(1, TimeUnit.SECONDS)) {
+                ProgressManager.checkCanceled()
+            }
+            return@InteractiveShell 0
         }
     }
 

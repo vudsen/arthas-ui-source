@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.github.vudsen.arthasui.api.BridgeUtils
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
@@ -30,11 +31,10 @@ class JvmSearcher(private val hostMachine: HostMachine) {
             TODO("handle non-zero exit code.")
         }
         val jsonArray = "[" + execResult.stdout + "]"
-        val tree = gson.toJsonTree(jsonArray)
+        val tree = gson.fromJson(jsonArray, object : TypeToken<List<Map<String, String>>>() {})
         val result = mutableListOf<JVM>()
-        for (element in tree.asJsonArray) {
-            val obj = element.asJsonObject
-            result.add(DockerJvm(obj.get("ID").asString, obj.get("Names").asString, obj.get("Image").asString))
+        for (element in tree) {
+            result.add(DockerJvm(element["ID"]!!, element["Names"]!!, element["Image"]!!))
         }
         return result
     }

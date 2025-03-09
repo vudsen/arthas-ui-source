@@ -11,9 +11,9 @@ import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import java.awt.Dimension
 import javax.swing.*
 
-class CreateOrUpdateHostMachineDialogUI(private val onOk: (HostMachineConfigV2) -> Unit) : DialogWrapper(false) {
+class CreateOrUpdateHostMachineDialogUI(oldState: HostMachineConfigV2?, private val onOk: (HostMachineConfigV2) -> Unit) : DialogWrapper(false) {
 
-    private val state = HostMachineConfigV2()
+    private val state = oldState ?: HostMachineConfigV2()
 
     private lateinit var root: DialogPanel
 
