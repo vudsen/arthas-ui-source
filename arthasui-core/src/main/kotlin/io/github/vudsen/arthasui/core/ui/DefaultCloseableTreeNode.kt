@@ -19,11 +19,11 @@ class DefaultCloseableTreeNode(config: HostMachineConfigV2, project: Project) : 
     }
 
     override fun close() {
-        Disposer.dispose(this)
+        getHostMachine().close()
     }
 
     override fun dispose() {
-        getHostMachine().close()
+        this.close()
     }
 
 }

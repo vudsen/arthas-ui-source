@@ -26,6 +26,7 @@ import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
+import io.ktor.util.collections.*
 import java.awt.Component
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -54,22 +55,41 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
 
     private lateinit var closeAction: CloseAction
 
-    companion object {
-        class CloseAction : AnAction(AllIcons.Actions.Suspend) {
+    inner class CloseAction : AnAction(AllIcons.Actions.Suspend) {
 
-            var enabled = false
+        var enabled = false
 
-            override fun getActionUpdateThread(): ActionUpdateThread {
-                return ActionUpdateThread.EDT
-            }
+        private val debounce = (ConcurrentSet <CloseableTreeNode>())
 
-            override fun actionPerformed(e: AnActionEvent) {}
-
-            override fun update(e: AnActionEvent) {
-                e.presentation.isEnabled = enabled
-            }
-
+        override fun getActionUpdateThread(): ActionUpdateThread {
+            return ActionUpdateThread.EDT
         }
+
+        override fun actionPerformed(e: AnActionEvent) {
+            val lastSelectedPathComponent = tree.lastSelectedPathComponent ?: return
+            val node = lastSelectedPathComponent as DefaultMutableTreeNode
+            val uo = node.userObject as RecursiveTreeNode
+            val rootNode = uo.getTopRootNode()
+            if (rootNode is CloseableTreeNode && !debounce.contains(rootNode) && rootNode.isActive()) {
+                debounce.add(rootNode)
+                ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Closing client", true) {
+
+                    override fun run(indicator: ProgressIndicator) {
+                        try {
+                            rootNode.close()
+                            e.presentation.isEnabled = rootNode.isActive()
+                        } finally {
+                            debounce.remove(rootNode)
+                        }
+                    }
+                })
+            }
+        }
+
+        override fun update(e: AnActionEvent) {
+            e.presentation.isEnabled = enabled
+        }
+
     }
 
     init {
@@ -179,7 +199,7 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
             ShowSettingsUtil.getInstance().showSettingsDialog(project, ArthasUISettingsConfigurable::class.java)
         }
         toolbarDecorator.disableRemoveAction()
-        toolbarDecorator.addExtraAction(object : AnAction(AllIcons.Debugger.Console) {
+        toolbarDecorator.addExtraAction(object : AnAction("Open Query Console", "", AllIcons.Debugger.Console) {
             override fun actionPerformed(e: AnActionEvent) {
                 tryOpenQueryConsole()
             }

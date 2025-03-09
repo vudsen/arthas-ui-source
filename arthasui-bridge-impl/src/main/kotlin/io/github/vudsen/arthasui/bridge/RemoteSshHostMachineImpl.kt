@@ -16,39 +16,46 @@ import kotlin.text.toByteArray
 
 class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) : HostMachine, CloseableHostMachine {
 
-    val session: ClientSession by lazy {
-        val client = SshClient
-            .setUpDefaultClient()
+    private var _session: ClientSession? = null
 
-        client.start()
-        val session = client.connect(config.ssh.username, config.ssh.host, config.ssh.port)
-            .verify(5, TimeUnit.SECONDS)
-            .session
-        session.addPasswordIdentity(config.ssh.password)
-        session.auth().verify(5, TimeUnit.SECONDS)
-        session
+    private fun getSession(): ClientSession {
+        _session ?.let { return it }
+        synchronized(this) {
+            _session ?.let { return it }
+            val client = SshClient
+                .setUpDefaultClient()
+
+            client.start()
+            val session = client.connect(config.ssh.username, config.ssh.host, config.ssh.port)
+                .verify(5, TimeUnit.SECONDS)
+                .session
+            session.addPasswordIdentity(config.ssh.password)
+            session.auth().verify(5, TimeUnit.SECONDS)
+            this._session = session
+            return session
+        }
     }
 
-    private var isClosed = false
-
     override fun isClosed(): Boolean {
-        return isClosed
+        val clientSession = _session ?: return true
+        return clientSession.isClosed
     }
 
     override fun close() {
-        isClosed = true
-        val lazy = this::session.getDelegate() as Lazy<*>
-        if (lazy.isInitialized()) {
-            session.close()
+        _session ?: return
+        synchronized(this) {
+            val clientSession = _session ?: return
+            clientSession.close()
+            _session = null
         }
     }
 
     override fun execute(vararg command: String): CommandExecuteResult {
-        return session.executeCancelable(command.joinToOptString(" "))
+        return getSession().executeCancelable(command.joinToOptString(" "))
     }
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
-        val channel = session.createShellChannel()
+        val channel = getSession().createShellChannel()
         channel.isRedirectErrorStream = true
         val future = channel.open()
         for (spin in 0 until 20) {
