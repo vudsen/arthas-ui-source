@@ -35,6 +35,7 @@ import javax.swing.JLabel
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
+import javax.swing.tree.MutableTreeNode
 import javax.swing.tree.TreeCellRenderer
 
 /**
@@ -133,6 +134,9 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
                 }
             }
         })
+        project.getService(ArthasUISettingsPersistent::class.java).addUpdatedListener {
+            loadRootNode()
+        }
         tree.minimumWidth = 301
         loadRootNode()
         tree.expandRow(0)
@@ -153,6 +157,13 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
     private fun loadRootNode() {
         val persistent = project.getService(ArthasUISettingsPersistent::class.java)
 
+        for (child in rootModel.children()) {
+            val treeNode = child as DefaultMutableTreeNode
+            val uo = treeNode.userObject
+            if (uo is CloseableTreeNode) {
+                Disposer.dispose(uo)
+            }
+        }
         rootModel.removeAllChildren()
         for (hostMachineConfig in persistent.state.hostMachines) {
             val node: AbstractRecursiveTreeNode

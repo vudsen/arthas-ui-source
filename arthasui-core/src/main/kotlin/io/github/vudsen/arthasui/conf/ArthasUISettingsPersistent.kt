@@ -4,6 +4,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import java.util.concurrent.CopyOnWriteArrayList
 
 @State(
     name = "io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent",
@@ -11,6 +12,8 @@ import com.intellij.openapi.components.Storage
 )
 @Service(Service.Level.PROJECT)
 class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
+
+    private val listeners = CopyOnWriteArrayList<() -> Unit>()
 
     private var myState = ArthasUISettings()
 
@@ -21,4 +24,13 @@ class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
     override fun loadState(state: ArthasUISettings) {
         this.myState = state
     }
+
+    fun addUpdatedListener(listener: () -> Unit) {
+        listeners.add(listener)
+    }
+
+    fun notifyStateUpdated() {
+        listeners.forEach { it() }
+    }
+
 }

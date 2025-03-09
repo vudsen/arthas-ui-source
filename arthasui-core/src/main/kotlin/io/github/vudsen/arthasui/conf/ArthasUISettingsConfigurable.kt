@@ -28,6 +28,7 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
         val service = project.getService(ArthasUISettingsPersistent::class.java)
 
         service.state.hostMachines = ui.settingState.hostMachines
+        service.notifyStateUpdated()
     }
 
     override fun getDisplayName(): String {
