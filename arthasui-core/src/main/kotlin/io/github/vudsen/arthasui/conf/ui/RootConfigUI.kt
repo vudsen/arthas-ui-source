@@ -59,7 +59,7 @@ class RootConfigUI(project: Project) : Disposable {
             }
         }
 
-        currentRoot.registerValidators {}
+        currentRoot.registerValidators(this)
         this.root = currentRoot
         return currentRoot
     }
