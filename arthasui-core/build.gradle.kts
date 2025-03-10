@@ -1,3 +1,6 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
+
 sourceSets {
     main {
         java {
@@ -57,9 +60,20 @@ tasks {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
 
-//    intellijPlatform {
-//        pluginVerification {
-//            ides
-//        }
-//    }
+    intellijPlatform {
+        // Do not run this task on your own pc! It will download all the IDE between these version.
+        pluginVerification {
+            ides {
+                ide(IntelliJPlatformType.IntellijIdeaUltimate, providers.gradleProperty("platformVersion").get())
+                local(file(System.getenv("IDE_PATH") ?: "/fake"))
+                recommended()
+                select {
+                    types = listOf(IntelliJPlatformType.IntellijIdeaUltimate)
+                    channels = listOf(ProductRelease.Channel.RELEASE)
+                    sinceBuild = "233"
+                    untilBuild = "243.*"
+                }
+            }
+        }
+    }
 }
