@@ -24,6 +24,19 @@ class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
         return os
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LocalConnectConfig
+
+        return os == other.os
+    }
+
+    override fun hashCode(): Int {
+        return os.hashCode()
+    }
+
 
 }
 
