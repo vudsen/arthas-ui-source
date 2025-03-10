@@ -42,7 +42,7 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<H
                 row {
                     label("Os type")
                     segmentedButton(OS.values().toList()) {
-                        it.toString()
+                        text = it.toString()
                     }.bind(osTypeObservableMutableProperty)
                 }
                 row("host") {

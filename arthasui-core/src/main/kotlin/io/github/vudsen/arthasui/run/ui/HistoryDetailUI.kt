@@ -17,8 +17,8 @@ class HistoryDetailUI(project: Project, raw: String, result: ArthasResultItem?) 
         // help init
         consoleViewImpl.component.border = null
         consoleViewImpl.component.border = BorderFactory.createEmptyBorder(-5, -10, -5,-10)
-        consoleViewImpl.editor.document.setText(raw)
-        consoleViewImpl.editor.settings.isUseSoftWraps = true
+        consoleViewImpl.editor!!.document.setText(raw)
+        consoleViewImpl.editor!!.settings.isUseSoftWraps = true
         addTab("Raw", consoleViewImpl)
 
         if (result is StringResult) {

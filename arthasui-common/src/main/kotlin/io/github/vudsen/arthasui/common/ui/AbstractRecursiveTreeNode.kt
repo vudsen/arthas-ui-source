@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.common.ui
 
-import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import java.util.*
 import javax.swing.tree.DefaultMutableTreeNode
 
 /**

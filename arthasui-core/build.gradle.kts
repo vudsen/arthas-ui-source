@@ -6,13 +6,32 @@ sourceSets {
     }
 }
 
+repositories {
+    intellijPlatform {
+        defaultRepositories()
+
+    }
+}
+
+plugins {
+    id("org.jetbrains.intellij.platform") version "2.3.0"
+}
+
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation(project(":arthasui-common"))
-    implementation(project(":arthasui-bridge-impl"))
-    api(project(":arthasui-api"))
+    intellijPlatform {
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
+        bundledPlugin("com.intellij.java")
+        pluginModule(implementation(project(":arthasui-common")))
+        pluginModule(implementation(project(":arthasui-bridge-impl")))
+        pluginModule(api(project(":arthasui-api")))
+        pluginVerifier()
+        zipSigner()
+    }
 }
+
 group = "io.github.vudsen.arthasui"
+
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
@@ -25,7 +44,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("232")
-        untilBuild.set("242.*")
+        untilBuild.set("243.*")
     }
 
     signPlugin {
@@ -37,4 +56,10 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
+
+//    intellijPlatform {
+//        pluginVerification {
+//            ides
+//        }
+//    }
 }

@@ -1,6 +1,9 @@
 dependencies {
     testImplementation(kotlin("test"))
     api(project(":arthasui-api"))
+    intellijPlatform {
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
+    }
 }
 group = "io.github.vudsen.arthasui.common"
 tasks.test {
@@ -8,4 +11,17 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(17)
+}
+
+repositories {
+    mavenCentral()
+
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+
+plugins {
+    id("org.jetbrains.intellij.platform.module") version "2.3.0"
 }

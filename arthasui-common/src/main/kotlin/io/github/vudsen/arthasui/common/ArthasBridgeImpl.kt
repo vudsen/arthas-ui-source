@@ -52,8 +52,8 @@ class ArthasBridgeImpl(
     private suspend fun ensureAttachStatus() {
         if (isAttached) {
             if (!arthasProcess.isAlive()) {
-                val readCharSequence = reader.readCharSequence()
-                throw IllegalStateException(readCharSequence.toString())
+                val readCharSequence = reader.readText()
+                throw IllegalStateException(readCharSequence)
             }
             return
         }
