@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.bridge
 
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalConnectConfigurationForm
 import io.github.vudsen.arthasui.bridge.ui.SshConfigurationForm
 
@@ -26,6 +27,13 @@ class HostMachineConnectConfigUIProvider(private val oldState: HostMachineConnec
         return forms[type]!!
     }
 
+    fun getConnectType(config: HostMachineConnectConfig): ConnectType {
+        return when (config::class) {
+            LocalConnectConfigurationForm::class -> ConnectType.LOCAL
+            SshHostMachineConnectConfig::class -> ConnectType.SSH
+            else -> ConnectType.LOCAL
+        }
+    }
 
 
 }

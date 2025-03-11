@@ -41,9 +41,7 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<H
             group("Connection Config") {
                 row {
                     label("Os type")
-                    segmentedButton(OS.values().toList()) {
-                        text = it.toString()
-                    }.bind(osTypeObservableMutableProperty)
+                    comboBox(OS.values().toList()).bindItem(osTypeObservableMutableProperty)
                 }
                 row("host") {
                     textField().bindText(state.ssh::host).align(Align.FILL)

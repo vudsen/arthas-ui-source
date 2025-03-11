@@ -21,7 +21,7 @@ class CreateOrUpdateHostMachineDialogUI(oldState: HostMachineConfigV2?, private 
 
     private val connectConfigurationUIProvider = HostMachineConnectConfigUIProvider(state.connect)
 
-    private var connectType: HostMachineConnectConfigUIProvider.Companion.ConnectType? = HostMachineConnectConfigUIProvider.Companion.ConnectType.LOCAL
+    private var connectType: HostMachineConnectConfigUIProvider.Companion.ConnectType? = connectConfigurationUIProvider.getConnectType(state.connect)
 
     init {
         title = "Create Or Update Host Machine"
