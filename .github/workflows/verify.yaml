@@ -1,7 +1,9 @@
 name: Build
 on:
   pull_request:
-
+  push:
+    branches:
+      - master
 jobs:
   build:
     name: Build
@@ -85,23 +87,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Cache Plugin Verifier IDEs
-      - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
-          key: plugin-verifier-${{ hashFiles('arthasui-core/build/listProductsReleases.txt') }}
-
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
         run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
 
       - name: Report issue
         uses: vudsen/intellij-plugin-verification-display@master
-        if: ${{ failure() }}
+        if: ${{ failure() && github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          plugin-verifier-result-path: '${{ github.workspace }}/arthasui-core/build/reports/pluginVerifier/pluginVerifier-result.zip'
+          plugin-verifier-result-path: '${{ github.workspace }}/arthasui-core/build/reports/pluginVerifier/'
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
