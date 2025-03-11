@@ -5,15 +5,18 @@ import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.impl.text.PsiAwareTextEditorImpl
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import javax.swing.JComponent
 
 /**
  * bypass 'internal' limitation.
  */
-class PsiAwareTextEditorImplWrapper(private val delegate: FileEditor, private val project: Project) : FileEditor by delegate {
+class PsiAwareTextEditorImplWrapper(private val delegate: FileEditor, private val project: Project, private val file: VirtualFile) : FileEditor by delegate {
 
-
+    override fun getFile(): VirtualFile {
+        return file
+    }
 
     override fun getComponent(): JComponent {
         val editorComponent = delegate.component

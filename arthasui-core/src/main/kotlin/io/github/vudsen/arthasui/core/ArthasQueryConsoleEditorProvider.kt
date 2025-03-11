@@ -20,7 +20,7 @@ class ArthasQueryConsoleEditorProvider : FileEditorProvider, DumbAware {
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {
         val psiAwareTextEditorImpl = PsiAwareTextEditorImpl(project, file, TextEditorProvider.getInstance())
-        return PsiAwareTextEditorImplWrapper(psiAwareTextEditorImpl, project)
+        return PsiAwareTextEditorImplWrapper(psiAwareTextEditorImpl, project, file)
     }
 
     override fun getEditorTypeId(): String {
