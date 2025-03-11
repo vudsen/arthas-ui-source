@@ -11,26 +11,6 @@ import kotlin.math.abs
 
 class ExecutionGutterIconRenderer(private val editorEx: EditorEx) : GutterIconRenderer() {
 
-    private fun createLoadingIcon(editorEx: EditorEx): Icon {
-        val loadingIcon = scaleIcon(AnimatedIcon.Default.INSTANCE, editorEx)
-        return loadingIcon
-    }
-
-    private fun scaleIcon(icon: Icon, editorEx: EditorEx): Icon {
-        val scale: Float = getEditorScaleFactor(editorEx)
-        return if (scale == 1f) icon else scale(icon, editorEx.gutterComponentEx, scale)
-    }
-
-    private fun getEditorScaleFactor(editorEx: EditorEx): Float {
-        if (Registry.`is`("editor.scale.gutter.icons") && editorEx is EditorImpl) {
-            val scale: Float = editorEx.getScale()
-            if (abs((1f - scale).toDouble()) > 0.10f) {
-                return scale
-            }
-        }
-        return 1f
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -43,7 +23,7 @@ class ExecutionGutterIconRenderer(private val editorEx: EditorEx) : GutterIconRe
     }
 
     override fun getIcon(): Icon {
-        return createLoadingIcon(editorEx)
+        return AnimatedIcon.Default.INSTANCE
     }
 
 }
