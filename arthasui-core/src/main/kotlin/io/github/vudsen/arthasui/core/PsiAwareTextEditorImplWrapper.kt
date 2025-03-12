@@ -12,11 +12,9 @@ import javax.swing.JComponent
 /**
  * bypass 'internal' limitation.
  */
-class PsiAwareTextEditorImplWrapper(private val delegate: FileEditor, private val project: Project, private val file: VirtualFile) : FileEditor by delegate {
+class PsiAwareTextEditorImplWrapper(private val delegate: FileEditor, private val project: Project) : FileEditor by delegate {
 
-    override fun getFile(): VirtualFile {
-        return file
-    }
+    override fun getFile(): VirtualFile = delegate.file
 
     override fun getComponent(): JComponent {
         val editorComponent = delegate.component

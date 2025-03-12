@@ -36,8 +36,9 @@ class ExecuteHistoryUI(project: Project, jvm: JVM) : AdditionalTabComponent() {
 
     companion object {
         private enum class Tag(val color: Color) {
-            SUCCESS(EditorColorsManager.getInstance().globalScheme.getAttributes(CodeInsightColors.MATCHED_BRACE_ATTRIBUTES).backgroundColor),
-            ERROR(EditorColorsManager.getInstance().globalScheme.getAttributes(HighlighterColors.BAD_CHARACTER).backgroundColor);
+            // FIXME: color contains compatibility problem.
+            SUCCESS(EditorColorsManager.getInstance().globalScheme.getAttributes(CodeInsightColors.MATCHED_BRACE_ATTRIBUTES).let { it.backgroundColor ?: it.foregroundColor }),
+            ERROR(EditorColorsManager.getInstance().globalScheme.getAttributes(HighlighterColors.BAD_CHARACTER).let { it.backgroundColor ?: it.foregroundColor });
         }
         private data class CardItem (
             var command: String,

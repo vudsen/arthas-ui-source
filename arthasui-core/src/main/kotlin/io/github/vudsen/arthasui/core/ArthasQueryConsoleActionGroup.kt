@@ -122,7 +122,7 @@ class ArthasQueryConsoleActionGroup(
             override fun update(e: AnActionEvent) {
                 val coordinator = project.getService(ArthasExecutionManager::class.java)
                 coordinator.getTemplate(virtualFileAttributes.jvm) ?.let {
-                    e.presentation.isEnabled = it.isBusy()
+                    e.presentation.isEnabled = it.isAlive()
                 } ?: let {
                     e.presentation.isEnabled = false
                 }
