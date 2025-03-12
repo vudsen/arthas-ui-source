@@ -56,9 +56,21 @@ jobs:
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./arthasui-core/build/distributions/content/*/*
+
+      - name: Post download link
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            📦 Plugin build success: [Download Plugin](${{ steps.upload.outputs.artifact-url }})
+
   verify:
     name: Verify plugin
     needs: [ build ]
