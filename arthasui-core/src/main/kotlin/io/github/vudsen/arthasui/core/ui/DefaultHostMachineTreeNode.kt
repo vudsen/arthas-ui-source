@@ -1,27 +1,31 @@
 package io.github.vudsen.arthasui.core.ui
 
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.service
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import com.intellij.ui.PopupHandler
 import io.github.vudsen.arthasui.api.HostMachineFactory
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.bridge.JvmSearcher
+import io.github.vudsen.arthasui.conf.JvmSearchGroupConfigurable
+import java.awt.Component
 import java.awt.FlowLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTree
 
-/**
- * TODO, remove the CloseableTreeNode and move all the method in TreeNodeHostMachine itself.
- */
 open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
 
 
     protected val ctx: TreeNodeContext
 
+    private var root: JComponent? = null
 
     init {
         val factory = service<HostMachineFactory>()
@@ -43,10 +47,30 @@ open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, p
 
 
     override fun render(tree: JTree): JComponent {
-        return JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
+        root ?.let { return it }
+        val root = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
             add(JLabel(config.connect.getIcon()))
             add(JLabel(config.name))
         }
+        root.addMouseListener(object : PopupHandler() {
+            override fun invokePopup(comp: Component?, x: Int, y: Int) {
+                val actionGroup = DefaultActionGroup().apply {
+                    add(object : AnAction("Create Custom Search Group", "", AllIcons.Nodes.Folder) {
+                        override fun actionPerformed(evt: AnActionEvent) {
+                            ShowSettingsUtil.getInstance().showSettingsDialog(
+                                ctx.project,
+                                JvmSearchGroupConfigurable(ctx.hostMachine, config, ctx.project)
+                            )
+                        }
+                    })
+                }
+                val actionManager = ActionManager.getInstance()
+                val popupMenu = actionManager.createActionPopupMenu(ActionPlaces.POPUP, actionGroup)
+                popupMenu.component.show(comp, x, y)
+            }
+        })
+        this.root = root
+        return root
     }
 
     override fun getTopRootNode(): RecursiveTreeNode {

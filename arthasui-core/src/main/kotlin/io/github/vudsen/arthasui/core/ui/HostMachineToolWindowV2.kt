@@ -121,7 +121,7 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
                 val uo = node.userObject as RecursiveTreeNode
                 if (e.clickCount == 2) {
                     if (uo is TreeNodeJVM) {
-                        tryOpenQueryConsole(lastSelectedPathComponent)
+                        tryOpenQueryConsole()
                     } else {
                         launchRefreshNodeTask(uo)
                     }
@@ -191,7 +191,8 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
         return null
     }
 
-    private fun tryOpenQueryConsole(node: Any = tree.lastSelectedPathComponent) {
+    private fun tryOpenQueryConsole() {
+        val node: Any = tree.lastSelectedPathComponent
         if (node !is DefaultMutableTreeNode) {
             return
         }

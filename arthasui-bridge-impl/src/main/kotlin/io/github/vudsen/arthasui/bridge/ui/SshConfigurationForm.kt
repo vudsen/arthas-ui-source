@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.ui
 
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.*
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
