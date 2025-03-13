@@ -28,7 +28,7 @@ class ArthasBridgeImpl(
     private val executionLock = Mutex()
 
     /**
-     * 停止执行标志.
+     * 停止执行标志. 
      */
     private val stopExecuteFlag = AtomicBoolean(false)
 
