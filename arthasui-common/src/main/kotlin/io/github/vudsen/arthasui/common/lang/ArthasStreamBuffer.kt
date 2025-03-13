@@ -49,6 +49,9 @@ class ArthasStreamBuffer {
      */
     fun readNextFrame(ignoreFirstLine: Boolean = true): String? {
         val result = FRAME_END_PATTERN.find(buffer) ?: return null
+        if (result.range.first == 0) {
+            return ""
+        }
         val first = result.range.first - 1
         val content = StringBuilder(first)
 
