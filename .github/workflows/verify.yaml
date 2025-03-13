@@ -13,7 +13,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    environment: production
+    environment:
+      name: production
+      url: ${{ steps.pluginUpload.outputs.artifact-url }}
     outputs:
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
@@ -62,25 +64,17 @@ jobs:
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
         uses: actions/upload-artifact@v4
-        id: upload
+        id: pluginUpload
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./arthasui-core/build/distributions/content/*/*
 
-      - name: Post download link
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions-cool/issues-helper@v3
-        with:
-          actions: 'create-comment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            📦 Plugin build success: [Download Plugin](${{ steps.upload.outputs.artifact-url }})
-
   verify:
     name: Verify plugin
     needs: [ build ]
-    environment: production
+    environment:
+      name: production
+      url: ${{ steps.verifyUpload.outputs.artifact-url }}
     runs-on: ubuntu-latest
     steps:
 
@@ -120,6 +114,7 @@ jobs:
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
+        id: verifyUpload
         uses: actions/upload-artifact@v4
         with:
           name: pluginVerifier-result
