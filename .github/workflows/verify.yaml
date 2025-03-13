@@ -112,10 +112,11 @@ jobs:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report issue
-        uses: vudsen/intellij-plugin-verification-display@v1.1.1
+        uses: vudsen/intellij-plugin-verification-display@v1.1.2
         if: ${{ github.event_name == 'pull_request' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           plugin-verifier-result-path: '${{ github.workspace }}/arthasui-core/build/reports/pluginVerifier/'
           visit-path: ${{ steps.verifyDeploy.outputs.deployment-url }}
-
+        env:
+          NODE_OPTIONS: --enable-source-maps
