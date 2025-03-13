@@ -1,11 +1,12 @@
-package io.github.vudsen.arthasui.core.action
+package io.github.vudsen.arthasui.core.toolwindow
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.ui.PopupHandler
+import java.awt.Component
 
-class ToolWindowRightClickMenu() : ActionGroup() {
+class ToolWindowRightClickHandler : PopupHandler() {
 
     private val actions: Array<AnAction>
 
@@ -15,15 +16,15 @@ class ToolWindowRightClickMenu() : ActionGroup() {
             override fun actionPerformed(evt: AnActionEvent) {
 
             }
-        }.apply {
-            templatePresentation.isEnabled = false
         })
 
         this.actions = actions.toTypedArray()
     }
 
-    override fun getChildren(event: AnActionEvent?): Array<AnAction> {
 
+
+    override fun invokePopup(p0: Component?, p1: Int, p2: Int) {
+        TODO("Not yet implemented")
     }
 
 }

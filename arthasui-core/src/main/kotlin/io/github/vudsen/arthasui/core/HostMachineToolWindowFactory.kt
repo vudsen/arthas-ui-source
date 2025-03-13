@@ -5,12 +5,12 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
-import io.github.vudsen.arthasui.core.ui.HostMachineToolWindowV2
+import io.github.vudsen.arthasui.core.toolwindow.ToolWindowTree
 
 class HostMachineToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val hostMachineToolWindow = HostMachineToolWindowV2(project)
+        val hostMachineToolWindow = ToolWindowTree(project)
         val contentFactory = ContentFactory.getInstance()
         val content = contentFactory.createContent(hostMachineToolWindow.getComponent(), "", false)
         Disposer.register(toolWindow.contentManager, content)

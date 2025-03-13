@@ -20,7 +20,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTree
 
-open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
+open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
 
 
     protected val ctx: TreeNodeContext
@@ -52,23 +52,7 @@ open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, p
             add(JLabel(config.connect.getIcon()))
             add(JLabel(config.name))
         }
-        root.addMouseListener(object : PopupHandler() {
-            override fun invokePopup(comp: Component?, x: Int, y: Int) {
-                val actionGroup = DefaultActionGroup().apply {
-                    add(object : AnAction("Create Custom Search Group", "", AllIcons.Nodes.Folder) {
-                        override fun actionPerformed(evt: AnActionEvent) {
-                            ShowSettingsUtil.getInstance().showSettingsDialog(
-                                ctx.project,
-                                JvmSearchGroupConfigurable(ctx.hostMachine, config, ctx.project)
-                            )
-                        }
-                    })
-                }
-                val actionManager = ActionManager.getInstance()
-                val popupMenu = actionManager.createActionPopupMenu(ActionPlaces.POPUP, actionGroup)
-                popupMenu.component.show(comp, x, y)
-            }
-        })
+
         this.root = root
         return root
     }

@@ -1,0 +1,130 @@
+package io.github.vudsen.arthasui.core.toolwindow
+
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.testFramework.LightVirtualFile
+import com.intellij.ui.treeStructure.Tree
+import com.intellij.ui.util.minimumWidth
+import io.github.vudsen.arthasui.api.ArthasExecutionManager
+import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
+import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
+import io.github.vudsen.arthasui.common.ui.TreeNodeJVM
+import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
+import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
+import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
+import javax.swing.JComponent
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.DefaultTreeModel
+
+class ToolWindowTree(val project: Project) : Disposable {
+
+    private val rootModel = DefaultMutableTreeNode("Invisible Root")
+
+    /**
+     * Structure:
+     * - `Invisible Root`
+     *  - --> [HostMachineNode]
+     */
+    val tree = Tree(DefaultTreeModel(rootModel))
+
+
+    init {
+        tree.setCellRenderer(ToolWindowTreeCellRenderer())
+        tree.addMouseListener(ToolWindowRightClickHandler())
+        tree.addMouseListener(ToolWindowMouseAdapter(this))
+
+        project.getService(ArthasUISettingsPersistent::class.java).addUpdatedListener {
+            refreshRootNode()
+        }
+        tree.minimumWidth = 301
+        refreshRootNode()
+        tree.expandRow(0)
+        tree.isRootVisible = false
+    }
+
+    /**
+     * 刷新某个一个节点
+     */
+    fun launchRefreshNodeTask(node: RecursiveTreeNode) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Load arthas nodes", true) {
+            override fun run(indicator: ProgressIndicator) {
+                node.refreshRootNode()
+                ToolWindowManager.getInstance(project).invokeLater {
+                    tree.updateUI()
+                }
+            }
+        })
+    }
+
+    /**
+     * 刷新根节点
+     */
+    private fun refreshRootNode() {
+        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
+
+        for (child in rootModel.children()) {
+            val treeNode = child as DefaultMutableTreeNode
+            val uo = treeNode.userObject
+            if (uo is CloseableTreeNode) {
+                Disposer.dispose(uo)
+            }
+        }
+        rootModel.removeAllChildren()
+        for (hostMachineConfig in persistent.state.hostMachines) {
+            val node: AbstractRecursiveTreeNode
+            if (hostMachineConfig.connect.isRequireClose()) {
+                node = DefaultCloseableTreeNode(hostMachineConfig, project)
+                Disposer.register(this, node)
+            } else {
+                node = DefaultHostMachineTreeNode(hostMachineConfig, project)
+            }
+            rootModel.add(node.refreshRootNode())
+            tree.updateUI()
+        }
+    }
+
+    override fun dispose() {}
+
+    fun tryOpenQueryConsole() {
+        val node = currentFocusedRootNode()
+        if (node !is TreeNodeJVM) {
+            return
+        }
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        val lightVirtualFile = LightVirtualFile(node.jvm.getMainClass(), ArthasFileType, "")
+        lightVirtualFile.putUserData(
+            ArthasExecutionManager.VF_ATTRIBUTES,
+            VirtualFileAttributes(
+                node.jvm,
+                (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
+                node.providerConfig)
+        )
+        fileEditorManager.openFile(lightVirtualFile, true)
+    }
+
+    /**
+     * 获取用户当前聚焦的节点
+     */
+    fun currentFocusedRootNode(): RecursiveTreeNode? {
+        val comp = tree.lastSelectedPathComponent ?: return null
+        if (comp !is DefaultMutableTreeNode) {
+            throw IllegalStateException("The node must be a DefaultMutableTreeNode")
+        }
+        val uo = comp.userObject as RecursiveTreeNode
+        return uo
+    }
+
+    fun getComponent(): JComponent {
+        return ToolWindowToolbar(this).createPanel()
+    }
+
+}

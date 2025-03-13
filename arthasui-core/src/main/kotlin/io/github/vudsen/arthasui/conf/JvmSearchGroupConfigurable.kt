@@ -15,9 +15,9 @@ import io.github.vudsen.arthasui.util.ui.KMutableProperty2MutablePropertyAdapter
 import javax.swing.JComponent
 
 class JvmSearchGroupConfigurable(
-    private val hostMachine: HostMachine,
-    private val hostMachineConfigV2: HostMachineConfigV2,
     private val project: Project
+//    private val hostMachine: HostMachine ,
+//    private val hostMachineConfigV2: HostMachineConfigV2 = HostMachineConfigV2(),
 ) : Configurable {
 
     private val state = State()
@@ -55,11 +55,12 @@ class JvmSearchGroupConfigurable(
         }
 
         this.root = root
+        return root
     }
 
     private fun testScript(script: String) {
         try {
-            OgnlJvmSearcher.search(script, SearcherRootState(hostMachine, hostMachineConfigV2))
+            OgnlJvmSearcher.search(script, SearcherRootState())
         } catch (e: Exception) {
             TODO("Tip user script execute failed.")
         }
@@ -75,27 +76,27 @@ class JvmSearchGroupConfigurable(
         if (root.validateAll().isNotEmpty()) {
             return
         }
-        val entity = JvmSearchGroup(state.name, hostMachineConfigV2.name, state.script)
-        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
-
-        val target = persistent.state.hostMachines.find { config -> config == hostMachineConfigV2 }
-        target ?: let {
-            throw IllegalStateException("Unreachable code.")
-        }
-
-        val newSearchGroup = ArrayList<JvmSearchGroup>(target.searchGroups.size)
-        for (searchGroup in target.searchGroups) {
-            if (searchGroup == entity) {
-                newSearchGroup.add(entity)
-            } else {
-                newSearchGroup.add(searchGroup)
-            }
-        }
-        if (newSearchGroup.size != target.searchGroups.size) {
-            newSearchGroup.add(entity)
-        }
-
-        target.searchGroups = newSearchGroup
+//        val entity = JvmSearchGroup(state.name, hostMachineConfigV2.name, state.script)
+//        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
+//
+//        val target = persistent.state.hostMachines.find { config -> config == hostMachineConfigV2 }
+//        target ?: let {
+//            throw IllegalStateException("Unreachable code.")
+//        }
+//
+//        val newSearchGroup = ArrayList<JvmSearchGroup>(target.searchGroups.size)
+//        for (searchGroup in target.searchGroups) {
+//            if (searchGroup == entity) {
+//                newSearchGroup.add(entity)
+//            } else {
+//                newSearchGroup.add(searchGroup)
+//            }
+//        }
+//        if (newSearchGroup.size != target.searchGroups.size) {
+//            newSearchGroup.add(entity)
+//        }
+//
+//        target.searchGroups = newSearchGroup
     }
 
     override fun getDisplayName(): String {
