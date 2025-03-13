@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * 增强 [ArthasBridge]，提供懒加载。
  *
- * 实际的 [ArthasBridge] 将会在第一次执行命令时初始化，除此之外可以直接调用 [attachNow] 立即连接。
+ * 实际的 [ArthasBridge] 将会在第一次执行命令时初始化，除此之外可以直接调用 [attachNow] 立即连接。 
  */
 class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     ArthasBridge {
