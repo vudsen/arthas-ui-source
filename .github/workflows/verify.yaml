@@ -107,7 +107,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: 'pages deploy ${{ github.workspace }}/arthasui-core/build/reports/pluginVerifier/ --project-name=example'
+          command: 'pages deploy ${{ github.workspace }}/arthasui-core/build/reports/pluginVerifier/ --project-name=arthas-ui'
           # Optional: Enable this if you want to have GitHub Deployments triggered
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
