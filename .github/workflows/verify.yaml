@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    environment: production
     outputs:
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
@@ -67,13 +73,14 @@ jobs:
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             📦 Plugin build success: [Download Plugin](${{ steps.upload.outputs.artifact-url }})
 
   verify:
     name: Verify plugin
     needs: [ build ]
+    environment: production
     runs-on: ubuntu-latest
     steps:
 
