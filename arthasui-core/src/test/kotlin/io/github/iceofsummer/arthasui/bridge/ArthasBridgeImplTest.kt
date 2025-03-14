@@ -8,7 +8,6 @@ import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.MockArthasProcess
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
-import io.github.vudsen.arthasui.common.ArthasBridgeImpl
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
