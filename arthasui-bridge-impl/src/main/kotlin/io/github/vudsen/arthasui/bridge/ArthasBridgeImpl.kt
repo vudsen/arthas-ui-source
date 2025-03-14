@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.common
+package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger;
@@ -11,6 +11,7 @@ import io.github.vudsen.arthasui.common.parser.OgnlFrameDecoder
 import io.github.vudsen.arthasui.common.bean.StringResult
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
+import io.github.vudsen.arthasui.common.util.SpinHelper
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -103,17 +104,19 @@ class ArthasBridgeImpl(
     private suspend fun parse0(decoder: ArthasFrameDecoder, cancelable: Boolean): ArthasResultItem {
         var len: Int
         var data: ArthasResultItem? = null
+        val spinHelper = SpinHelper()
         while (true) {
             withContext(Dispatchers.IO) {
                 while (true) {
                     if (reader.ready()) {
                         len = reader.read(readBuffer)
+                        spinHelper.reportSuccess()
                         break
                     } else if (stopExecuteFlag.get() && cancelable){
                         len = -1
                         return@withContext
                     } else {
-                        delay(1000)
+                        spinHelper.sleepSuspend()
                     }
                 }
             }
@@ -249,8 +252,9 @@ class ArthasBridgeImpl(
 
 
     override suspend fun execute(command: String): ArthasResultItem {
-        while (!executionLock.tryLock(1)) {
-            delay(1000)
+        val spinHelper = SpinHelper()
+        while (!executionLock.tryLock()) {
+            spinHelper.sleepSuspend()
         }
         try {
             return execute0(command)
@@ -295,8 +299,9 @@ class ArthasBridgeImpl(
         var locked = false
         try {
             // wait until execute exit.
+            val spinHelper = SpinHelper()
             if (!executionLock.tryLock()) {
-                delay(1000)
+                spinHelper.sleepSuspend()
             }
             locked = true
             val prev = lastExecuted
