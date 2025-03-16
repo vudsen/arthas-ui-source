@@ -1,4 +1,5 @@
 # arthas-ui
+<!-- Plugin description -->
 
 An IntelliJ IDEA Plugin that manage [Arthas](https://arthas.aliyun.com/) connections for you.
 
@@ -8,6 +9,7 @@ An IntelliJ IDEA Plugin that manage [Arthas](https://arthas.aliyun.com/) connect
 >
 > And we still have a lot of features that have not been done; please stay tuned.
 
+
 ## Features
 
 - [x] Attach to the local JVM
@@ -15,6 +17,8 @@ An IntelliJ IDEA Plugin that manage [Arthas](https://arthas.aliyun.com/) connect
 - [ ] Attach to the JVM in kubernetes (coming soon)
 - [x] Basic command completion
 - [ ] Arthas command grammar check (unstable)
+- 
+<!-- Plugin description end -->
 
 ## Quick Start
 
