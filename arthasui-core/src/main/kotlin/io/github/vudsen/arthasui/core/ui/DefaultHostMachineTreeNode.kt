@@ -14,19 +14,17 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTree
 
-/**
- * TODO, remove the CloseableTreeNode and move all the method in TreeNodeHostMachine itself.
- */
-open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
+open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
 
 
     protected val ctx: TreeNodeContext
 
+    private var root: JComponent? = null
 
     init {
         val factory = service<HostMachineFactory>()
         val hostMachine = factory.getHostMachine(config.connect)
-        ctx = TreeNodeContext(hostMachine, this, project, JvmSearcher(hostMachine))
+        ctx = TreeNodeContext(hostMachine, this, project, JvmSearcher(hostMachine), config)
     }
 
     fun getConnectConfig(): HostMachineConnectConfig {
@@ -38,15 +36,22 @@ open class DefaultHostMachineTreeNode(private val config: HostMachineConfigV2, p
         for (provider in config.providers) {
             result.add(TreeNodeJvmProviderFolder(ctx, provider))
         }
+        for (searchGroup in config.searchGroups) {
+            result.add(CustomSearchGroupTreeNode(searchGroup, ctx))
+        }
         return result
     }
 
 
     override fun render(tree: JTree): JComponent {
-        return JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
+        root ?.let { return it }
+        val root = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
             add(JLabel(config.connect.getIcon()))
             add(JLabel(config.name))
         }
+
+        this.root = root
+        return root
     }
 
     override fun getTopRootNode(): RecursiveTreeNode {

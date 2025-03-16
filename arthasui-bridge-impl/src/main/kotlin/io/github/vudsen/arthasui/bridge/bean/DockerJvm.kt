@@ -3,9 +3,7 @@ package io.github.vudsen.arthasui.bridge.bean
 import io.github.vudsen.arthasui.api.JVM
 
 
-class DockerJvm(private val containerId: String, name: String, image: String) : JVM {
-
-    private val displayName = "$name($image)"
+class DockerJvm(private val containerId: String, private val displayName: String) : JVM {
 
     override fun getDisplayName(): String {
         return displayName
@@ -37,5 +35,8 @@ class DockerJvm(private val containerId: String, name: String, image: String) : 
         return result
     }
 
+    override fun toString(): String {
+        return "type: docker, ${getDisplayName()}"
+    }
 
 }

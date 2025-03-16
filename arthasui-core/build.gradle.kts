@@ -19,6 +19,7 @@ plugins {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("ognl:ognl:3.4.6")
     implementation("com.google.code.gson:gson:2.11.0")
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))

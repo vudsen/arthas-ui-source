@@ -1,10 +1,8 @@
-package io.github.vudsen.arthasui.core.ui
+package io.github.vudsen.arthasui.core.toolwindow
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.progress.ProgressIndicator
@@ -14,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.testFramework.LightVirtualFile
+import com.intellij.ui.PopupHandler
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.ui.util.minimumWidth
@@ -25,6 +24,9 @@ import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import io.github.vudsen.arthasui.conf.JvmSearchGroupConfigurable
+import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
+import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
 import io.ktor.util.collections.*
 import java.awt.Component
@@ -35,7 +37,6 @@ import javax.swing.JLabel
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
-import javax.swing.tree.MutableTreeNode
 import javax.swing.tree.TreeCellRenderer
 
 /**
@@ -43,6 +44,7 @@ import javax.swing.tree.TreeCellRenderer
  *
  * - [CloseableTreeNode] : 用于表示节点可以被关闭
  */
+@Deprecated("Use ToolWindowTree instead", level = DeprecationLevel.ERROR)
 class HostMachineToolWindowV2(private val project: Project) : Disposable {
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
@@ -114,6 +116,25 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
                 return userObject.render(tree)
             }
         })
+
+        tree.addMouseListener(object : PopupHandler() {
+            override fun invokePopup(comp: Component?, x: Int, y: Int) {
+                val actionGroup = DefaultActionGroup().apply {
+                    add(object : AnAction("Create Custom Search Group", "", AllIcons.Nodes.Folder) {
+                        override fun actionPerformed(evt: AnActionEvent) {
+                            ShowSettingsUtil.getInstance().editConfigurable(
+                                project,
+                                JvmSearchGroupConfigurable(project)
+                            )
+                        }
+                    })
+                }
+                val actionManager = ActionManager.getInstance()
+                val popupMenu = actionManager.createActionPopupMenu(ActionPlaces.POPUP, actionGroup)
+                popupMenu.component.show(comp, x, y)
+            }
+        })
+
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 val lastSelectedPathComponent = tree.lastSelectedPathComponent ?: return
@@ -121,7 +142,7 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
                 val uo = node.userObject as RecursiveTreeNode
                 if (e.clickCount == 2) {
                     if (uo is TreeNodeJVM) {
-                        tryOpenQueryConsole(lastSelectedPathComponent)
+                        tryOpenQueryConsole()
                     } else {
                         launchRefreshNodeTask(uo)
                     }
@@ -191,7 +212,8 @@ class HostMachineToolWindowV2(private val project: Project) : Disposable {
         return null
     }
 
-    private fun tryOpenQueryConsole(node: Any = tree.lastSelectedPathComponent) {
+    private fun tryOpenQueryConsole() {
+        val node: Any = tree.lastSelectedPathComponent
         if (node !is DefaultMutableTreeNode) {
             return
         }

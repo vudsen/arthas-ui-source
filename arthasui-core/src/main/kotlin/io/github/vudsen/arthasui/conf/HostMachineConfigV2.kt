@@ -4,6 +4,7 @@ import com.intellij.util.xmlb.annotations.OptionTag
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.bean.EmptyConnectConfig
+import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 
 data class HostMachineConfigV2(
     var name: String = "",
@@ -16,5 +17,10 @@ data class HostMachineConfigV2(
      * jvm 提供者配置
      */
     @OptionTag(converter = JvmProviderConfigConfigConverter::class)
-    var providers: MutableList<JvmProviderConfig> = mutableListOf()
+    var providers: MutableList<JvmProviderConfig> = mutableListOf(),
+
+    /**
+     * 用户自定义搜索组
+     */
+    var searchGroups: MutableList<JvmSearchGroup> = mutableListOf()
 )
