@@ -25,6 +25,11 @@ import javax.swing.JComponent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 
+/**
+ * ToolWindow 界面。所有的子节点必须实现 [RecursiveTreeNode]. 根节点可以选择实现:
+ *
+ * - [CloseableTreeNode] : 用于表示节点可以被关闭
+ */
 class ToolWindowTree(val project: Project) : Disposable {
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
@@ -39,7 +44,7 @@ class ToolWindowTree(val project: Project) : Disposable {
 
     init {
         tree.setCellRenderer(ToolWindowTreeCellRenderer())
-        tree.addMouseListener(ToolWindowRightClickHandler())
+        tree.addMouseListener(ToolWindowRightClickHandler(this))
         tree.addMouseListener(ToolWindowMouseAdapter(this))
 
         project.getService(ArthasUISettingsPersistent::class.java).addUpdatedListener {

@@ -4,6 +4,16 @@ import io.github.vudsen.arthasui.api.JVM
 import ognl.Ognl
 import kotlin.jvm.Throws
 
+/**
+ * 使用 ognl 脚本搜索 jvm.
+ *
+ * Example:
+ * ```
+ * #resultStr = hostMachine.execute(localHelper.jps(), '-lm').stdout,
+ * #result = #resultStr.split('\n').{? #this.contains('com.intellij.idea.Main')},
+ * addLocal(#result.{ #this.split(' ') })
+ * ```
+ */
 object OgnlJvmSearcher {
 
     /**
@@ -11,11 +21,9 @@ object OgnlJvmSearcher {
      * @throws ClassCastException 脚本返回值不是 [ArrayList]<[JVM]>
      */
     @Throws(ClassCastException::class)
-    fun search(script: String, root: SearcherRootState): ArrayList<JVM> {
-        val context = Ognl.createDefaultContext(root)
+    fun execute(script: String, context: MyOgnlContext) {
         val expression = Ognl.parseExpression(script)
-        val value = Ognl.getValue(expression, context, ArrayList::class)
-        return value as ArrayList<JVM>
+        Ognl.getValue(expression, context)
     }
 
 }

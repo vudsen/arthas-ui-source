@@ -36,5 +36,8 @@ class LocalJVM(val myPid: String, private val mainClass: String) : JVM {
         return result
     }
 
+    override fun toString(): String {
+        return "type = local, ${getDisplayName()}"
+    }
 
 }

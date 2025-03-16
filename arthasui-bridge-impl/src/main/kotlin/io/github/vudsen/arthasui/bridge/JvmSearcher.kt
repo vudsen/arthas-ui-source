@@ -34,7 +34,7 @@ class JvmSearcher(private val hostMachine: HostMachine) {
         val tree = gson.fromJson(jsonArray, object : TypeToken<List<Map<String, String>>>() {})
         val result = mutableListOf<JVM>()
         for (element in tree) {
-            result.add(DockerJvm(element["ID"]!!, element["Names"]!!, element["Image"]!!))
+            result.add(DockerJvm(element["ID"]!!, "${element["Names"]!!}(${element["Image"]!!})", ))
         }
         return result
     }
