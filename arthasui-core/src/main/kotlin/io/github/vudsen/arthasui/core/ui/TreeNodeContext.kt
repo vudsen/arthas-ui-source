@@ -4,10 +4,12 @@ import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.bridge.JvmSearcher
+import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 
 class TreeNodeContext(
     val hostMachine: HostMachine,
     val root: RecursiveTreeNode,
     val project: Project,
-    val searcher: JvmSearcher
+    val searcher: JvmSearcher,
+    val config: HostMachineConfigV2
 )

@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 import ognl.Ognl
 import kotlin.jvm.Throws
 
@@ -24,6 +25,11 @@ object OgnlJvmSearcher {
     fun execute(script: String, context: MyOgnlContext) {
         val expression = Ognl.parseExpression(script)
         Ognl.getValue(expression, context)
+    }
+
+    fun executeByGroup(searchGroup: JvmSearchGroup, context: MyOgnlContext): MutableList<JVM> {
+        execute(searchGroup.script, context)
+        return context.getResultHolder().result
     }
 
 }

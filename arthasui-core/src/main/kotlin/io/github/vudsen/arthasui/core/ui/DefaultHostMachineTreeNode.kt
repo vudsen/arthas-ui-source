@@ -1,19 +1,13 @@
 package io.github.vudsen.arthasui.core.ui
 
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.service
-import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.ui.PopupHandler
 import io.github.vudsen.arthasui.api.HostMachineFactory
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.bridge.JvmSearcher
-import io.github.vudsen.arthasui.conf.JvmSearchGroupConfigurable
-import java.awt.Component
 import java.awt.FlowLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -30,7 +24,7 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: 
     init {
         val factory = service<HostMachineFactory>()
         val hostMachine = factory.getHostMachine(config.connect)
-        ctx = TreeNodeContext(hostMachine, this, project, JvmSearcher(hostMachine))
+        ctx = TreeNodeContext(hostMachine, this, project, JvmSearcher(hostMachine), config)
     }
 
     fun getConnectConfig(): HostMachineConnectConfig {
@@ -41,6 +35,9 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: 
         val result = mutableListOf<AbstractRecursiveTreeNode>()
         for (provider in config.providers) {
             result.add(TreeNodeJvmProviderFolder(ctx, provider))
+        }
+        for (searchGroup in config.searchGroups) {
+            result.add(CustomSearchGroupTreeNode(searchGroup, ctx))
         }
         return result
     }
