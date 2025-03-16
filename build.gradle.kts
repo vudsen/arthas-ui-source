@@ -7,7 +7,7 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "java")
 
-    version = "0.0.2-alpha"
+    version = "0.0.3-alpha"
 
     repositories {
         maven{ url=uri("https://maven.aliyun.com/repository/public") }
