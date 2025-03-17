@@ -35,8 +35,8 @@ public class ArthasJadExpressionImpl extends ArthasCommandImpl implements Arthas
 
   @Override
   @NotNull
-  public ArthasClazz getClazz() {
-    return findNotNullChildByClass(ArthasClazz.class);
+  public PsiElement getClassPattern() {
+    return findNotNullChildByType(CLASS_PATTERN);
   }
 
 }

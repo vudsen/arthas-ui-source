@@ -29,8 +29,8 @@ public class ArthasArgumentImpl extends ArthasCommandImpl implements ArthasArgum
 
   @Override
   @NotNull
-  public PsiElement getArgs() {
-    return findNotNullChildByType(ARGS);
+  public PsiElement getArgumentHead() {
+    return findNotNullChildByType(ARGUMENT_HEAD);
   }
 
   @Override

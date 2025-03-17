@@ -7,16 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ArthasWatchStatement extends ArthasCommand {
 
-  @NotNull
-  List<ArthasArgument> getArgumentList();
+  @Nullable
+  ArthasOgnlExp getOgnlExp();
 
   @Nullable
-  ArthasClazz getClazz();
-
-  @Nullable
-  ArthasMethod getMethod();
-
-  @Nullable
-  ArthasOgnl getOgnl();
+  PsiElement getClassPattern();
 
 }

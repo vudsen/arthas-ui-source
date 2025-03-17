@@ -35,18 +35,6 @@ public class ArthasHeapdumpStatementImpl extends ArthasCommandImpl implements Ar
 
   @Override
   @Nullable
-  public PsiElement getArgs() {
-    return findChildByType(ARGS);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getIdentifier() {
-    return findChildByType(IDENTIFIER);
-  }
-
-  @Override
-  @Nullable
   public PsiElement getNonWhitespaceSequence() {
     return findChildByType(NON_WHITESPACE_SEQUENCE);
   }

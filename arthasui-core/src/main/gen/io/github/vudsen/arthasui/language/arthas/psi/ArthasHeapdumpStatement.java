@@ -11,12 +11,6 @@ public interface ArthasHeapdumpStatement extends ArthasCommand {
   List<ArthasArgument> getArgumentList();
 
   @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
-  @Nullable
   PsiElement getNonWhitespaceSequence();
 
 }

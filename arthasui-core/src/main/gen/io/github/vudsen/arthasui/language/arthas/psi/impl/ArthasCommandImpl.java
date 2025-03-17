@@ -27,4 +27,16 @@ public class ArthasCommandImpl extends ASTWrapperPsiElement implements ArthasCom
     else super.accept(visitor);
   }
 
+  @Override
+  @Nullable
+  public ArthasAuthCommand getAuthCommand() {
+    return findChildByClass(ArthasAuthCommand.class);
+  }
+
+  @Override
+  @Nullable
+  public ArthasWatchCommand getWatchCommand() {
+    return findChildByClass(ArthasWatchCommand.class);
+  }
+
 }

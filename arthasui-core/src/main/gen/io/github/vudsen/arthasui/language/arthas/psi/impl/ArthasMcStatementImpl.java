@@ -34,21 +34,9 @@ public class ArthasMcStatementImpl extends ArthasCommandImpl implements ArthasMc
   }
 
   @Override
-  @Nullable
-  public PsiElement getArgs() {
-    return findChildByType(ARGS);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getIdentifier() {
-    return findChildByType(IDENTIFIER);
-  }
-
-  @Override
-  @Nullable
+  @NotNull
   public PsiElement getNonWhitespaceSequence() {
-    return findChildByType(NON_WHITESPACE_SEQUENCE);
+    return findNotNullChildByType(NON_WHITESPACE_SEQUENCE);
   }
 
 }

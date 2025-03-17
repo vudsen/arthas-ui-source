@@ -11,6 +11,6 @@ public interface ArthasJadExpression extends ArthasCommand {
   List<ArthasArgument> getArgumentList();
 
   @NotNull
-  ArthasClazz getClazz();
+  PsiElement getClassPattern();
 
 }

@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ArthasEchoExpression extends ArthasCommand {
 
   @NotNull
-  PsiElement getString();
+  PsiElement getNonWhitespaceSequence();
 
 }

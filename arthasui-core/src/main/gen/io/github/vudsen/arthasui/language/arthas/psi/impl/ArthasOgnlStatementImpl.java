@@ -35,8 +35,8 @@ public class ArthasOgnlStatementImpl extends ArthasCommandImpl implements Arthas
 
   @Override
   @Nullable
-  public ArthasOgnl getOgnl() {
-    return findChildByClass(ArthasOgnl.class);
+  public PsiElement getOgnl() {
+    return findChildByType(STRING);
   }
 
 }

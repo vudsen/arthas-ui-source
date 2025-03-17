@@ -26,7 +26,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
-        bundledPlugin("com.intellij.java")
+        bundledPlugins("com.intellij.java", "org.jetbrains.plugins.yaml")
+
         pluginModule(implementation(project(":arthasui-common")))
         pluginModule(implementation(project(":arthasui-bridge-impl")))
         pluginModule(api(project(":arthasui-api")))

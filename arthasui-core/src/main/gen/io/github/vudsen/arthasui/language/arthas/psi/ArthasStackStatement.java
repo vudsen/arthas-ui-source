@@ -11,12 +11,12 @@ public interface ArthasStackStatement extends ArthasCommand {
   List<ArthasArgument> getArgumentList();
 
   @NotNull
-  ArthasClazz getClazz();
+  PsiElement getClassPattern();
+
+  @Nullable
+  PsiElement getIdentifier();
 
   @NotNull
-  ArthasMethod getMethod();
-
-  @NotNull
-  ArthasOgnl getOgnl();
+  PsiElement getOgnl();
 
 }

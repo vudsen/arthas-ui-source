@@ -36,101 +36,87 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   public static final TokenSet[] EXTENDS_SETS_ = new TokenSet[] {
-    create_token_set_(ARGUMENT, AUTH_EXPRESSION, CAT_EXPRESSION, CLASSLOADER_EXPRESSION,
-      CLS_STATEMENT, COMMAND, DASHBOARD_STATEMENT, ECHO_EXPRESSION,
-      HEAPDUMP_STATEMENT, HELP_EXPRESSION, HISTORY_EXPRESSION, JAD_EXPRESSION,
-      JVM_EXPRESSION, KEYMAP_EXPRESSION, LOGGER_EXPRESSION, MC_STATEMENT,
-      MEMORY_EXPRESSION, OGNL_STATEMENT, PWD_EXPRESSION, QUIT_STATEMENT,
-      RETRANSFORM_STATEMENT, SC_EXPRESSION, SESSION_EXPRESSION, SM_EXPRESSION,
-      STACK_STATEMENT, STOP_STATEMENT, SYSENV_EXPRESSION, SYSPROP_EXPRESSION,
-      THREAD_EXPRESSION, TRACE_STATEMENT, TT_EXPRESSION, TT_T_STATEMENT,
-      UNHANDLED_BASE_64_EXPRESSION, UNHANDLED_DUMP_STATEMENT, UNHANDLED_GETSTATIC_EXPRESSION, UNHANDLED_GREP_EXPRESSION,
-      UNHANDLED_JFR_STATEMENT, UNHANDLED_MBEAN_STATEMENT, UNHANDLED_MONITOR_STATEMENT, UNHANDLED_OPTIONS_STATEMENT,
-      UNHANDLED_PERFCOUNTER_EXPRESSION, UNHANDLED_PROFILER_STATEMENT, UNHANDLED_REDEFINE_STATEMENT, UNHANDLED_RESET_STATEMENT,
-      UNHANDLED_TEE_EXPRESSION, UNHANDLED_VMTOOL_STATEMENT, VERSION_EXPRESSION, VMOPTION_EXPRESSION,
-      WATCH_STATEMENT),
+    create_token_set_(ARGUMENT, CAT_EXPRESSION, CLASSLOADER_EXPRESSION, CLS_STATEMENT,
+      COMMAND, DASHBOARD_STATEMENT, ECHO_EXPRESSION, HEAPDUMP_STATEMENT,
+      HELP_EXPRESSION, HISTORY_EXPRESSION, JAD_EXPRESSION, JVM_EXPRESSION,
+      KEYMAP_EXPRESSION, LOGGER_EXPRESSION, MC_STATEMENT, MEMORY_EXPRESSION,
+      OGNL_STATEMENT, PWD_EXPRESSION, QUIT_STATEMENT, RETRANSFORM_STATEMENT,
+      SC_EXPRESSION, SESSION_EXPRESSION, SM_EXPRESSION, STACK_STATEMENT,
+      STOP_STATEMENT, SYSENV_EXPRESSION, SYSPROP_EXPRESSION, THREAD_EXPRESSION,
+      TRACE_STATEMENT, TT_EXPRESSION, TT_T_STATEMENT, UNHANDLED_BASE_64_EXPRESSION,
+      UNHANDLED_DUMP_STATEMENT, UNHANDLED_GETSTATIC_EXPRESSION, UNHANDLED_GREP_EXPRESSION, UNHANDLED_JFR_STATEMENT,
+      UNHANDLED_MBEAN_STATEMENT, UNHANDLED_MONITOR_STATEMENT, UNHANDLED_OPTIONS_STATEMENT, UNHANDLED_PERFCOUNTER_EXPRESSION,
+      UNHANDLED_PROFILER_STATEMENT, UNHANDLED_REDEFINE_STATEMENT, UNHANDLED_RESET_STATEMENT, UNHANDLED_TEE_EXPRESSION,
+      UNHANDLED_VMTOOL_STATEMENT, VERSION_EXPRESSION, VMOPTION_EXPRESSION),
   };
 
   /* ********************************************************** */
-  // NON_WHITESPACE_SEQUENCE | IDENTIFIER | ARGS
-  static boolean any_sequence(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "any_sequence")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, null, "<String>");
-    r = consumeToken(b, NON_WHITESPACE_SEQUENCE);
-    if (!r) r = consumeToken(b, IDENTIFIER);
-    if (!r) r = consumeToken(b, ARGS);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // ARGS IDENTIFIER?
+  // ARGUMENT_HEAD tip_argument_value?
   public static boolean argument(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "argument")) return false;
-    if (!nextTokenIs(b, "<Argument>", ARGS)) return false;
+    if (!nextTokenIs(b, ARGUMENT_HEAD)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ARGUMENT, "<Argument>");
-    r = consumeToken(b, ARGS);
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ARGUMENT_HEAD);
     r = r && argument_1(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
+    exit_section_(b, m, ARGUMENT, r);
     return r;
   }
 
-  // IDENTIFIER?
+  // tip_argument_value?
   private static boolean argument_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "argument_1")) return false;
-    consumeToken(b, IDENTIFIER);
+    tip_argument_value(b, l + 1);
     return true;
   }
 
   /* ********************************************************** */
-  // 'auth' argument* any_sequence argument*
-  public static boolean auth_expression(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "auth_expression")) return false;
+  // 'auth' argument* tip_auth_pwd argument*
+  public static boolean auth_command(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "auth_command")) return false;
     if (!nextTokenIs(b, COMMAND_AUTH)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, AUTH_EXPRESSION, null);
+    Marker m = enter_section_(b, l, _NONE_, AUTH_COMMAND, null);
     r = consumeToken(b, COMMAND_AUTH);
     p = r; // pin = 1
-    r = r && report_error_(b, auth_expression_1(b, l + 1));
-    r = p && report_error_(b, any_sequence(b, l + 1)) && r;
-    r = p && auth_expression_3(b, l + 1) && r;
+    r = r && report_error_(b, auth_command_1(b, l + 1));
+    r = p && report_error_(b, tip_auth_pwd(b, l + 1)) && r;
+    r = p && auth_command_3(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 
   // argument*
-  private static boolean auth_expression_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "auth_expression_1")) return false;
+  private static boolean auth_command_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "auth_command_1")) return false;
     while (true) {
       int c = current_position_(b);
       if (!argument(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "auth_expression_1", c)) break;
+      if (!empty_element_parsed_guard_(b, "auth_command_1", c)) break;
     }
     return true;
   }
 
   // argument*
-  private static boolean auth_expression_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "auth_expression_3")) return false;
+  private static boolean auth_command_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "auth_command_3")) return false;
     while (true) {
       int c = current_position_(b);
       if (!argument(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "auth_expression_3", c)) break;
+      if (!empty_element_parsed_guard_(b, "auth_command_3", c)) break;
     }
     return true;
   }
 
   /* ********************************************************** */
-  // 'cat' any_sequence
+  // 'cat' tip_any_seq
   public static boolean cat_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "cat_expression")) return false;
     if (!nextTokenIs(b, COMMAND_CAT)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_CAT);
-    r = r && any_sequence(b, l + 1);
+    r = r && tip_any_seq(b, l + 1);
     exit_section_(b, m, CAT_EXPRESSION, r);
     return r;
   }
@@ -160,18 +146,6 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // CLASS_PATTERN
-  public static boolean clazz(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "clazz")) return false;
-    if (!nextTokenIs(b, "<Class>", CLASS_PATTERN)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, CLAZZ, "<Class>");
-    r = consumeToken(b, CLASS_PATTERN);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // 'cls'
   public static boolean cls_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "cls_statement")) return false;
@@ -184,7 +158,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // auth_expression
+  // auth_command
   //     | unhandled_base64_expression
   //     | cat_expression
   //     | classloader_expression
@@ -230,12 +204,12 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   //     | version_expression
   //     | vmoption_expression
   //     | unhandled_vmtool_statement
-  //     | watch_statement
+  //     | watch_command
   public static boolean command(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "command")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _COLLAPSE_, COMMAND, "<Command>");
-    r = auth_expression(b, l + 1);
+    r = auth_command(b, l + 1);
     if (!r) r = unhandled_base64_expression(b, l + 1);
     if (!r) r = cat_expression(b, l + 1);
     if (!r) r = classloader_expression(b, l + 1);
@@ -281,7 +255,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!r) r = version_expression(b, l + 1);
     if (!r) r = vmoption_expression(b, l + 1);
     if (!r) r = unhandled_vmtool_statement(b, l + 1);
-    if (!r) r = watch_statement(b, l + 1);
+    if (!r) r = watch_command(b, l + 1);
     exit_section_(b, l, m, r, false, ArthasParser::recover);
     return r;
   }
@@ -311,19 +285,20 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'echo' string
+  // 'echo' tip_any_seq
   public static boolean echo_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "echo_expression")) return false;
     if (!nextTokenIs(b, COMMAND_ECHO)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, COMMAND_ECHO, STRING);
+    r = consumeToken(b, COMMAND_ECHO);
+    r = r && tip_any_seq(b, l + 1);
     exit_section_(b, m, ECHO_EXPRESSION, r);
     return r;
   }
 
   /* ********************************************************** */
-  // 'headpdump' argument* any_sequence? argument*
+  // 'headpdump' argument* tip_any_seq? argument*
   public static boolean heapdump_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "heapdump_statement")) return false;
     boolean r;
@@ -347,10 +322,10 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // any_sequence?
+  // tip_any_seq?
   private static boolean heapdump_statement_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "heapdump_statement_2")) return false;
-    any_sequence(b, l + 1);
+    tip_any_seq(b, l + 1);
     return true;
   }
 
@@ -398,7 +373,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'jad' argument* clazz argument*
+  // 'jad' argument* tip_clazz argument*
   public static boolean jad_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "jad_expression")) return false;
     if (!nextTokenIs(b, COMMAND_JAD)) return false;
@@ -406,7 +381,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_JAD);
     r = r && jad_expression_1(b, l + 1);
-    r = r && clazz(b, l + 1);
+    r = r && tip_clazz(b, l + 1);
     r = r && jad_expression_3(b, l + 1);
     exit_section_(b, m, JAD_EXPRESSION, r);
     return r;
@@ -471,7 +446,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'mc' argument* any_sequence argument*
+  // 'mc' argument* tip_any_seq argument*
   public static boolean mc_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "mc_statement")) return false;
     if (!nextTokenIs(b, COMMAND_MC)) return false;
@@ -479,7 +454,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_MC);
     r = r && mc_statement_1(b, l + 1);
-    r = r && any_sequence(b, l + 1);
+    r = r && tip_any_seq(b, l + 1);
     r = r && mc_statement_3(b, l + 1);
     exit_section_(b, m, MC_STATEMENT, r);
     return r;
@@ -520,43 +495,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // IDENTIFIER
-  public static boolean method(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "method")) return false;
-    if (!nextTokenIs(b, "<Method>", IDENTIFIER)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, METHOD, "<Method>");
-    r = consumeToken(b, IDENTIFIER);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // ognl_item
-  public static boolean ognl(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "ognl")) return false;
-    if (!nextTokenIs(b, STRING)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = ognl_item(b, l + 1);
-    exit_section_(b, m, OGNL, r);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // string
-  static boolean ognl_item(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "ognl_item")) return false;
-    if (!nextTokenIs(b, "<Ognl Expression>", STRING)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, null, "<Ognl Expression>");
-    r = consumeToken(b, STRING);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // 'ognl' argument* ognl argument*
+  // 'ognl' argument* tip_ognl argument*
   public static boolean ognl_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "ognl_statement")) return false;
     if (!nextTokenIs(b, COMMAND_OGNL)) return false;
@@ -565,7 +504,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, COMMAND_OGNL);
     p = r; // pin = 1
     r = r && report_error_(b, ognl_statement_1(b, l + 1));
-    r = p && report_error_(b, ognl(b, l + 1)) && r;
+    r = p && report_error_(b, tip_ognl(b, l + 1)) && r;
     r = p && ognl_statement_3(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -692,7 +631,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'retransform' argument* any_sequence argument*
+  // 'retransform' argument* tip_any_seq argument*
   public static boolean retransform_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "retransform_statement")) return false;
     if (!nextTokenIs(b, COMMAND_RETRANSFORM)) return false;
@@ -700,7 +639,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_RETRANSFORM);
     r = r && retransform_statement_1(b, l + 1);
-    r = r && any_sequence(b, l + 1);
+    r = r && tip_any_seq(b, l + 1);
     r = r && retransform_statement_3(b, l + 1);
     exit_section_(b, m, RETRANSFORM_STATEMENT, r);
     return r;
@@ -764,7 +703,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'sc' argument* clazz method method? argument*
+  // 'sc' argument* tip_clazz tip_method? argument*
   public static boolean sc_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sc_expression")) return false;
     if (!nextTokenIs(b, COMMAND_SC)) return false;
@@ -772,10 +711,9 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_SC);
     r = r && sc_expression_1(b, l + 1);
-    r = r && clazz(b, l + 1);
-    r = r && method(b, l + 1);
+    r = r && tip_clazz(b, l + 1);
+    r = r && sc_expression_3(b, l + 1);
     r = r && sc_expression_4(b, l + 1);
-    r = r && sc_expression_5(b, l + 1);
     exit_section_(b, m, SC_EXPRESSION, r);
     return r;
   }
@@ -791,20 +729,20 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // method?
-  private static boolean sc_expression_4(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "sc_expression_4")) return false;
-    method(b, l + 1);
+  // tip_method?
+  private static boolean sc_expression_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "sc_expression_3")) return false;
+    tip_method(b, l + 1);
     return true;
   }
 
   // argument*
-  private static boolean sc_expression_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "sc_expression_5")) return false;
+  private static boolean sc_expression_4(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "sc_expression_4")) return false;
     while (true) {
       int c = current_position_(b);
       if (!argument(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "sc_expression_5", c)) break;
+      if (!empty_element_parsed_guard_(b, "sc_expression_4", c)) break;
     }
     return true;
   }
@@ -822,7 +760,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'sm' argument* clazz method? argument*
+  // 'sm' argument* tip_clazz tip_method? argument*
   public static boolean sm_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sm_expression")) return false;
     if (!nextTokenIs(b, COMMAND_SM)) return false;
@@ -830,7 +768,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_SM);
     r = r && sm_expression_1(b, l + 1);
-    r = r && clazz(b, l + 1);
+    r = r && tip_clazz(b, l + 1);
     r = r && sm_expression_3(b, l + 1);
     r = r && sm_expression_4(b, l + 1);
     exit_section_(b, m, SM_EXPRESSION, r);
@@ -848,10 +786,10 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // method?
+  // tip_method?
   private static boolean sm_expression_3(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sm_expression_3")) return false;
-    method(b, l + 1);
+    tip_method(b, l + 1);
     return true;
   }
 
@@ -867,7 +805,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'stack' argument* clazz method ognl argument*
+  // 'stack' argument* tip_clazz tip_method? tip_ognl argument*
   public static boolean stack_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "stack_statement")) return false;
     if (!nextTokenIs(b, COMMAND_STACK)) return false;
@@ -875,9 +813,9 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_STACK);
     r = r && stack_statement_1(b, l + 1);
-    r = r && clazz(b, l + 1);
-    r = r && method(b, l + 1);
-    r = r && ognl(b, l + 1);
+    r = r && tip_clazz(b, l + 1);
+    r = r && stack_statement_3(b, l + 1);
+    r = r && tip_ognl(b, l + 1);
     r = r && stack_statement_5(b, l + 1);
     exit_section_(b, m, STACK_STATEMENT, r);
     return r;
@@ -891,6 +829,13 @@ public class ArthasParser implements PsiParser, LightPsiParser {
       if (!argument(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "stack_statement_1", c)) break;
     }
+    return true;
+  }
+
+  // tip_method?
+  private static boolean stack_statement_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "stack_statement_3")) return false;
+    tip_method(b, l + 1);
     return true;
   }
 
@@ -918,7 +863,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'sysenv' any_sequence?
+  // 'sysenv' tip_any_seq?
   public static boolean sysenv_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysenv_expression")) return false;
     if (!nextTokenIs(b, COMMAND_SYSENV)) return false;
@@ -930,15 +875,15 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // any_sequence?
+  // tip_any_seq?
   private static boolean sysenv_expression_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysenv_expression_1")) return false;
-    any_sequence(b, l + 1);
+    tip_any_seq(b, l + 1);
     return true;
   }
 
   /* ********************************************************** */
-  // 'sysprop' (any_sequence | any_sequence any_sequence)?
+  // 'sysprop' (tip_any_seq | tip_any_seq tip_any_seq)?
   public static boolean sysprop_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysprop_expression")) return false;
     if (!nextTokenIs(b, COMMAND_SYSPROP)) return false;
@@ -950,37 +895,37 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // (any_sequence | any_sequence any_sequence)?
+  // (tip_any_seq | tip_any_seq tip_any_seq)?
   private static boolean sysprop_expression_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysprop_expression_1")) return false;
     sysprop_expression_1_0(b, l + 1);
     return true;
   }
 
-  // any_sequence | any_sequence any_sequence
+  // tip_any_seq | tip_any_seq tip_any_seq
   private static boolean sysprop_expression_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysprop_expression_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = any_sequence(b, l + 1);
+    r = tip_any_seq(b, l + 1);
     if (!r) r = sysprop_expression_1_0_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // any_sequence any_sequence
+  // tip_any_seq tip_any_seq
   private static boolean sysprop_expression_1_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "sysprop_expression_1_0_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = any_sequence(b, l + 1);
-    r = r && any_sequence(b, l + 1);
+    r = tip_any_seq(b, l + 1);
+    r = r && tip_any_seq(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   /* ********************************************************** */
-  // 'thread' argument* any_sequence argument*
+  // 'thread' argument* tip_thread_id argument*
   public static boolean thread_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "thread_expression")) return false;
     if (!nextTokenIs(b, COMMAND_THREAD)) return false;
@@ -988,7 +933,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_THREAD);
     r = r && thread_expression_1(b, l + 1);
-    r = r && any_sequence(b, l + 1);
+    r = r && tip_thread_id(b, l + 1);
     r = r && thread_expression_3(b, l + 1);
     exit_section_(b, m, THREAD_EXPRESSION, r);
     return r;
@@ -1017,7 +962,91 @@ public class ArthasParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'trace' argument* clazz method ognl? argument*
+  // NON_WHITESPACE_SEQUENCE
+  static boolean tip_any_seq(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_any_seq")) return false;
+    if (!nextTokenIs(b, "<Any Characters>", NON_WHITESPACE_SEQUENCE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Any Characters>");
+    r = consumeToken(b, NON_WHITESPACE_SEQUENCE);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // IDENTIFIER
+  static boolean tip_argument_value(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_argument_value")) return false;
+    if (!nextTokenIs(b, "<Argument Value>", IDENTIFIER)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Argument Value>");
+    r = consumeToken(b, IDENTIFIER);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // NON_WHITESPACE_SEQUENCE
+  static boolean tip_auth_pwd(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_auth_pwd")) return false;
+    if (!nextTokenIs(b, "<Password>", NON_WHITESPACE_SEQUENCE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Password>");
+    r = consumeToken(b, NON_WHITESPACE_SEQUENCE);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // CLASS_PATTERN
+  static boolean tip_clazz(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_clazz")) return false;
+    if (!nextTokenIs(b, "<Class>", CLASS_PATTERN)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Class>");
+    r = consumeToken(b, CLASS_PATTERN);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // IDENTIFIER
+  static boolean tip_method(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_method")) return false;
+    if (!nextTokenIs(b, "<Method>", IDENTIFIER)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Method>");
+    r = consumeToken(b, IDENTIFIER);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // string
+  static boolean tip_ognl(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_ognl")) return false;
+    if (!nextTokenIs(b, "<Ognl Expression>", STRING)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Ognl Expression>");
+    r = consumeToken(b, STRING);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // any_sequence
+  static boolean tip_thread_id(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tip_thread_id")) return false;
+    if (!nextTokenIs(b, "<Thread ID>", ANY_SEQUENCE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<Thread ID>");
+    r = consumeToken(b, ANY_SEQUENCE);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // 'trace' argument* tip_clazz tip_method tip_ognl? argument*
   public static boolean trace_statement(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "trace_statement")) return false;
     if (!nextTokenIs(b, COMMAND_TRACE)) return false;
@@ -1025,8 +1054,8 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, COMMAND_TRACE);
     r = r && trace_statement_1(b, l + 1);
-    r = r && clazz(b, l + 1);
-    r = r && method(b, l + 1);
+    r = r && tip_clazz(b, l + 1);
+    r = r && tip_method(b, l + 1);
     r = r && trace_statement_4(b, l + 1);
     r = r && trace_statement_5(b, l + 1);
     exit_section_(b, m, TRACE_STATEMENT, r);
@@ -1044,10 +1073,10 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // ognl?
+  // tip_ognl?
   private static boolean trace_statement_4(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "trace_statement_4")) return false;
-    ognl(b, l + 1);
+    tip_ognl(b, l + 1);
     return true;
   }
 
@@ -1096,8 +1125,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, COMMAND_TT);
     r = r && consumeToken(b, "-t");
     r = r && tt_t_statement_2(b, l + 1);
-    r = r && clazz(b, l + 1);
-    r = r && method(b, l + 1);
+    r = r && consumeTokens(b, 0, CLAZZ, METHOD);
     r = r && tt_t_statement_5(b, l + 1);
     exit_section_(b, m, TT_T_STATEMENT, r);
     return r;
@@ -1143,7 +1171,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_base64_expression_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_base64_expression_1", c)) break;
     }
     return true;
@@ -1167,7 +1195,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_dump_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_dump_statement_1", c)) break;
     }
     return true;
@@ -1191,7 +1219,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_getstatic_expression_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_getstatic_expression_1", c)) break;
     }
     return true;
@@ -1215,7 +1243,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_grep_expression_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_grep_expression_1", c)) break;
     }
     return true;
@@ -1239,7 +1267,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_jfr_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_jfr_statement_1", c)) break;
     }
     return true;
@@ -1263,7 +1291,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_mbean_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_mbean_statement_1", c)) break;
     }
     return true;
@@ -1286,7 +1314,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_monitor_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_monitor_statement_1", c)) break;
     }
     return true;
@@ -1310,7 +1338,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_options_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_options_statement_1", c)) break;
     }
     return true;
@@ -1334,7 +1362,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_perfcounter_expression_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_perfcounter_expression_1", c)) break;
     }
     return true;
@@ -1357,7 +1385,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_profiler_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_profiler_statement_1", c)) break;
     }
     return true;
@@ -1381,7 +1409,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_redefine_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_redefine_statement_1", c)) break;
     }
     return true;
@@ -1405,7 +1433,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_reset_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_reset_statement_1", c)) break;
     }
     return true;
@@ -1429,7 +1457,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_tee_expression_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_tee_expression_1", c)) break;
     }
     return true;
@@ -1453,7 +1481,7 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unhandled_vmtool_statement_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!any_sequence(b, l + 1)) break;
+      if (!consumeToken(b, ANY_SEQUENCE)) break;
       if (!empty_element_parsed_guard_(b, "unhandled_vmtool_statement_1", c)) break;
     }
     return true;
@@ -1496,66 +1524,55 @@ public class ArthasParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "vmoption_expression_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = any_sequence(b, l + 1);
-    if (!r) r = vmoption_expression_1_0_1(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // any_sequence any_sequence
-  private static boolean vmoption_expression_1_0_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "vmoption_expression_1_0_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = any_sequence(b, l + 1);
-    r = r && any_sequence(b, l + 1);
+    r = consumeToken(b, ANY_SEQUENCE);
+    if (!r) r = parseTokens(b, 0, ANY_SEQUENCE, ANY_SEQUENCE);
     exit_section_(b, m, null, r);
     return r;
   }
 
   /* ********************************************************** */
-  // 'watch' argument* clazz method ognl? argument*
-  public static boolean watch_statement(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "watch_statement")) return false;
+  // 'watch' argument* tip_clazz tip_method tip_ognl? argument*
+  public static boolean watch_command(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "watch_command")) return false;
     if (!nextTokenIs(b, COMMAND_WATCH)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, WATCH_STATEMENT, null);
+    Marker m = enter_section_(b, l, _NONE_, WATCH_COMMAND, null);
     r = consumeToken(b, COMMAND_WATCH);
     p = r; // pin = 1
-    r = r && report_error_(b, watch_statement_1(b, l + 1));
-    r = p && report_error_(b, clazz(b, l + 1)) && r;
-    r = p && report_error_(b, method(b, l + 1)) && r;
-    r = p && report_error_(b, watch_statement_4(b, l + 1)) && r;
-    r = p && watch_statement_5(b, l + 1) && r;
+    r = r && report_error_(b, watch_command_1(b, l + 1));
+    r = p && report_error_(b, tip_clazz(b, l + 1)) && r;
+    r = p && report_error_(b, tip_method(b, l + 1)) && r;
+    r = p && report_error_(b, watch_command_4(b, l + 1)) && r;
+    r = p && watch_command_5(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 
   // argument*
-  private static boolean watch_statement_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "watch_statement_1")) return false;
+  private static boolean watch_command_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "watch_command_1")) return false;
     while (true) {
       int c = current_position_(b);
       if (!argument(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "watch_statement_1", c)) break;
+      if (!empty_element_parsed_guard_(b, "watch_command_1", c)) break;
     }
     return true;
   }
 
-  // ognl?
-  private static boolean watch_statement_4(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "watch_statement_4")) return false;
-    ognl(b, l + 1);
+  // tip_ognl?
+  private static boolean watch_command_4(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "watch_command_4")) return false;
+    tip_ognl(b, l + 1);
     return true;
   }
 
   // argument*
-  private static boolean watch_statement_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "watch_statement_5")) return false;
+  private static boolean watch_command_5(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "watch_command_5")) return false;
     while (true) {
       int c = current_position_(b);
       if (!argument(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "watch_statement_5", c)) break;
+      if (!empty_element_parsed_guard_(b, "watch_command_5", c)) break;
     }
     return true;
   }

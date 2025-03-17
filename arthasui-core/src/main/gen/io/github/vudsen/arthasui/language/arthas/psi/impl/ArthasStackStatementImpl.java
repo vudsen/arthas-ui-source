@@ -35,20 +35,20 @@ public class ArthasStackStatementImpl extends ArthasCommandImpl implements Artha
 
   @Override
   @NotNull
-  public ArthasClazz getClazz() {
-    return findNotNullChildByClass(ArthasClazz.class);
+  public PsiElement getClassPattern() {
+    return findNotNullChildByType(CLASS_PATTERN);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getIdentifier() {
+    return findChildByType(IDENTIFIER);
   }
 
   @Override
   @NotNull
-  public ArthasMethod getMethod() {
-    return findNotNullChildByClass(ArthasMethod.class);
-  }
-
-  @Override
-  @NotNull
-  public ArthasOgnl getOgnl() {
-    return findNotNullChildByClass(ArthasOgnl.class);
+  public PsiElement getOgnl() {
+    return findNotNullChildByType(STRING);
   }
 
 }

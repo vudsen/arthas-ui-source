@@ -10,13 +10,4 @@ public interface ArthasThreadExpression extends ArthasCommand {
   @NotNull
   List<ArthasArgument> getArgumentList();
 
-  @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
-  @Nullable
-  PsiElement getNonWhitespaceSequence();
-
 }

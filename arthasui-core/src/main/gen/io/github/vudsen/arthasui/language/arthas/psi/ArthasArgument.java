@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ArthasArgument extends ArthasCommand {
 
   @NotNull
-  PsiElement getArgs();
+  PsiElement getArgumentHead();
 
   @Nullable
   PsiElement getIdentifier();

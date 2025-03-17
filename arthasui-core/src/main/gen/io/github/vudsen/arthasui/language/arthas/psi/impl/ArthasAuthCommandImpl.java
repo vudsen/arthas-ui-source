@@ -8,17 +8,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import io.github.vudsen.arthasui.language.arthas.psi.*;
 
-public class ArthasCatExpressionImpl extends ArthasCommandImpl implements ArthasCatExpression {
+public class ArthasAuthCommandImpl extends ASTWrapperPsiElement implements ArthasAuthCommand {
 
-  public ArthasCatExpressionImpl(@NotNull ASTNode node) {
+  public ArthasAuthCommandImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull ArthasVisitor visitor) {
-    visitor.visitCatExpression(this);
+    visitor.visitAuthCommand(this);
   }
 
   @Override
@@ -29,8 +29,14 @@ public class ArthasCatExpressionImpl extends ArthasCommandImpl implements Arthas
 
   @Override
   @NotNull
+  public List<ArthasArgument> getArgumentList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ArthasArgument.class);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getNonWhitespaceSequence() {
-    return findNotNullChildByType(NON_WHITESPACE_SEQUENCE);
+    return findChildByType(NON_WHITESPACE_SEQUENCE);
   }
 
 }

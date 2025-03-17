@@ -10,13 +10,13 @@ public interface ArthasTraceStatement extends ArthasCommand {
   @NotNull
   List<ArthasArgument> getArgumentList();
 
-  @NotNull
-  ArthasClazz getClazz();
-
-  @NotNull
-  ArthasMethod getMethod();
-
   @Nullable
-  ArthasOgnl getOgnl();
+  PsiElement getOgnl();
+
+  @NotNull
+  PsiElement getClazz();
+
+  @NotNull
+  PsiElement getMethod();
 
 }

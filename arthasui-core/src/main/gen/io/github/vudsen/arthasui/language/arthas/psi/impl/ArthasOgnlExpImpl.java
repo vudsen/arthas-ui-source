@@ -10,15 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
 import io.github.vudsen.arthasui.language.arthas.psi.*;
 
-public class ArthasCatExpressionImpl extends ArthasCommandImpl implements ArthasCatExpression {
+public class ArthasOgnlExpImpl extends ArthasCommandImpl implements ArthasOgnlExp {
 
-  public ArthasCatExpressionImpl(@NotNull ASTNode node) {
+  public ArthasOgnlExpImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull ArthasVisitor visitor) {
-    visitor.visitCatExpression(this);
+    visitor.visitOgnlExp(this);
   }
 
   @Override
@@ -29,8 +29,8 @@ public class ArthasCatExpressionImpl extends ArthasCommandImpl implements Arthas
 
   @Override
   @NotNull
-  public PsiElement getNonWhitespaceSequence() {
-    return findNotNullChildByType(NON_WHITESPACE_SEQUENCE);
+  public PsiElement getString() {
+    return findNotNullChildByType(STRING);
   }
 
 }

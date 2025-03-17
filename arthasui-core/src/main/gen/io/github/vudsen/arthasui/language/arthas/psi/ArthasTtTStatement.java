@@ -10,10 +10,4 @@ public interface ArthasTtTStatement extends ArthasCommand {
   @NotNull
   List<ArthasArgument> getArgumentList();
 
-  @NotNull
-  ArthasClazz getClazz();
-
-  @NotNull
-  ArthasMethod getMethod();
-
 }

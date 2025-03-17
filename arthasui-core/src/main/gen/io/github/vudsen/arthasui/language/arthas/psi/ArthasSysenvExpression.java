@@ -8,12 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ArthasSysenvExpression extends ArthasCommand {
 
   @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
-  @Nullable
   PsiElement getNonWhitespaceSequence();
 
 }

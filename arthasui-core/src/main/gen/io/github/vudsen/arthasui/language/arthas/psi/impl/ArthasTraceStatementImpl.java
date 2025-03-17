@@ -34,21 +34,21 @@ public class ArthasTraceStatementImpl extends ArthasCommandImpl implements Artha
   }
 
   @Override
-  @NotNull
-  public ArthasClazz getClazz() {
-    return findNotNullChildByClass(ArthasClazz.class);
-  }
-
-  @Override
-  @NotNull
-  public ArthasMethod getMethod() {
-    return findNotNullChildByClass(ArthasMethod.class);
-  }
-
-  @Override
   @Nullable
-  public ArthasOgnl getOgnl() {
-    return findChildByClass(ArthasOgnl.class);
+  public PsiElement getOgnl() {
+    return findChildByType(STRING);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getClazz() {
+    return findNotNullChildByType(CLASS_PATTERN);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getMethod() {
+    return findNotNullChildByType(IDENTIFIER);
   }
 
 }

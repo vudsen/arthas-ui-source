@@ -5,12 +5,13 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ArthasOgnlStatement extends ArthasCommand {
+public interface ArthasOgnlExp extends ArthasCommand {
 
   @NotNull
-  List<ArthasArgument> getArgumentList();
+  PsiElement getString();
 
-  @Nullable
-  PsiElement getOgnl();
+  //WARNING: getOgnl(...) is skipped
+  //matching getOgnl(ArthasOgnlExp, ...)
+  //methods are not found in null
 
 }

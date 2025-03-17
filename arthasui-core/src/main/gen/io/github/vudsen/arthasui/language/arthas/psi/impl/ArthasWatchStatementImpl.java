@@ -28,27 +28,15 @@ public class ArthasWatchStatementImpl extends ArthasCommandImpl implements Artha
   }
 
   @Override
-  @NotNull
-  public List<ArthasArgument> getArgumentList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ArthasArgument.class);
+  @Nullable
+  public ArthasOgnlExp getOgnlExp() {
+    return findChildByClass(ArthasOgnlExp.class);
   }
 
   @Override
   @Nullable
-  public ArthasClazz getClazz() {
-    return findChildByClass(ArthasClazz.class);
-  }
-
-  @Override
-  @Nullable
-  public ArthasMethod getMethod() {
-    return findChildByClass(ArthasMethod.class);
-  }
-
-  @Override
-  @Nullable
-  public ArthasOgnl getOgnl() {
-    return findChildByClass(ArthasOgnl.class);
+  public PsiElement getClassPattern() {
+    return findChildByType(CLASS_PATTERN);
   }
 
 }

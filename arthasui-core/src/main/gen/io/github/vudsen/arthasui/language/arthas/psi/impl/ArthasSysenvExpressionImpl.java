@@ -29,18 +29,6 @@ public class ArthasSysenvExpressionImpl extends ArthasCommandImpl implements Art
 
   @Override
   @Nullable
-  public PsiElement getArgs() {
-    return findChildByType(ARGS);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getIdentifier() {
-    return findChildByType(IDENTIFIER);
-  }
-
-  @Override
-  @Nullable
   public PsiElement getNonWhitespaceSequence() {
     return findChildByType(NON_WHITESPACE_SEQUENCE);
   }

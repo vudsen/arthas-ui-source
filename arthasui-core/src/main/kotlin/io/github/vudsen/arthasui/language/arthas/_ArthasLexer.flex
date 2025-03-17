@@ -36,6 +36,7 @@ import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
         return zzToPrintable(str.toString());
     }
 %}
+%debug
 
 %public
 %class _ArthasLexer
@@ -43,7 +44,6 @@ import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
 %function advance
 %type IElementType
 %unicode
-%debug
 
 EOL=\R
 WHITE_SPACE=\s+
@@ -52,7 +52,7 @@ SPACE=[ \t\n\x0B\f\r]+
 EOL=\n
 STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
 LINE_COMMENT="//".*
-ARGUMENT=-[a-zA-Z]+
+ARGUMENT_HEAD=-[a-zA-Z]+
 IDENTIFIER=[a-zA-Z\d]+
 NON_WHITESPACE_SEQUENCE=[^\n ]+
 CLASS_PATTERN=[a-zA-Z\d]+(\.[a-zA-Z\d]+)*
@@ -66,7 +66,7 @@ CLASS_PATTERN=[a-zA-Z\d]+(\.[a-zA-Z\d]+)*
 
 <CLAZZ_METHOD_PAIR_1> {
     {CLASS_PATTERN}               { beginState(CLAZZ_METHOD_PAIR_2); return CLASS_PATTERN; }
-    {ARGUMENT}                    { beginState(WAITING_ARGUMENT_VALYE); return ARGS; }
+    {ARGUMENT_HEAD}                    { beginState(WAITING_ARGUMENT_VALYE); return ARGS; }
     <CLAZZ_METHOD_PAIR_2> {
         {IDENTIFIER}                  { popState(); popState(); return IDENTIFIER; }
     }
@@ -128,7 +128,7 @@ CLASS_PATTERN=[a-zA-Z\d]+(\.[a-zA-Z\d]+)*
   {EOL}                           { return EOL; }
   {STRING}                        { return STRING; }
   {LINE_COMMENT}                  { return LINE_COMMENT; }
-  {ARGUMENT}                      { return ARGUMENT; }
+  {ARGUMENT_HEAD}                 { beginState(WAITING_ARGUMENT_VALYE); return ARGUMENT_HEAD; }
   {IDENTIFIER}                    { return IDENTIFIER; }
   {NON_WHITESPACE_SEQUENCE}       { return NON_WHITESPACE_SEQUENCE; }
 

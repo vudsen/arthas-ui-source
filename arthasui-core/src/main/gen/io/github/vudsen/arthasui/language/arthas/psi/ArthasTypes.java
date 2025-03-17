@@ -9,10 +9,9 @@ import io.github.vudsen.arthasui.language.arthas.psi.impl.*;
 public interface ArthasTypes {
 
   IElementType ARGUMENT = new ArthasElementType("ARGUMENT");
-  IElementType AUTH_EXPRESSION = new ArthasElementType("AUTH_EXPRESSION");
+  IElementType AUTH_COMMAND = new ArthasElementType("AUTH_COMMAND");
   IElementType CAT_EXPRESSION = new ArthasElementType("CAT_EXPRESSION");
   IElementType CLASSLOADER_EXPRESSION = new ArthasElementType("CLASSLOADER_EXPRESSION");
-  IElementType CLAZZ = new ArthasElementType("CLAZZ");
   IElementType CLS_STATEMENT = new ArthasElementType("CLS_STATEMENT");
   IElementType COMMAND = new ArthasElementType("COMMAND");
   IElementType DASHBOARD_STATEMENT = new ArthasElementType("DASHBOARD_STATEMENT");
@@ -26,8 +25,6 @@ public interface ArthasTypes {
   IElementType LOGGER_EXPRESSION = new ArthasElementType("LOGGER_EXPRESSION");
   IElementType MC_STATEMENT = new ArthasElementType("MC_STATEMENT");
   IElementType MEMORY_EXPRESSION = new ArthasElementType("MEMORY_EXPRESSION");
-  IElementType METHOD = new ArthasElementType("METHOD");
-  IElementType OGNL = new ArthasElementType("OGNL");
   IElementType OGNL_STATEMENT = new ArthasElementType("OGNL_STATEMENT");
   IElementType PWD_EXPRESSION = new ArthasElementType("PWD_EXPRESSION");
   IElementType QUIT_STATEMENT = new ArthasElementType("QUIT_STATEMENT");
@@ -59,10 +56,12 @@ public interface ArthasTypes {
   IElementType UNHANDLED_VMTOOL_STATEMENT = new ArthasElementType("UNHANDLED_VMTOOL_STATEMENT");
   IElementType VERSION_EXPRESSION = new ArthasElementType("VERSION_EXPRESSION");
   IElementType VMOPTION_EXPRESSION = new ArthasElementType("VMOPTION_EXPRESSION");
-  IElementType WATCH_STATEMENT = new ArthasElementType("WATCH_STATEMENT");
+  IElementType WATCH_COMMAND = new ArthasElementType("WATCH_COMMAND");
 
-  IElementType ARGS = new ArthasTokenType("ARGS");
+  IElementType ANY_SEQUENCE = new ArthasTokenType("any_sequence");
+  IElementType ARGUMENT_HEAD = new ArthasTokenType("ARGUMENT_HEAD");
   IElementType CLASS_PATTERN = new ArthasTokenType("CLASS_PATTERN");
+  IElementType CLAZZ = new ArthasTokenType("clazz");
   IElementType COMMAND_AUTH = new ArthasTokenType("auth");
   IElementType COMMAND_BASE64 = new ArthasTokenType("base64");
   IElementType COMMAND_CAT = new ArthasTokenType("cat");
@@ -111,6 +110,7 @@ public interface ArthasTypes {
   IElementType DOT = new ArthasTokenType(".");
   IElementType IDENTIFIER = new ArthasTokenType("IDENTIFIER");
   IElementType LINE_COMMENT = new ArthasTokenType("line_comment");
+  IElementType METHOD = new ArthasTokenType("method");
   IElementType NON_WHITESPACE_SEQUENCE = new ArthasTokenType("NON_WHITESPACE_SEQUENCE");
   IElementType SEMICOLON = new ArthasTokenType(";");
   IElementType STRING = new ArthasTokenType("string");
@@ -121,17 +121,14 @@ public interface ArthasTypes {
       if (type == ARGUMENT) {
         return new ArthasArgumentImpl(node);
       }
-      else if (type == AUTH_EXPRESSION) {
-        return new ArthasAuthExpressionImpl(node);
+      else if (type == AUTH_COMMAND) {
+        return new ArthasAuthCommandImpl(node);
       }
       else if (type == CAT_EXPRESSION) {
         return new ArthasCatExpressionImpl(node);
       }
       else if (type == CLASSLOADER_EXPRESSION) {
         return new ArthasClassloaderExpressionImpl(node);
-      }
-      else if (type == CLAZZ) {
-        return new ArthasClazzImpl(node);
       }
       else if (type == CLS_STATEMENT) {
         return new ArthasClsStatementImpl(node);
@@ -171,12 +168,6 @@ public interface ArthasTypes {
       }
       else if (type == MEMORY_EXPRESSION) {
         return new ArthasMemoryExpressionImpl(node);
-      }
-      else if (type == METHOD) {
-        return new ArthasMethodImpl(node);
-      }
-      else if (type == OGNL) {
-        return new ArthasOgnlImpl(node);
       }
       else if (type == OGNL_STATEMENT) {
         return new ArthasOgnlStatementImpl(node);
@@ -271,8 +262,8 @@ public interface ArthasTypes {
       else if (type == VMOPTION_EXPRESSION) {
         return new ArthasVmoptionExpressionImpl(node);
       }
-      else if (type == WATCH_STATEMENT) {
-        return new ArthasWatchStatementImpl(node);
+      else if (type == WATCH_COMMAND) {
+        return new ArthasWatchCommandImpl(node);
       }
       throw new AssertionError("Unknown element type: " + type);
     }

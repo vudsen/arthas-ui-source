@@ -11,8 +11,8 @@ public class ArthasVisitor extends PsiElementVisitor {
     visitCommand(o);
   }
 
-  public void visitAuthExpression(@NotNull ArthasAuthExpression o) {
-    visitCommand(o);
+  public void visitAuthCommand(@NotNull ArthasAuthCommand o) {
+    visitPsiElement(o);
   }
 
   public void visitCatExpression(@NotNull ArthasCatExpression o) {
@@ -21,10 +21,6 @@ public class ArthasVisitor extends PsiElementVisitor {
 
   public void visitClassloaderExpression(@NotNull ArthasClassloaderExpression o) {
     visitCommand(o);
-  }
-
-  public void visitClazz(@NotNull ArthasClazz o) {
-    visitPsiElement(o);
   }
 
   public void visitClsStatement(@NotNull ArthasClsStatement o) {
@@ -77,14 +73,6 @@ public class ArthasVisitor extends PsiElementVisitor {
 
   public void visitMemoryExpression(@NotNull ArthasMemoryExpression o) {
     visitCommand(o);
-  }
-
-  public void visitMethod(@NotNull ArthasMethod o) {
-    visitPsiElement(o);
-  }
-
-  public void visitOgnl(@NotNull ArthasOgnl o) {
-    visitPsiElement(o);
   }
 
   public void visitOgnlStatement(@NotNull ArthasOgnlStatement o) {
@@ -211,8 +199,8 @@ public class ArthasVisitor extends PsiElementVisitor {
     visitCommand(o);
   }
 
-  public void visitWatchStatement(@NotNull ArthasWatchStatement o) {
-    visitCommand(o);
+  public void visitWatchCommand(@NotNull ArthasWatchCommand o) {
+    visitPsiElement(o);
   }
 
   public void visitPsiElement(@NotNull PsiElement o) {

@@ -5,10 +5,16 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ArthasOgnlStatement extends ArthasCommand {
+public interface ArthasWatchCommand extends PsiElement {
 
   @NotNull
   List<ArthasArgument> getArgumentList();
+
+  @Nullable
+  PsiElement getClassPattern();
+
+  @Nullable
+  PsiElement getIdentifier();
 
   @Nullable
   PsiElement getOgnl();

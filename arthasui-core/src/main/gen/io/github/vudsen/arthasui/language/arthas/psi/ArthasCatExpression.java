@@ -7,13 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ArthasCatExpression extends ArthasCommand {
 
-  @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
-  @Nullable
+  @NotNull
   PsiElement getNonWhitespaceSequence();
 
 }

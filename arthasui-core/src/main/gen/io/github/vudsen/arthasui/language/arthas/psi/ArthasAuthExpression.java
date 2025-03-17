@@ -7,15 +7,6 @@ import com.intellij.psi.PsiElement;
 
 public interface ArthasAuthExpression extends ArthasCommand {
 
-  @NotNull
-  List<ArthasArgument> getArgumentList();
-
-  @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
   @Nullable
   PsiElement getNonWhitespaceSequence();
 

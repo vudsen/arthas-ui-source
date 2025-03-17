@@ -33,16 +33,4 @@ public class ArthasTtTStatementImpl extends ArthasCommandImpl implements ArthasT
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ArthasArgument.class);
   }
 
-  @Override
-  @NotNull
-  public ArthasClazz getClazz() {
-    return findNotNullChildByClass(ArthasClazz.class);
-  }
-
-  @Override
-  @NotNull
-  public ArthasMethod getMethod() {
-    return findNotNullChildByClass(ArthasMethod.class);
-  }
-
 }

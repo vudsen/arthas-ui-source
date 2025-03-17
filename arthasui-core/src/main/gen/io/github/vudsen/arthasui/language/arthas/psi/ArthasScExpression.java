@@ -11,9 +11,9 @@ public interface ArthasScExpression extends ArthasCommand {
   List<ArthasArgument> getArgumentList();
 
   @NotNull
-  ArthasClazz getClazz();
+  PsiElement getClassPattern();
 
-  @NotNull
-  List<ArthasMethod> getMethodList();
+  @Nullable
+  PsiElement getIdentifier();
 
 }

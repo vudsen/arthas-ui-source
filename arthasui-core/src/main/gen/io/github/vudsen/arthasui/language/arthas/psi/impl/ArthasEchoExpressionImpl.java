@@ -29,8 +29,8 @@ public class ArthasEchoExpressionImpl extends ArthasCommandImpl implements Artha
 
   @Override
   @NotNull
-  public PsiElement getString() {
-    return findNotNullChildByType(STRING);
+  public PsiElement getNonWhitespaceSequence() {
+    return findNotNullChildByType(NON_WHITESPACE_SEQUENCE);
   }
 
 }

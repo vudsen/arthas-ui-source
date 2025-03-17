@@ -8,17 +8,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import io.github.vudsen.arthasui.language.arthas.psi.*;
 
-public class ArthasCatExpressionImpl extends ArthasCommandImpl implements ArthasCatExpression {
+public class ArthasWatchCommandImpl extends ASTWrapperPsiElement implements ArthasWatchCommand {
 
-  public ArthasCatExpressionImpl(@NotNull ASTNode node) {
+  public ArthasWatchCommandImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull ArthasVisitor visitor) {
-    visitor.visitCatExpression(this);
+    visitor.visitWatchCommand(this);
   }
 
   @Override
@@ -29,8 +29,26 @@ public class ArthasCatExpressionImpl extends ArthasCommandImpl implements Arthas
 
   @Override
   @NotNull
-  public PsiElement getNonWhitespaceSequence() {
-    return findNotNullChildByType(NON_WHITESPACE_SEQUENCE);
+  public List<ArthasArgument> getArgumentList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ArthasArgument.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getClassPattern() {
+    return findChildByType(CLASS_PATTERN);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getIdentifier() {
+    return findChildByType(IDENTIFIER);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOgnl() {
+    return findChildByType(STRING);
   }
 
 }

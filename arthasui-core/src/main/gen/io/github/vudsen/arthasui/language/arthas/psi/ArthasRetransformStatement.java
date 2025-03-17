@@ -10,13 +10,7 @@ public interface ArthasRetransformStatement extends ArthasCommand {
   @NotNull
   List<ArthasArgument> getArgumentList();
 
-  @Nullable
-  PsiElement getArgs();
-
-  @Nullable
-  PsiElement getIdentifier();
-
-  @Nullable
+  @NotNull
   PsiElement getNonWhitespaceSequence();
 
 }

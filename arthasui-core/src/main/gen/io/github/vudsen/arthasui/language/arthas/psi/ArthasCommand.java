@@ -7,4 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ArthasCommand extends PsiElement {
 
+  @Nullable
+  ArthasAuthCommand getAuthCommand();
+
+  @Nullable
+  ArthasWatchCommand getWatchCommand();
+
 }

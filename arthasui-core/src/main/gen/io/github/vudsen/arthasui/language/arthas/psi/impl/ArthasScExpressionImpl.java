@@ -35,14 +35,14 @@ public class ArthasScExpressionImpl extends ArthasCommandImpl implements ArthasS
 
   @Override
   @NotNull
-  public ArthasClazz getClazz() {
-    return findNotNullChildByClass(ArthasClazz.class);
+  public PsiElement getClassPattern() {
+    return findNotNullChildByType(CLASS_PATTERN);
   }
 
   @Override
-  @NotNull
-  public List<ArthasMethod> getMethodList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ArthasMethod.class);
+  @Nullable
+  public PsiElement getIdentifier() {
+    return findChildByType(IDENTIFIER);
   }
 
 }
