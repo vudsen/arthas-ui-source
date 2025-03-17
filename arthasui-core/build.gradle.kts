@@ -12,7 +12,6 @@ sourceSets {
 repositories {
     intellijPlatform {
         defaultRepositories()
-
     }
 }
 
@@ -99,7 +98,6 @@ intellijPlatform {
 changelog {
     groups.empty()
     repositoryUrl = providers.gradleProperty("pluginRepositoryUrl")
-
 }
 
 
@@ -120,7 +118,7 @@ tasks {
     }
 
     publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN"))
+        dependsOn(patchChangelog)
     }
 
 }
