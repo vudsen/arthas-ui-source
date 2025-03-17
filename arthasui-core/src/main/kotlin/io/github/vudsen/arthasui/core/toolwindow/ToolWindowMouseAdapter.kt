@@ -7,7 +7,7 @@ import java.awt.event.MouseEvent
 class ToolWindowMouseAdapter(private val toolwindow: ToolWindowTree) : MouseAdapter() {
 
     override fun mouseClicked(e: MouseEvent) {
-        val uo = toolwindow.currentFocusedRootNode() ?: return
+        val uo = toolwindow.currentFocusedNode() ?: return
         if (e.clickCount == 2) {
             if (uo is TreeNodeJVM) {
                 toolwindow.tryOpenQueryConsole()

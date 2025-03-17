@@ -1,7 +1,5 @@
 package io.github.vudsen.arthasui.conf
 
-import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
-
 
 class ArthasUISettings {
 

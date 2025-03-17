@@ -18,7 +18,7 @@ import javax.swing.JTree
 /**
  * 用户自定义的搜索节点，使用 ognl 脚本搜索特定的 jvm.
  */
-class CustomSearchGroupTreeNode(private val group: JvmSearchGroup, private val ctx: TreeNodeContext) : AbstractRecursiveTreeNode() {
+class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: TreeNodeContext) : AbstractRecursiveTreeNode() {
 
     private fun mapToJvmNode(jvm: JVM): TreeNodeJVM {
         val provider = BridgeUtils.findProvider(ctx.config.providers, jvm) ?: TODO("Tip user that this type is not configured")

@@ -17,24 +17,22 @@ import io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType
 import io.github.vudsen.arthasui.script.OgnlJvmSearcher
 import io.github.vudsen.arthasui.script.MyOgnlContext
 import io.github.vudsen.arthasui.util.ui.KMutableProperty2MutablePropertyAdapter;
+import java.awt.Dimension
 import javax.swing.JComponent
 
 class JvmSearchGroupConfigurable(
     private val project: Project,
     private val hostMachineConfigV2: HostMachineConfigV2 = HostMachineConfigV2(),
+    oldState: JvmSearchGroup? = null,
 ) : Configurable {
 
 
-    private val state = State()
+    private val state = oldState ?: JvmSearchGroup()
 
     private var root: DialogPanel? = null
 
     companion object {
         private val logger = Logger.getInstance(JvmSearchGroupConfigurable::class.java)
-        data class State(
-            var name: String = "",
-            var script: String = ""
-        )
     }
 
     override fun createComponent(): JComponent {
@@ -61,6 +59,7 @@ class JvmSearchGroupConfigurable(
                 }
             }
         }
+        root.preferredSize = Dimension(400, 300)
 
         this.root = root
         return root
@@ -96,7 +95,7 @@ class JvmSearchGroupConfigurable(
         if (root.validateAll().isNotEmpty()) {
             return
         }
-        val entity = JvmSearchGroup(state.name, hostMachineConfigV2.name, state.script)
+        val newEntity = JvmSearchGroup(state.name, state.script)
         val persistent = project.getService(ArthasUISettingsPersistent::class.java)
 
         val target = persistent.state.hostMachines.find { config -> config == hostMachineConfigV2 }
@@ -105,20 +104,21 @@ class JvmSearchGroupConfigurable(
         }
 
         val newSearchGroup = ArrayList<JvmSearchGroup>(target.searchGroups.size)
-        var newGroup = true
-        for (searchGroup in target.searchGroups) {
-            if (searchGroup == entity) {
-                newSearchGroup.add(entity)
-                newGroup = false
+        var insert = true
+        for (oldEntity in target.searchGroups) {
+            if (oldEntity == newEntity) {
+                newSearchGroup.add(newEntity)
+                insert = false
             } else {
-                newSearchGroup.add(searchGroup)
+                newSearchGroup.add(oldEntity)
             }
         }
-        if (newGroup) {
-            newSearchGroup.add(entity)
+        if (insert) {
+            newSearchGroup.add(newEntity)
         }
 
         target.searchGroups = newSearchGroup
+        persistent.notifyStateUpdated()
     }
 
     override fun getDisplayName(): String {

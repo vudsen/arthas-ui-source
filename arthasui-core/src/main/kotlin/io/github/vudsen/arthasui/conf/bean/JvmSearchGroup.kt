@@ -6,10 +6,6 @@ data class JvmSearchGroup(
      */
     var name: String = "",
     /**
-     * 宿主机的名称 [io.github.vudsen.arthasui.conf.HostMachineConfigV2.name]
-     */
-    var hostMachineName: String = "",
-    /**
      * 搜索脚本
      */
     var script: String = ""
@@ -20,15 +16,10 @@ data class JvmSearchGroup(
 
         other as JvmSearchGroup
 
-        if (name != other.name) return false
-        if (hostMachineName != other.hostMachineName) return false
-
-        return true
+        return name == other.name
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + hostMachineName.hashCode()
-        return result
+        return name.hashCode()
     }
 }

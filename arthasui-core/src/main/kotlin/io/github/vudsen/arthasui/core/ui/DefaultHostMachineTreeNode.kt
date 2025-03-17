@@ -14,6 +14,9 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTree
 
+/**
+ * 默认的根节点
+ */
 open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
 
 

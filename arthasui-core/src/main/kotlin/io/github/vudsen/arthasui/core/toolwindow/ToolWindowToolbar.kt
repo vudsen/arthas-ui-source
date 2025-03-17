@@ -29,7 +29,7 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
         }
 
         override fun actionPerformed(e: AnActionEvent) {
-            val rootNode = toolWindow.currentFocusedRootNode()?.getTopRootNode()
+            val rootNode = toolWindow.currentFocusedNode()?.getTopRootNode()
             if (rootNode is CloseableTreeNode && !debounce.contains(rootNode) && rootNode.isActive()) {
                 debounce.add(rootNode)
                 ProgressManager.getInstance().run(object : Task.Backgroundable(toolWindow.project, "Closing client", true) {
@@ -47,7 +47,7 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
         }
 
         override fun update(e: AnActionEvent) {
-            val rootNode = toolWindow.currentFocusedRootNode()?.getTopRootNode()
+            val rootNode = toolWindow.currentFocusedNode()?.getTopRootNode()
             if (rootNode is CloseableTreeNode) {
                 e.presentation.isEnabled = rootNode.isActive()
             } else {
@@ -75,7 +75,7 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
         toolbarDecorator.addExtraAction(object : AnAction(AllIcons.Actions.Refresh) {
 
             override fun actionPerformed(e: AnActionEvent) {
-                toolWindow.currentFocusedRootNode() ?.let {
+                toolWindow.currentFocusedNode() ?.let {
                     toolWindow.launchRefreshNodeTask(it)
                 }
             }

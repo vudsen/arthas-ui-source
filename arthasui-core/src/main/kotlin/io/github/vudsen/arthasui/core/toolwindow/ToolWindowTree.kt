@@ -100,7 +100,7 @@ class ToolWindowTree(val project: Project) : Disposable {
     override fun dispose() {}
 
     fun tryOpenQueryConsole() {
-        val node = currentFocusedRootNode()
+        val node = currentFocusedNode()
         if (node !is TreeNodeJVM) {
             return
         }
@@ -119,7 +119,7 @@ class ToolWindowTree(val project: Project) : Disposable {
     /**
      * 获取用户当前聚焦的节点
      */
-    fun currentFocusedRootNode(): RecursiveTreeNode? {
+    fun currentFocusedNode(): RecursiveTreeNode? {
         val comp = tree.lastSelectedPathComponent ?: return null
         if (comp !is DefaultMutableTreeNode) {
             throw IllegalStateException("The node must be a DefaultMutableTreeNode")
