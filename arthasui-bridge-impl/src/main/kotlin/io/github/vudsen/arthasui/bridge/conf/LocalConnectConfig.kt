@@ -37,6 +37,10 @@ class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
         return os.hashCode()
     }
 
+    override fun toString(): String {
+        return "Local($os)"
+    }
+
 
 }
 

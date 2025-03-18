@@ -2,11 +2,12 @@ package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import io.github.vudsen.arthasui.api.HostMachineFactory
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.api.extension.HostMachineConnectRegistry
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import io.github.vudsen.arthasui.bridge.HostMachineConnectRegistryImpl
 import io.github.vudsen.arthasui.bridge.JvmSearcher
 import java.awt.FlowLayout
 import javax.swing.JComponent
@@ -25,8 +26,8 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: 
     private var root: JComponent? = null
 
     init {
-        val factory = service<HostMachineFactory>()
-        val hostMachine = factory.getHostMachine(config.connect)
+        val factory = service<HostMachineConnectRegistry>()
+        val hostMachine = factory.connect(config.connect)
         ctx = TreeNodeContext(hostMachine, this, project, JvmSearcher(hostMachine), config)
     }
 

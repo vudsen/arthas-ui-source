@@ -10,7 +10,7 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import javax.swing.JComponent
 
-class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<HostMachineConnectConfig> {
+class SshConfigurationForm(oldState: HostMachineConnectConfig?) : FormComponent<HostMachineConnectConfig> {
 
     private val state: SshHostMachineConnectConfig
 

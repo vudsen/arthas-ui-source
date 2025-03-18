@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.api
 
-interface CloseableHostMachine : AutoCloseable {
+
+interface CloseableHostMachine : AutoCloseable, HostMachine {
 
     fun isClosed(): Boolean
 

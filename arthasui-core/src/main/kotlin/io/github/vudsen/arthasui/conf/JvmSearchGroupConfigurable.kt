@@ -10,7 +10,8 @@ import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.util.preferredHeight
-import io.github.vudsen.arthasui.api.HostMachineFactory
+import io.github.vudsen.arthasui.api.extension.HostMachineConnectRegistry
+import io.github.vudsen.arthasui.bridge.HostMachineConnectRegistryImpl
 import io.github.vudsen.arthasui.common.ui.SimpleDialog
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType
@@ -67,7 +68,7 @@ class JvmSearchGroupConfigurable(
 
     private fun testScript(script: String) {
         val context = MyOgnlContext(
-            service<HostMachineFactory>().getHostMachine(hostMachineConfigV2.connect),
+            service<HostMachineConnectRegistry>().connect(hostMachineConfigV2.connect),
             hostMachineConfigV2
         )
         try {

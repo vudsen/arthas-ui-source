@@ -57,5 +57,8 @@ class SshHostMachineConnectConfig(
         return result
     }
 
+    override fun toString(): String {
+        return "SSH(name = $name)"
+    }
 
 }
