@@ -1,9 +1,9 @@
 package io.github.vudsen.arthasui.language.arthas;
 
-import com.intellij.lexer.FlexLexer;
-import com.intellij.psi.tree.IElementType;import com.intellij.ui.mac.foundation.ID;
+import com.intellij.psi.tree.IElementType;
 
-import java.util.Stack;import static com.intellij.psi.TokenType.BAD_CHARACTER;
+import java.util.Stack;
+import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
 import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
 
@@ -57,41 +57,58 @@ IDENTIFIER=[a-zA-Z\d]+
 NON_WHITESPACE_SEQUENCE=[^\n ]+
 CLASS_PATTERN=[a-zA-Z\d]+(\.[a-zA-Z\d]+)*
 %states CLAZZ_METHOD_PAIR_1, CLAZZ_METHOD_PAIR_2
-%states WAITING_ARGUMENT_VALYE
+%states WAITING_IDENTIFIER, WAITING_ANY_SQE_OR_ARG, WAITING_CLASS_PATTERN, WAITING_FILE_PATH, WAITING_KEY_AND_VALUE
 %%
 
-<WAITING_ARGUMENT_VALYE> {
-    {IDENTIFIER}  { popState(); return IDENTIFIER; }
+
+<WAITING_IDENTIFIER> {
+    {IDENTIFIER}                  { popState(); return IDENTIFIER; }
+}
+<WAITING_CLASS_PATTERN> {
+    {CLASS_PATTERN}               { popState(); return CLASS_PATTERN; }
+}
+
+<WAITING_ANY_SQE_OR_ARG> {
+    {ARGUMENT_HEAD}               { beginState(WAITING_IDENTIFIER); return ARGUMENT_HEAD; }
+    {NON_WHITESPACE_SEQUENCE}     { popState(); return NON_WHITESPACE_SEQUENCE; }
 }
 
 <CLAZZ_METHOD_PAIR_1> {
     {CLASS_PATTERN}               { beginState(CLAZZ_METHOD_PAIR_2); return CLASS_PATTERN; }
-    {ARGUMENT_HEAD}                    { beginState(WAITING_ARGUMENT_VALYE); return ARGS; }
+    {ARGUMENT_HEAD}               { beginState(WAITING_IDENTIFIER); return ARGUMENT_HEAD; }
     <CLAZZ_METHOD_PAIR_2> {
-        {IDENTIFIER}                  { popState(); popState(); return IDENTIFIER; }
+        {IDENTIFIER}              { popState(); popState(); return IDENTIFIER; }
     }
 }
 
+<WAITING_FILE_PATH> {
+    {NON_WHITESPACE_SEQUENCE}     { return FILE_PATH; }
+    {EOL}                         { popState(); return EOL; }
+}
+
+<WAITING_KEY_AND_VALUE> {
+    {NON_WHITESPACE_SEQUENCE} { return NON_WHITESPACE_SEQUENCE; }
+}
 
 <YYINITIAL> {
   {WHITE_SPACE}                   { return WHITE_SPACE; }
 
   ";"                             { return SEMICOLON; }
   "."                             { return DOT; }
-  "auth"                          { return COMMAND_AUTH; }
-  "base64"                        { return COMMAND_BASE64; }
-  "cat"                           { return COMMAND_CAT; }
+  "auth"                          { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_AUTH; }
+  "base64"                        { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_BASE64; }
+  "cat"                           { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_CAT; }
   "classloader"                   { return COMMAND_CLASSLOADER; }
   "cls"                           { return COMMAND_CLS; }
   "dashboard"                     { return COMMAND_DASHBOARD; }
-  "dump"                          { return COMMAND_DUMP; }
-  "echo"                          { return COMMAND_ECHO; }
-  "getstatic"                     { return COMMAND_GETSTATIC; }
-  "grep"                          { return COMMAND_GREP; }
-  "heapdump"                      { return COMMAND_HEAPDUMP; }
+  "dump"                          { beginState(WAITING_CLASS_PATTERN); return COMMAND_DUMP; }
+  "echo"                          { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_ECHO; }
+  "getstatic"                     { beginState(CLAZZ_METHOD_PAIR_1); return COMMAND_GETSTATIC; }
+  "grep"                          { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_GREP; }
+  "heapdump"                      { beginState(WAITING_ANY_SQE_OR_ARG); return COMMAND_HEAPDUMP; }
   "help"                          { return COMMAND_HELP; }
   "history"                       { return COMMAND_HISTORY; }
-  "jad"                           { return COMMAND_JAD; }
+  "jad"                           { beginState(WAITING_CLASS_PATTERN);return COMMAND_JAD; }
   "jfr"                           { return COMMAND_JFR; }
   "jvm"                           { return COMMAND_JVM; }
   "keymap"                        { return COMMAND_KEYMAP; }
@@ -103,37 +120,37 @@ CLASS_PATTERN=[a-zA-Z\d]+(\.[a-zA-Z\d]+)*
   "watch"                         { beginState(CLAZZ_METHOD_PAIR_1);return COMMAND_WATCH; }
   "ognl"                          { return COMMAND_OGNL; }
   "perfcounter"                   { return COMMAND_PERFCOUNTER; }
-  "profiler"                      { return COMMAND_PROFILER; }
+  "profiler"                      { beginState(WAITING_IDENTIFIER); return COMMAND_PROFILER; }
   "pwd"                           { return COMMAND_PWD; }
   "quit"                          { return COMMAND_QUIT; }
-  "redefine"                      { return COMMAND_REDEFINE; }
-  "reset"                         { return COMMAND_RESET; }
-  "retransform"                   { return COMMAND_RETRANSFORM; }
-  "sc"                            { return COMMAND_SC; }
-  "session"                       { return COMMAND_SESSION; }
+  "redefine"                      { beginState(WAITING_FILE_PATH); return COMMAND_REDEFINE; }
+  "reset"                         { beginState(WAITING_CLASS_PATTERN); return COMMAND_RESET; }
+  "retransform"                   { beginState(WAITING_FILE_PATH); return COMMAND_RETRANSFORM; }
+  "sc"                            { beginState(WAITING_CLASS_PATTERN); return COMMAND_SC; }
+  "session"                       { beginState(CLAZZ_METHOD_PAIR_1); return COMMAND_SESSION; }
   "sm"                            { return COMMAND_SM; }
-  "stack"                         { return COMMAND_STACK; }
+  "stack"                         { beginState(CLAZZ_METHOD_PAIR_1); return COMMAND_STACK; }
   "stop"                          { return COMMAND_STOP; }
-  "sysenv"                        { return COMMAND_SYSENV; }
-  "sysprop"                       { return COMMAND_SYSPROP; }
-  "tee"                           { return COMMAND_TEE; }
+  "sysenv"                        { beginState(WAITING_KEY_AND_VALUE); return COMMAND_SYSENV; }
+  "sysprop"                       { beginState(WAITING_KEY_AND_VALUE); return COMMAND_SYSPROP; }
+  "tee"                           { beginState(WAITING_FILE_PATH); return COMMAND_TEE; }
   "thread"                        { return COMMAND_THREAD; }
-  "trace"                         { return COMMAND_TRACE; }
-  "tt"                            { return COMMAND_TT; }
+  "trace"                         { beginState(CLAZZ_METHOD_PAIR_1); return COMMAND_TRACE; }
+  "tt"                            { beginState(CLAZZ_METHOD_PAIR_1); return COMMAND_TT; }
   "version"                       { return COMMAND_VERSION; }
-  "vmoptions"                     { return COMMAND_VMOPTIONS; }
+  "vmoptions"                     { beginState(WAITING_KEY_AND_VALUE); return COMMAND_VMOPTIONS; }
   "vmtool"                        { return COMMAND_VMTOOL; }
 
   {SPACE}                         { return SPACE; }
-  {EOL}                           { return EOL; }
   {STRING}                        { return STRING; }
   {LINE_COMMENT}                  { return LINE_COMMENT; }
-  {ARGUMENT_HEAD}                 { beginState(WAITING_ARGUMENT_VALYE); return ARGUMENT_HEAD; }
   {IDENTIFIER}                    { return IDENTIFIER; }
   {NON_WHITESPACE_SEQUENCE}       { return NON_WHITESPACE_SEQUENCE; }
 
 
 
 }
+{ARGUMENT_HEAD}                  { beginState(WAITING_IDENTIFIER); return ARGUMENT_HEAD; }
+{EOL}                           { return EOL; }
 " " { return WHITE_SPACE; }
 [^] { return BAD_CHARACTER; }

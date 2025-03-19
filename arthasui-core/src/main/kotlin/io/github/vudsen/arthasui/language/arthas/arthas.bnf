@@ -70,6 +70,7 @@
         CLASS_PATTERN='regexp:[a-zA-Z\d]+(\.[a-zA-Z\d]+)*'
         IDENTIFIER='regexp:[a-zA-Z\d]+'
         NON_WHITESPACE_SEQUENCE='regexp:[^\n ]+'
+        FILE_PATH = ""
     ]
 }
 
@@ -107,13 +108,13 @@ command ::= auth_command
     | memory_command
     | unhandled_monitor_command
     | ognl_command
-    | unhandled_options_command
-    | unhandled_perfcounter_command
-    | unhandled_profiler_command
+    | options_command
+    | perfcounter_command
+    | profiler_command
     | pwd_command
     | quit_command
-    | unhandled_redefine_command
-    | unhandled_reset_command
+    | redefine_command
+    | reset_command
     | retransform_command
     | sc_command
     | session_command
@@ -122,14 +123,14 @@ command ::= auth_command
     | stop_command
     | sysenv_command
     | sysprop_command
-    | unhandled_tee_command
+    | tee_command
     | thread_command
     | trace_command
     | tt_command
     | version_command
     | vmoption_command
-    | unhandled_vmtool_command
-    | watch_command{recoverWhile=recover name="Command"}
+    | vmtool_command
+    | watch_command{recoverWhile=recover name="Command" methods=[getCommand="/expr[0]"]}
 
 
 // alias
@@ -144,9 +145,10 @@ private tip_thread_id ::= NON_WHITESPACE_SEQUENCE {name='Thread ID'}
 private tip_name ::= NON_WHITESPACE_SEQUENCE {name='name'}
 private tip_value ::= NON_WHITESPACE_SEQUENCE {name='value'}
 private tip_command ::= IDENTIFIER {name='Command'}
+private tip_action ::= IDENTIFIER {name='Action'}
+private tip_filepath ::= FILE_PATH {name='FilePath'}
 
 clazz ::= tip_clazz
-method ::= tip_method
 
 // common
 argument ::= ARGUMENT_HEAD tip_argument_value? {
@@ -256,8 +258,8 @@ tt_command ::= 'tt' argument* (tip_clazz tip_method)? argument* {
 }
 version_command ::= 'version'
 vmoption_command ::= 'vmoptions' (tip_name | tip_name tip_value)?
-base64_command ::= 'base64' tip_any_seq*
-dump_command ::= 'dump' tip_clazz {
+base64_command ::= 'base64' argument* (tip_any_seq argument*)?
+dump_command ::= 'dump' argument* (tip_clazz argument*)? {
     methods=[
         clazz="CLASS_PATTERN"
     ]
@@ -273,10 +275,10 @@ grep_command ::= 'grep' argument* tip_any_seq* argument*
 jfr_command ::= 'jfr' argument* tip_command argument*
 mbean_command ::= 'mbean' tip_any_seq*
 unhandled_monitor_command ::= 'monitor' tip_any_seq*
-unhandled_options_command ::= 'options' tip_any_seq*
-unhandled_perfcounter_command ::= 'perfcounter' tip_any_seq*
-unhandled_profiler_command ::= 'unhandled' tip_any_seq*
-unhandled_redefine_command ::= 'redefine' tip_any_seq*
-unhandled_reset_command ::= 'reset' tip_any_seq*
-unhandled_tee_command ::= 'tee' tip_any_seq*
-unhandled_vmtool_command ::= 'vmtool' tip_any_seq*
+options_command ::= 'options' (tip_name | tip_name tip_value)?
+perfcounter_command ::= 'perfcounter' argument*
+profiler_command ::= 'unhandled' argument* tip_action argument*
+redefine_command ::= 'redefine' argument* tip_filepath+ argument*
+reset_command ::= 'reset' argument* (tip_clazz argument*)?
+tee_command ::= 'tee' tip_any_seq*
+vmtool_command ::= 'vmtool' argument*
