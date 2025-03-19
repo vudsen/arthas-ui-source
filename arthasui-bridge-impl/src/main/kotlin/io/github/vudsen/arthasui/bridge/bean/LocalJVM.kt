@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.api.bean
+package io.github.vudsen.arthasui.bridge.bean
 
 import io.github.vudsen.arthasui.api.JVM
 

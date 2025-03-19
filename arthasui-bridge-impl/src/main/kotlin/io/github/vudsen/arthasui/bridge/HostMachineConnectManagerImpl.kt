@@ -1,21 +1,23 @@
 package io.github.vudsen.arthasui.bridge
 
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
-import io.github.vudsen.arthasui.api.extension.HostMachineConnectRegistry
+import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
+import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
+import io.github.vudsen.arthasui.bridge.util.ReusableHostMachine
 import java.util.*
 
 /**
  * 注册 + 工厂
  */
-class HostMachineConnectRegistryImpl : HostMachineConnectRegistry {
+class HostMachineConnectManagerImpl : HostMachineConnectManager {
 
     companion object {
-        val logger = Logger.getInstance(HostMachineConnectRegistryImpl::class.java)
+        val logger = Logger.getInstance(HostMachineConnectManagerImpl::class.java)
     }
 
     private val providers = mutableMapOf<Class<out HostMachineConnectConfig>, HostMachineConnectProvider>()
@@ -44,7 +46,7 @@ class HostMachineConnectRegistryImpl : HostMachineConnectRegistry {
     /**
      * 获取对应的 provider
      */
-    private fun getProvider(config: HostMachineConnectConfig): HostMachineConnectProvider {
+    override fun getProvider(config: HostMachineConnectConfig): HostMachineConnectProvider {
         return providers[config::class.java] ?: throw IllegalArgumentException("No provider registered for config $config")
     }
 

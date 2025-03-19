@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.bridge
+package io.github.vudsen.arthasui.bridge.util
 
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.OS
@@ -7,6 +7,9 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 
+/**
+ * 可以复用的宿主机，在连接关闭后再次使用，会重新创建一个连接
+ */
 class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineConnectProvider, private val config: HostMachineConnectConfig) : CloseableHostMachine {
 
     private var instance: CloseableHostMachine? = null

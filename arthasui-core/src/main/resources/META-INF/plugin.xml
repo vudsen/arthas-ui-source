@@ -60,9 +60,11 @@
         <projectService serviceImplementation="io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl"
                         serviceInterface="io.github.vudsen.arthasui.api.ArthasExecutionManager"/>
 
-        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.HostMachineConnectRegistryImpl"
-                            serviceInterface="io.github.vudsen.arthasui.api.extension.HostMachineConnectRegistry"/>
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.HostMachineConnectManagerImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.extension.HostMachineConnectManager"/>
 
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.JvmProviderManagerImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.extension.JvmProviderManager"/>
     </extensions>
 
 

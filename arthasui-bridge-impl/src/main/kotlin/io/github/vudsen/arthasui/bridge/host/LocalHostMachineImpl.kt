@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.bridge
+package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.progress.ProgressManager
 import io.github.vudsen.arthasui.api.OS

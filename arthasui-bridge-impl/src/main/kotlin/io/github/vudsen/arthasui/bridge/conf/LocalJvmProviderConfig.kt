@@ -5,6 +5,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import javax.swing.Icon
 
 class LocalJvmProviderConfig(
+    var enabled: Boolean = false,
     var arthasHome: String = "",
     var jdkHome: String = ""
 ) : JvmProviderConfig(TYPE) {
@@ -22,7 +23,7 @@ class LocalJvmProviderConfig(
     }
 
     override fun copy(): JvmProviderConfig {
-        return LocalJvmProviderConfig(arthasHome, jdkHome)
+        return LocalJvmProviderConfig(enabled, arthasHome, jdkHome)
     }
 
 }

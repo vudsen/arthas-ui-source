@@ -1,9 +1,10 @@
 package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
-import io.github.vudsen.arthasui.bridge.util.BridgeUtils
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
@@ -21,7 +22,7 @@ import javax.swing.JTree
 class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: TreeNodeContext) : AbstractRecursiveTreeNode() {
 
     private fun mapToJvmNode(jvm: JVM): TreeNodeJVM {
-        val provider = BridgeUtils.findProvider(ctx.config.providers, jvm) ?: TODO("Tip user that this type is not configured")
+        val provider = service<JvmProviderManager>().findProviderByJvm(ctx.config.providers, jvm) ?: TODO("Tip user that this type is not configured")
         return TreeNodeJVM(ctx.root, provider, jvm, ctx.project)
     }
 

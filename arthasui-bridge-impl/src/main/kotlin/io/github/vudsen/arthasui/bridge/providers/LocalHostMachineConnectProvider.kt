@@ -1,9 +1,10 @@
-package io.github.vudsen.arthasui.bridge
+package io.github.vudsen.arthasui.bridge.providers
 
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import io.github.vudsen.arthasui.bridge.host.LocalHostMachineImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalConnectConfigurationForm
 

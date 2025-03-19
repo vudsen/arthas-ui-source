@@ -5,6 +5,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import javax.swing.Icon
 
 class JvmInDockerProviderConfig(
+    var enabled: Boolean = false,
     var dockerPath: String = "docker",
     /**
      * 使用容器自带的工具
@@ -33,6 +34,6 @@ class JvmInDockerProviderConfig(
     }
 
     override fun copy(): JvmProviderConfig {
-        return JvmInDockerProviderConfig(dockerPath, useToolsInContainer, jdkHome, arthasHome)
+        return JvmInDockerProviderConfig(enabled, dockerPath, useToolsInContainer, jdkHome, arthasHome)
     }
 }

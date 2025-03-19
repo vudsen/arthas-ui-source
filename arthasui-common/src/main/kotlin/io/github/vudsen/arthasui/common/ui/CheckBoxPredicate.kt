@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.util.ui
+package io.github.vudsen.arthasui.common.ui
 
 import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.layout.ComponentPredicate
