@@ -1,30 +1,29 @@
 package io.github.vudsen.arthasui.bridge.util
 
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.api.bean.LocalJVM
-import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
-import io.github.vudsen.arthasui.bridge.bean.DockerJvm
-import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.bean.LocalJVM
+
 
 object BridgeUtils {
 
+    fun parseJpsOutput(out: String): MutableList<JVM> {
+        val lines = out.split("\n")
+        val result = ArrayList<JVM>(lines.size)
 
-    /**
-     * 根据 jvm 找到对应的 provider
-     */
-    fun findProvider(providers: List<JvmProviderConfig>, jvm: JVM): JvmProviderConfig? {
-        val expectedClass = when(jvm::class) {
-            LocalJVM::class -> LocalJvmProviderConfig::class
-            DockerJvm::class -> JvmInDockerProviderConfig::class
-            else -> throw IllegalStateException("Unreachable code.")
-        }
-        for (provider in providers) {
-            if (provider::class == expectedClass) {
-                return provider
+        for (line in lines) {
+            val split = line.split(" ")
+            if (split.isEmpty()) {
+                continue
+            } else if (split.size == 1) {
+                result.add(LocalJVM(split[0].trim(), "<null>"))
+            } else if (split.size == 2) {
+                result.add(LocalJVM(split[0].trim(), split[1].trim()))
+            } else {
+                throw IllegalStateException("Unreachable code.")
             }
         }
-        return null
+        return result
     }
+
 
 }

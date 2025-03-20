@@ -7,21 +7,16 @@ import com.intellij.ui.dsl.builder.*
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import javax.swing.JComponent
 
-class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<HostMachineConnectConfig> {
+class SshConfigurationForm(oldState: HostMachineConnectConfig?) : AbstractFormComponent<HostMachineConnectConfig>() {
 
-    private val state: SshHostMachineConnectConfig
-
-    private var root: DialogPanel? = null
-
-    init {
-        if (oldState is SshHostMachineConnectConfig) {
-            state = oldState
-        } else {
-            state = SshHostMachineConnectConfig()
-        }
+    private val state: SshHostMachineConnectConfig = if (oldState is SshHostMachineConnectConfig) {
+        oldState
+    } else {
+        SshHostMachineConnectConfig()
     }
 
     private val osTypeObservableMutableProperty = object : ObservableMutableProperty<OS> {
@@ -36,9 +31,12 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<H
         }
     }
 
-    override fun getComponent(): JComponent {
-        root?.let { return it }
-        val root = panel {
+    override fun getState(): HostMachineConnectConfig {
+        return state
+    }
+
+    override fun createDialogPanel(): DialogPanel {
+        return panel {
             group("Connection Config") {
                 row {
                     label("Os type")
@@ -60,18 +58,8 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig) : FormComponent<H
                 }
             }
         }
-        this.root = root
-        return root
     }
 
-    override fun apply(): SshHostMachineConnectConfig? {
-        val root = root ?: throw IllegalStateException("Please invoke getComponent first.")
-        root.apply()
-        if (root.validateAll().isEmpty()) {
-            return state
-        }
-        return null
-    }
 
 
 }

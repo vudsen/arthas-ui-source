@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.HostMachine
-import io.github.vudsen.arthasui.api.bean.LocalJVM
+import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 

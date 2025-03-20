@@ -6,7 +6,8 @@ import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
-import io.github.vudsen.arthasui.bridge.ArthasAttachHelper
+import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -50,10 +51,10 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
         }
         log.info("Creating new arthas bridge for $jvm")
 
-        val factory = service<HostMachineFactory>()
-        val hostMachine = factory.getHostMachine(hostMachineConfig)
+        val factory = service<HostMachineConnectManager>()
+        val hostMachine = factory.connect(hostMachineConfig)
         val arthasBridgeFactory =
-            service<ArthasAttachHelper>().createArthasBridgeFactory(hostMachine, jvm, providerConfig)
+            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(hostMachine, jvm, providerConfig)
         val arthasBridgeTemplate = ArthasBridgeTemplate(arthasBridgeFactory)
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {

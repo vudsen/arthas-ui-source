@@ -1,8 +1,10 @@
 package io.github.vudsen.arthasui.core.ui
 
+import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import java.awt.FlowLayout
 import javax.swing.JComponent
@@ -13,7 +15,7 @@ import javax.swing.JTree
 class TreeNodeJvmProviderFolder(private val ctx: TreeNodeContext, private val provider: JvmProviderConfig) : AbstractRecursiveTreeNode() {
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
-        val jvmList = ctx.searcher.searchJvm(provider)
+        val jvmList = service<JvmProviderManager>().getProvider(provider).searchJvm(ctx.hostMachine, provider)
         val result = ArrayList<AbstractRecursiveTreeNode>(jvmList.size)
         for (jvm in jvmList) {
             result.add(TreeNodeJVM(ctx.root, provider, jvm, ctx.project))

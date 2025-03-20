@@ -56,20 +56,17 @@
                 implementationClass="io.github.vudsen.arthasui.language.arthas.completion.ArthasOgnlInjector"
                 language="Arthas"/>
 
-        <applicationService
-                serviceInterface="io.github.vudsen.arthasui.api.HostMachineFactory"
-                serviceImplementation="io.github.vudsen.arthasui.bridge.HostMachineFactoryImpl"/>
+
         <projectService serviceImplementation="io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl"
                         serviceInterface="io.github.vudsen.arthasui.api.ArthasExecutionManager"/>
+
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.HostMachineConnectManagerImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.extension.HostMachineConnectManager"/>
+
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.JvmProviderManagerImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.extension.JvmProviderManager"/>
     </extensions>
 
 
-    <actions>
-        <action id="io.github.vudsen.arthasui.StartDebugAction"
-                class="io.github.vudsen.arthasui.StartDebugAction" text="TEST"
-                description="Clear all remark">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </action>
 
-    </actions>
 </idea-plugin>
