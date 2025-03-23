@@ -14,7 +14,7 @@ class MyOgnlContext (
     /**
      * 用于帮助搜素本地 JVM
      */
-    val localHelper: LocalJvmSearchHelper = LocalJvmSearchHelper(hostMachineConfig)
+    val localHelper: LocalJvmSearchHelper = LocalJvmSearchHelper(hostMachine, hostMachineConfig)
 
     /**
      * 保存执行结果

@@ -78,7 +78,7 @@ class JvmSearchGroupConfigurable(
             val resultHolder = context.getResultHolder()
             SimpleDialog("Script execute success", "Searched jvms: ${resultHolder.result}\nDebug message:\n${resultHolder.collectDebugMessages()}").show()
         } catch (e: Exception) {
-            SimpleDialog("Script execute failed", "${e.message ?: e.toString()}, debugMessage:\n${context.getResultHolder().collectDebugMessages()}").show()
+            SimpleDialog("Script execute failed", "${e.cause?.message ?: e.toString()}, debugMessage:\n${context.getResultHolder().collectDebugMessages()}").show()
             if (logger.isDebugEnabled) {
                 logger.debug("Failed to execute script", e)
             }
