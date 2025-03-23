@@ -106,7 +106,7 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: GRADLE_OPTS="-Xmx4g" ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+        run: GRADLE_OPTS="-Xmx5g" ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }} --args -Xmx5g
 
       - name: Deploy verify result
         uses: cloudflare/wrangler-action@v3
