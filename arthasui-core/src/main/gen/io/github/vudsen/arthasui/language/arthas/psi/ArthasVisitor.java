@@ -8,18 +8,22 @@ import com.intellij.psi.PsiElement;
 public class ArthasVisitor extends PsiElementVisitor {
 
   public void visitArgument(@NotNull ArthasArgument o) {
+    visitPsiElement(o);
+  }
+
+  public void visitAuthCommand(@NotNull ArthasAuthCommand o) {
     visitCommand(o);
   }
 
-  public void visitAuthExpression(@NotNull ArthasAuthExpression o) {
+  public void visitBase64Command(@NotNull ArthasBase64Command o) {
     visitCommand(o);
   }
 
-  public void visitCatExpression(@NotNull ArthasCatExpression o) {
+  public void visitCatCommand(@NotNull ArthasCatCommand o) {
     visitCommand(o);
   }
 
-  public void visitClassloaderExpression(@NotNull ArthasClassloaderExpression o) {
+  public void visitClassloaderCommand(@NotNull ArthasClassloaderCommand o) {
     visitCommand(o);
   }
 
@@ -27,7 +31,7 @@ public class ArthasVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitClsStatement(@NotNull ArthasClsStatement o) {
+  public void visitClsCommand(@NotNull ArthasClsCommand o) {
     visitCommand(o);
   }
 
@@ -35,183 +39,167 @@ public class ArthasVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitDashboardStatement(@NotNull ArthasDashboardStatement o) {
+  public void visitDashboardCommand(@NotNull ArthasDashboardCommand o) {
     visitCommand(o);
   }
 
-  public void visitEchoExpression(@NotNull ArthasEchoExpression o) {
+  public void visitDumpCommand(@NotNull ArthasDumpCommand o) {
     visitCommand(o);
   }
 
-  public void visitHeapdumpStatement(@NotNull ArthasHeapdumpStatement o) {
+  public void visitEchoCommand(@NotNull ArthasEchoCommand o) {
     visitCommand(o);
   }
 
-  public void visitHelpExpression(@NotNull ArthasHelpExpression o) {
+  public void visitGetstaticCommand(@NotNull ArthasGetstaticCommand o) {
     visitCommand(o);
   }
 
-  public void visitHistoryExpression(@NotNull ArthasHistoryExpression o) {
+  public void visitGrepCommand(@NotNull ArthasGrepCommand o) {
     visitCommand(o);
   }
 
-  public void visitJadExpression(@NotNull ArthasJadExpression o) {
+  public void visitHeapdumpCommand(@NotNull ArthasHeapdumpCommand o) {
     visitCommand(o);
   }
 
-  public void visitJvmExpression(@NotNull ArthasJvmExpression o) {
+  public void visitHelpCommand(@NotNull ArthasHelpCommand o) {
     visitCommand(o);
   }
 
-  public void visitKeymapExpression(@NotNull ArthasKeymapExpression o) {
+  public void visitHistoryCommand(@NotNull ArthasHistoryCommand o) {
     visitCommand(o);
   }
 
-  public void visitLoggerExpression(@NotNull ArthasLoggerExpression o) {
+  public void visitJadCommand(@NotNull ArthasJadCommand o) {
     visitCommand(o);
   }
 
-  public void visitMcStatement(@NotNull ArthasMcStatement o) {
+  public void visitJfrCommand(@NotNull ArthasJfrCommand o) {
     visitCommand(o);
   }
 
-  public void visitMemoryExpression(@NotNull ArthasMemoryExpression o) {
+  public void visitJvmCommand(@NotNull ArthasJvmCommand o) {
     visitCommand(o);
   }
 
-  public void visitMethod(@NotNull ArthasMethod o) {
-    visitPsiElement(o);
-  }
-
-  public void visitOgnl(@NotNull ArthasOgnl o) {
-    visitPsiElement(o);
-  }
-
-  public void visitOgnlStatement(@NotNull ArthasOgnlStatement o) {
+  public void visitKeymapCommand(@NotNull ArthasKeymapCommand o) {
     visitCommand(o);
   }
 
-  public void visitPwdExpression(@NotNull ArthasPwdExpression o) {
+  public void visitLoggerCommand(@NotNull ArthasLoggerCommand o) {
     visitCommand(o);
   }
 
-  public void visitQuitStatement(@NotNull ArthasQuitStatement o) {
+  public void visitMbeanCommand(@NotNull ArthasMbeanCommand o) {
     visitCommand(o);
   }
 
-  public void visitRetransformStatement(@NotNull ArthasRetransformStatement o) {
+  public void visitMcCommand(@NotNull ArthasMcCommand o) {
     visitCommand(o);
   }
 
-  public void visitScExpression(@NotNull ArthasScExpression o) {
+  public void visitMemoryCommand(@NotNull ArthasMemoryCommand o) {
     visitCommand(o);
   }
 
-  public void visitSessionExpression(@NotNull ArthasSessionExpression o) {
+  public void visitMonitorCommand(@NotNull ArthasMonitorCommand o) {
     visitCommand(o);
   }
 
-  public void visitSmExpression(@NotNull ArthasSmExpression o) {
+  public void visitOgnlCommand(@NotNull ArthasOgnlCommand o) {
     visitCommand(o);
   }
 
-  public void visitStackStatement(@NotNull ArthasStackStatement o) {
+  public void visitOptionsCommand(@NotNull ArthasOptionsCommand o) {
     visitCommand(o);
   }
 
-  public void visitStopStatement(@NotNull ArthasStopStatement o) {
+  public void visitPerfcounterCommand(@NotNull ArthasPerfcounterCommand o) {
     visitCommand(o);
   }
 
-  public void visitSysenvExpression(@NotNull ArthasSysenvExpression o) {
+  public void visitProfilerCommand(@NotNull ArthasProfilerCommand o) {
     visitCommand(o);
   }
 
-  public void visitSyspropExpression(@NotNull ArthasSyspropExpression o) {
+  public void visitPwdCommand(@NotNull ArthasPwdCommand o) {
     visitCommand(o);
   }
 
-  public void visitThreadExpression(@NotNull ArthasThreadExpression o) {
+  public void visitQuitCommand(@NotNull ArthasQuitCommand o) {
     visitCommand(o);
   }
 
-  public void visitTraceStatement(@NotNull ArthasTraceStatement o) {
+  public void visitRedefineCommand(@NotNull ArthasRedefineCommand o) {
     visitCommand(o);
   }
 
-  public void visitTtExpression(@NotNull ArthasTtExpression o) {
+  public void visitResetCommand(@NotNull ArthasResetCommand o) {
     visitCommand(o);
   }
 
-  public void visitTtTStatement(@NotNull ArthasTtTStatement o) {
+  public void visitRetransformCommand(@NotNull ArthasRetransformCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledBase64Expression(@NotNull ArthasUnhandledBase64Expression o) {
+  public void visitScCommand(@NotNull ArthasScCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledDumpStatement(@NotNull ArthasUnhandledDumpStatement o) {
+  public void visitSessionCommand(@NotNull ArthasSessionCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledGetstaticExpression(@NotNull ArthasUnhandledGetstaticExpression o) {
+  public void visitSmCommand(@NotNull ArthasSmCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledGrepExpression(@NotNull ArthasUnhandledGrepExpression o) {
+  public void visitStackCommand(@NotNull ArthasStackCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledJfrStatement(@NotNull ArthasUnhandledJfrStatement o) {
+  public void visitStopCommand(@NotNull ArthasStopCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledMbeanStatement(@NotNull ArthasUnhandledMbeanStatement o) {
+  public void visitSysenvCommand(@NotNull ArthasSysenvCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledMonitorStatement(@NotNull ArthasUnhandledMonitorStatement o) {
+  public void visitSyspropCommand(@NotNull ArthasSyspropCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledOptionsStatement(@NotNull ArthasUnhandledOptionsStatement o) {
+  public void visitTeeCommand(@NotNull ArthasTeeCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledPerfcounterExpression(@NotNull ArthasUnhandledPerfcounterExpression o) {
+  public void visitThreadCommand(@NotNull ArthasThreadCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledProfilerStatement(@NotNull ArthasUnhandledProfilerStatement o) {
+  public void visitTraceCommand(@NotNull ArthasTraceCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledRedefineStatement(@NotNull ArthasUnhandledRedefineStatement o) {
+  public void visitTtCommand(@NotNull ArthasTtCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledResetStatement(@NotNull ArthasUnhandledResetStatement o) {
+  public void visitVersionCommand(@NotNull ArthasVersionCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledTeeExpression(@NotNull ArthasUnhandledTeeExpression o) {
+  public void visitVmoptionCommand(@NotNull ArthasVmoptionCommand o) {
     visitCommand(o);
   }
 
-  public void visitUnhandledVmtoolStatement(@NotNull ArthasUnhandledVmtoolStatement o) {
+  public void visitVmtoolCommand(@NotNull ArthasVmtoolCommand o) {
     visitCommand(o);
   }
 
-  public void visitVersionExpression(@NotNull ArthasVersionExpression o) {
-    visitCommand(o);
-  }
-
-  public void visitVmoptionExpression(@NotNull ArthasVmoptionExpression o) {
-    visitCommand(o);
-  }
-
-  public void visitWatchStatement(@NotNull ArthasWatchStatement o) {
+  public void visitWatchCommand(@NotNull ArthasWatchCommand o) {
     visitCommand(o);
   }
 

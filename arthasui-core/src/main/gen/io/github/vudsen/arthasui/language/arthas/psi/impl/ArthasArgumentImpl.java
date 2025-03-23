@@ -8,15 +8,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static io.github.vudsen.arthasui.language.arthas.psi.ArthasTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import io.github.vudsen.arthasui.language.arthas.psi.*;
 
-public class ArthasArgumentImpl extends ArthasCommandImpl implements ArthasArgument {
+public class ArthasArgumentImpl extends ASTWrapperPsiElement implements ArthasArgument {
 
   public ArthasArgumentImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull ArthasVisitor visitor) {
     visitor.visitArgument(this);
   }
@@ -29,14 +29,14 @@ public class ArthasArgumentImpl extends ArthasCommandImpl implements ArthasArgum
 
   @Override
   @NotNull
-  public PsiElement getArgs() {
-    return findNotNullChildByType(ARGS);
+  public PsiElement getArgumentHead() {
+    return findNotNullChildByType(ARGUMENT_HEAD);
   }
 
   @Override
   @Nullable
-  public PsiElement getIdentifier() {
-    return findChildByType(IDENTIFIER);
+  public PsiElement getNonWhitespaceSequence() {
+    return findChildByType(NON_WHITESPACE_SEQUENCE);
   }
 
 }

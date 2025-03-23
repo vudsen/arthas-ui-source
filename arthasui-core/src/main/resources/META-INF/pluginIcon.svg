@@ -5,7 +5,6 @@
 			<stop offset="0" stop-color="#928dab"/>
 			<stop offset="1" stop-color="#00d2ff"/>
 		</linearGradient>
-		<image width="384" height="512" id="img1" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzIiIHdpZHRoPSIyNCIgdmlld0JveD0iMCAwIDM4NCA1MTIiPjwhLS0hRm9udCBBd2Vzb21lIEZyZWUgNi43LjIgYnkgQGZvbnRhd2Vzb21lIC0gaHR0cHM6Ly9mb250YXdlc29tZS5jb20gTGljZW5zZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tL2xpY2Vuc2UvZnJlZSBDb3B5cmlnaHQgMjAyNSBGb250aWNvbnMsIEluYy4tLT48cGF0aCBmaWxsPSIjOGY5ODlkIiBkPSJNOTYgMEM3OC4zIDAgNjQgMTQuMyA2NCAzMmwwIDk2IDY0IDAgMC05NmMwLTE3LjctMTQuMy0zMi0zMi0zMnpNMjg4IDBjLTE3LjcgMC0zMiAxNC4zLTMyIDMybDAgOTYgNjQgMCAwLTk2YzAtMTcuNy0xNC4zLTMyLTMyLTMyek0zMiAxNjBjLTE3LjcgMC0zMiAxNC4zLTMyIDMyczE0LjMgMzIgMzIgMzJsMCAzMmMwIDc3LjQgNTUgMTQyIDEyOCAxNTYuOGwwIDY3LjJjMCAxNy43IDE0LjMgMzIgMzIgMzJzMzItMTQuMyAzMi0zMmwwLTY3LjJDMjk3IDM5OCAzNTIgMzMzLjQgMzUyIDI1NmwwLTMyYzE3LjcgMCAzMi0xNC4zIDMyLTMycy0xNC4zLTMyLTMyLTMyTDMyIDE2MHoiLz48L3N2Zz4="/>
 	</defs>
 	<style>
 		.s0 { fill: url(#g1) } 

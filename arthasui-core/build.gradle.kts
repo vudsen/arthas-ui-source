@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 sourceSets {
     main {
@@ -26,12 +27,14 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
-        bundledPlugin("com.intellij.java")
+        bundledPlugins("com.intellij.java")
+
         pluginModule(implementation(project(":arthasui-common")))
         pluginModule(implementation(project(":arthasui-bridge-impl")))
         pluginModule(api(project(":arthasui-api")))
         pluginVerifier()
         zipSigner()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 

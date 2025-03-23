@@ -1,0 +1,11 @@
+auth hello;
+base64 --input /tmp/test.txt --output /tmp/result.txt;
+base64 /tmp/test;
+cat /tmp/a.txt;
+classloader -c cafebabe;
+watch io.github.vudsen.arthasui.Core core;
+watch io.github.vudsen.arthasui.Core core -x 2;
+ognl "hel" -x 2;
+dump -d /tmp/output java.lang.String;
+getstatic -c 3d4eac69 demo.MathGame random;
+jad demo.MathGame main --lineNumber false;

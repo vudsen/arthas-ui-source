@@ -9,59 +9,56 @@ import io.github.vudsen.arthasui.language.arthas.psi.impl.*;
 public interface ArthasTypes {
 
   IElementType ARGUMENT = new ArthasElementType("ARGUMENT");
-  IElementType AUTH_EXPRESSION = new ArthasElementType("AUTH_EXPRESSION");
-  IElementType CAT_EXPRESSION = new ArthasElementType("CAT_EXPRESSION");
-  IElementType CLASSLOADER_EXPRESSION = new ArthasElementType("CLASSLOADER_EXPRESSION");
+  IElementType AUTH_COMMAND = new ArthasElementType("AUTH_COMMAND");
+  IElementType BASE_64_COMMAND = new ArthasElementType("BASE_64_COMMAND");
+  IElementType CAT_COMMAND = new ArthasElementType("CAT_COMMAND");
+  IElementType CLASSLOADER_COMMAND = new ArthasElementType("CLASSLOADER_COMMAND");
   IElementType CLAZZ = new ArthasElementType("CLAZZ");
-  IElementType CLS_STATEMENT = new ArthasElementType("CLS_STATEMENT");
+  IElementType CLS_COMMAND = new ArthasElementType("CLS_COMMAND");
   IElementType COMMAND = new ArthasElementType("COMMAND");
-  IElementType DASHBOARD_STATEMENT = new ArthasElementType("DASHBOARD_STATEMENT");
-  IElementType ECHO_EXPRESSION = new ArthasElementType("ECHO_EXPRESSION");
-  IElementType HEAPDUMP_STATEMENT = new ArthasElementType("HEAPDUMP_STATEMENT");
-  IElementType HELP_EXPRESSION = new ArthasElementType("HELP_EXPRESSION");
-  IElementType HISTORY_EXPRESSION = new ArthasElementType("HISTORY_EXPRESSION");
-  IElementType JAD_EXPRESSION = new ArthasElementType("JAD_EXPRESSION");
-  IElementType JVM_EXPRESSION = new ArthasElementType("JVM_EXPRESSION");
-  IElementType KEYMAP_EXPRESSION = new ArthasElementType("KEYMAP_EXPRESSION");
-  IElementType LOGGER_EXPRESSION = new ArthasElementType("LOGGER_EXPRESSION");
-  IElementType MC_STATEMENT = new ArthasElementType("MC_STATEMENT");
-  IElementType MEMORY_EXPRESSION = new ArthasElementType("MEMORY_EXPRESSION");
-  IElementType METHOD = new ArthasElementType("METHOD");
-  IElementType OGNL = new ArthasElementType("OGNL");
-  IElementType OGNL_STATEMENT = new ArthasElementType("OGNL_STATEMENT");
-  IElementType PWD_EXPRESSION = new ArthasElementType("PWD_EXPRESSION");
-  IElementType QUIT_STATEMENT = new ArthasElementType("QUIT_STATEMENT");
-  IElementType RETRANSFORM_STATEMENT = new ArthasElementType("RETRANSFORM_STATEMENT");
-  IElementType SC_EXPRESSION = new ArthasElementType("SC_EXPRESSION");
-  IElementType SESSION_EXPRESSION = new ArthasElementType("SESSION_EXPRESSION");
-  IElementType SM_EXPRESSION = new ArthasElementType("SM_EXPRESSION");
-  IElementType STACK_STATEMENT = new ArthasElementType("STACK_STATEMENT");
-  IElementType STOP_STATEMENT = new ArthasElementType("STOP_STATEMENT");
-  IElementType SYSENV_EXPRESSION = new ArthasElementType("SYSENV_EXPRESSION");
-  IElementType SYSPROP_EXPRESSION = new ArthasElementType("SYSPROP_EXPRESSION");
-  IElementType THREAD_EXPRESSION = new ArthasElementType("THREAD_EXPRESSION");
-  IElementType TRACE_STATEMENT = new ArthasElementType("TRACE_STATEMENT");
-  IElementType TT_EXPRESSION = new ArthasElementType("TT_EXPRESSION");
-  IElementType TT_T_STATEMENT = new ArthasElementType("TT_T_STATEMENT");
-  IElementType UNHANDLED_BASE_64_EXPRESSION = new ArthasElementType("UNHANDLED_BASE_64_EXPRESSION");
-  IElementType UNHANDLED_DUMP_STATEMENT = new ArthasElementType("UNHANDLED_DUMP_STATEMENT");
-  IElementType UNHANDLED_GETSTATIC_EXPRESSION = new ArthasElementType("UNHANDLED_GETSTATIC_EXPRESSION");
-  IElementType UNHANDLED_GREP_EXPRESSION = new ArthasElementType("UNHANDLED_GREP_EXPRESSION");
-  IElementType UNHANDLED_JFR_STATEMENT = new ArthasElementType("UNHANDLED_JFR_STATEMENT");
-  IElementType UNHANDLED_MBEAN_STATEMENT = new ArthasElementType("UNHANDLED_MBEAN_STATEMENT");
-  IElementType UNHANDLED_MONITOR_STATEMENT = new ArthasElementType("UNHANDLED_MONITOR_STATEMENT");
-  IElementType UNHANDLED_OPTIONS_STATEMENT = new ArthasElementType("UNHANDLED_OPTIONS_STATEMENT");
-  IElementType UNHANDLED_PERFCOUNTER_EXPRESSION = new ArthasElementType("UNHANDLED_PERFCOUNTER_EXPRESSION");
-  IElementType UNHANDLED_PROFILER_STATEMENT = new ArthasElementType("UNHANDLED_PROFILER_STATEMENT");
-  IElementType UNHANDLED_REDEFINE_STATEMENT = new ArthasElementType("UNHANDLED_REDEFINE_STATEMENT");
-  IElementType UNHANDLED_RESET_STATEMENT = new ArthasElementType("UNHANDLED_RESET_STATEMENT");
-  IElementType UNHANDLED_TEE_EXPRESSION = new ArthasElementType("UNHANDLED_TEE_EXPRESSION");
-  IElementType UNHANDLED_VMTOOL_STATEMENT = new ArthasElementType("UNHANDLED_VMTOOL_STATEMENT");
-  IElementType VERSION_EXPRESSION = new ArthasElementType("VERSION_EXPRESSION");
-  IElementType VMOPTION_EXPRESSION = new ArthasElementType("VMOPTION_EXPRESSION");
-  IElementType WATCH_STATEMENT = new ArthasElementType("WATCH_STATEMENT");
+  IElementType DASHBOARD_COMMAND = new ArthasElementType("DASHBOARD_COMMAND");
+  IElementType DUMP_COMMAND = new ArthasElementType("DUMP_COMMAND");
+  IElementType ECHO_COMMAND = new ArthasElementType("ECHO_COMMAND");
+  IElementType GETSTATIC_COMMAND = new ArthasElementType("GETSTATIC_COMMAND");
+  IElementType GREP_COMMAND = new ArthasElementType("GREP_COMMAND");
+  IElementType HEAPDUMP_COMMAND = new ArthasElementType("HEAPDUMP_COMMAND");
+  IElementType HELP_COMMAND = new ArthasElementType("HELP_COMMAND");
+  IElementType HISTORY_COMMAND = new ArthasElementType("HISTORY_COMMAND");
+  IElementType JAD_COMMAND = new ArthasElementType("JAD_COMMAND");
+  IElementType JFR_COMMAND = new ArthasElementType("JFR_COMMAND");
+  IElementType JVM_COMMAND = new ArthasElementType("JVM_COMMAND");
+  IElementType KEYMAP_COMMAND = new ArthasElementType("KEYMAP_COMMAND");
+  IElementType LOGGER_COMMAND = new ArthasElementType("LOGGER_COMMAND");
+  IElementType MBEAN_COMMAND = new ArthasElementType("MBEAN_COMMAND");
+  IElementType MC_COMMAND = new ArthasElementType("MC_COMMAND");
+  IElementType MEMORY_COMMAND = new ArthasElementType("MEMORY_COMMAND");
+  IElementType MONITOR_COMMAND = new ArthasElementType("MONITOR_COMMAND");
+  IElementType OGNL_COMMAND = new ArthasElementType("OGNL_COMMAND");
+  IElementType OPTIONS_COMMAND = new ArthasElementType("OPTIONS_COMMAND");
+  IElementType PERFCOUNTER_COMMAND = new ArthasElementType("PERFCOUNTER_COMMAND");
+  IElementType PROFILER_COMMAND = new ArthasElementType("PROFILER_COMMAND");
+  IElementType PWD_COMMAND = new ArthasElementType("PWD_COMMAND");
+  IElementType QUIT_COMMAND = new ArthasElementType("QUIT_COMMAND");
+  IElementType REDEFINE_COMMAND = new ArthasElementType("REDEFINE_COMMAND");
+  IElementType RESET_COMMAND = new ArthasElementType("RESET_COMMAND");
+  IElementType RETRANSFORM_COMMAND = new ArthasElementType("RETRANSFORM_COMMAND");
+  IElementType SC_COMMAND = new ArthasElementType("SC_COMMAND");
+  IElementType SESSION_COMMAND = new ArthasElementType("SESSION_COMMAND");
+  IElementType SM_COMMAND = new ArthasElementType("SM_COMMAND");
+  IElementType STACK_COMMAND = new ArthasElementType("STACK_COMMAND");
+  IElementType STOP_COMMAND = new ArthasElementType("STOP_COMMAND");
+  IElementType SYSENV_COMMAND = new ArthasElementType("SYSENV_COMMAND");
+  IElementType SYSPROP_COMMAND = new ArthasElementType("SYSPROP_COMMAND");
+  IElementType TEE_COMMAND = new ArthasElementType("TEE_COMMAND");
+  IElementType THREAD_COMMAND = new ArthasElementType("THREAD_COMMAND");
+  IElementType TRACE_COMMAND = new ArthasElementType("TRACE_COMMAND");
+  IElementType TT_COMMAND = new ArthasElementType("TT_COMMAND");
+  IElementType VERSION_COMMAND = new ArthasElementType("VERSION_COMMAND");
+  IElementType VMOPTION_COMMAND = new ArthasElementType("VMOPTION_COMMAND");
+  IElementType VMTOOL_COMMAND = new ArthasElementType("VMTOOL_COMMAND");
+  IElementType WATCH_COMMAND = new ArthasElementType("WATCH_COMMAND");
 
-  IElementType ARGS = new ArthasTokenType("ARGS");
+  IElementType ARGUMENT_HEAD = new ArthasTokenType("ARGUMENT_HEAD");
   IElementType CLASS_PATTERN = new ArthasTokenType("CLASS_PATTERN");
   IElementType COMMAND_AUTH = new ArthasTokenType("auth");
   IElementType COMMAND_BASE64 = new ArthasTokenType("base64");
@@ -84,6 +81,7 @@ public interface ArthasTypes {
   IElementType COMMAND_MBEAN = new ArthasTokenType("mbean");
   IElementType COMMAND_MC = new ArthasTokenType("mc");
   IElementType COMMAND_MEMORY = new ArthasTokenType("memory");
+  IElementType COMMAND_MONITOR = new ArthasTokenType("monitor");
   IElementType COMMAND_OGNL = new ArthasTokenType("ognl");
   IElementType COMMAND_OPTIONS = new ArthasTokenType("options");
   IElementType COMMAND_PERFCOUNTER = new ArthasTokenType("perfcounter");
@@ -105,10 +103,11 @@ public interface ArthasTypes {
   IElementType COMMAND_TRACE = new ArthasTokenType("trace");
   IElementType COMMAND_TT = new ArthasTokenType("tt");
   IElementType COMMAND_VERSION = new ArthasTokenType("version");
-  IElementType COMMAND_VMOPTIONS = new ArthasTokenType("vmoptions");
+  IElementType COMMAND_VMOPTION = new ArthasTokenType("vmoption");
   IElementType COMMAND_VMTOOL = new ArthasTokenType("vmtool");
   IElementType COMMAND_WATCH = new ArthasTokenType("watch");
   IElementType DOT = new ArthasTokenType(".");
+  IElementType FILE_PATH = new ArthasTokenType("");
   IElementType IDENTIFIER = new ArthasTokenType("IDENTIFIER");
   IElementType LINE_COMMENT = new ArthasTokenType("line_comment");
   IElementType NON_WHITESPACE_SEQUENCE = new ArthasTokenType("NON_WHITESPACE_SEQUENCE");
@@ -121,158 +120,149 @@ public interface ArthasTypes {
       if (type == ARGUMENT) {
         return new ArthasArgumentImpl(node);
       }
-      else if (type == AUTH_EXPRESSION) {
-        return new ArthasAuthExpressionImpl(node);
+      else if (type == AUTH_COMMAND) {
+        return new ArthasAuthCommandImpl(node);
       }
-      else if (type == CAT_EXPRESSION) {
-        return new ArthasCatExpressionImpl(node);
+      else if (type == BASE_64_COMMAND) {
+        return new ArthasBase64CommandImpl(node);
       }
-      else if (type == CLASSLOADER_EXPRESSION) {
-        return new ArthasClassloaderExpressionImpl(node);
+      else if (type == CAT_COMMAND) {
+        return new ArthasCatCommandImpl(node);
+      }
+      else if (type == CLASSLOADER_COMMAND) {
+        return new ArthasClassloaderCommandImpl(node);
       }
       else if (type == CLAZZ) {
         return new ArthasClazzImpl(node);
       }
-      else if (type == CLS_STATEMENT) {
-        return new ArthasClsStatementImpl(node);
+      else if (type == CLS_COMMAND) {
+        return new ArthasClsCommandImpl(node);
       }
       else if (type == COMMAND) {
         return new ArthasCommandImpl(node);
       }
-      else if (type == DASHBOARD_STATEMENT) {
-        return new ArthasDashboardStatementImpl(node);
+      else if (type == DASHBOARD_COMMAND) {
+        return new ArthasDashboardCommandImpl(node);
       }
-      else if (type == ECHO_EXPRESSION) {
-        return new ArthasEchoExpressionImpl(node);
+      else if (type == DUMP_COMMAND) {
+        return new ArthasDumpCommandImpl(node);
       }
-      else if (type == HEAPDUMP_STATEMENT) {
-        return new ArthasHeapdumpStatementImpl(node);
+      else if (type == ECHO_COMMAND) {
+        return new ArthasEchoCommandImpl(node);
       }
-      else if (type == HELP_EXPRESSION) {
-        return new ArthasHelpExpressionImpl(node);
+      else if (type == GETSTATIC_COMMAND) {
+        return new ArthasGetstaticCommandImpl(node);
       }
-      else if (type == HISTORY_EXPRESSION) {
-        return new ArthasHistoryExpressionImpl(node);
+      else if (type == GREP_COMMAND) {
+        return new ArthasGrepCommandImpl(node);
       }
-      else if (type == JAD_EXPRESSION) {
-        return new ArthasJadExpressionImpl(node);
+      else if (type == HEAPDUMP_COMMAND) {
+        return new ArthasHeapdumpCommandImpl(node);
       }
-      else if (type == JVM_EXPRESSION) {
-        return new ArthasJvmExpressionImpl(node);
+      else if (type == HELP_COMMAND) {
+        return new ArthasHelpCommandImpl(node);
       }
-      else if (type == KEYMAP_EXPRESSION) {
-        return new ArthasKeymapExpressionImpl(node);
+      else if (type == HISTORY_COMMAND) {
+        return new ArthasHistoryCommandImpl(node);
       }
-      else if (type == LOGGER_EXPRESSION) {
-        return new ArthasLoggerExpressionImpl(node);
+      else if (type == JAD_COMMAND) {
+        return new ArthasJadCommandImpl(node);
       }
-      else if (type == MC_STATEMENT) {
-        return new ArthasMcStatementImpl(node);
+      else if (type == JFR_COMMAND) {
+        return new ArthasJfrCommandImpl(node);
       }
-      else if (type == MEMORY_EXPRESSION) {
-        return new ArthasMemoryExpressionImpl(node);
+      else if (type == JVM_COMMAND) {
+        return new ArthasJvmCommandImpl(node);
       }
-      else if (type == METHOD) {
-        return new ArthasMethodImpl(node);
+      else if (type == KEYMAP_COMMAND) {
+        return new ArthasKeymapCommandImpl(node);
       }
-      else if (type == OGNL) {
-        return new ArthasOgnlImpl(node);
+      else if (type == LOGGER_COMMAND) {
+        return new ArthasLoggerCommandImpl(node);
       }
-      else if (type == OGNL_STATEMENT) {
-        return new ArthasOgnlStatementImpl(node);
+      else if (type == MBEAN_COMMAND) {
+        return new ArthasMbeanCommandImpl(node);
       }
-      else if (type == PWD_EXPRESSION) {
-        return new ArthasPwdExpressionImpl(node);
+      else if (type == MC_COMMAND) {
+        return new ArthasMcCommandImpl(node);
       }
-      else if (type == QUIT_STATEMENT) {
-        return new ArthasQuitStatementImpl(node);
+      else if (type == MEMORY_COMMAND) {
+        return new ArthasMemoryCommandImpl(node);
       }
-      else if (type == RETRANSFORM_STATEMENT) {
-        return new ArthasRetransformStatementImpl(node);
+      else if (type == MONITOR_COMMAND) {
+        return new ArthasMonitorCommandImpl(node);
       }
-      else if (type == SC_EXPRESSION) {
-        return new ArthasScExpressionImpl(node);
+      else if (type == OGNL_COMMAND) {
+        return new ArthasOgnlCommandImpl(node);
       }
-      else if (type == SESSION_EXPRESSION) {
-        return new ArthasSessionExpressionImpl(node);
+      else if (type == OPTIONS_COMMAND) {
+        return new ArthasOptionsCommandImpl(node);
       }
-      else if (type == SM_EXPRESSION) {
-        return new ArthasSmExpressionImpl(node);
+      else if (type == PERFCOUNTER_COMMAND) {
+        return new ArthasPerfcounterCommandImpl(node);
       }
-      else if (type == STACK_STATEMENT) {
-        return new ArthasStackStatementImpl(node);
+      else if (type == PROFILER_COMMAND) {
+        return new ArthasProfilerCommandImpl(node);
       }
-      else if (type == STOP_STATEMENT) {
-        return new ArthasStopStatementImpl(node);
+      else if (type == PWD_COMMAND) {
+        return new ArthasPwdCommandImpl(node);
       }
-      else if (type == SYSENV_EXPRESSION) {
-        return new ArthasSysenvExpressionImpl(node);
+      else if (type == QUIT_COMMAND) {
+        return new ArthasQuitCommandImpl(node);
       }
-      else if (type == SYSPROP_EXPRESSION) {
-        return new ArthasSyspropExpressionImpl(node);
+      else if (type == REDEFINE_COMMAND) {
+        return new ArthasRedefineCommandImpl(node);
       }
-      else if (type == THREAD_EXPRESSION) {
-        return new ArthasThreadExpressionImpl(node);
+      else if (type == RESET_COMMAND) {
+        return new ArthasResetCommandImpl(node);
       }
-      else if (type == TRACE_STATEMENT) {
-        return new ArthasTraceStatementImpl(node);
+      else if (type == RETRANSFORM_COMMAND) {
+        return new ArthasRetransformCommandImpl(node);
       }
-      else if (type == TT_EXPRESSION) {
-        return new ArthasTtExpressionImpl(node);
+      else if (type == SC_COMMAND) {
+        return new ArthasScCommandImpl(node);
       }
-      else if (type == TT_T_STATEMENT) {
-        return new ArthasTtTStatementImpl(node);
+      else if (type == SESSION_COMMAND) {
+        return new ArthasSessionCommandImpl(node);
       }
-      else if (type == UNHANDLED_BASE_64_EXPRESSION) {
-        return new ArthasUnhandledBase64ExpressionImpl(node);
+      else if (type == SM_COMMAND) {
+        return new ArthasSmCommandImpl(node);
       }
-      else if (type == UNHANDLED_DUMP_STATEMENT) {
-        return new ArthasUnhandledDumpStatementImpl(node);
+      else if (type == STACK_COMMAND) {
+        return new ArthasStackCommandImpl(node);
       }
-      else if (type == UNHANDLED_GETSTATIC_EXPRESSION) {
-        return new ArthasUnhandledGetstaticExpressionImpl(node);
+      else if (type == STOP_COMMAND) {
+        return new ArthasStopCommandImpl(node);
       }
-      else if (type == UNHANDLED_GREP_EXPRESSION) {
-        return new ArthasUnhandledGrepExpressionImpl(node);
+      else if (type == SYSENV_COMMAND) {
+        return new ArthasSysenvCommandImpl(node);
       }
-      else if (type == UNHANDLED_JFR_STATEMENT) {
-        return new ArthasUnhandledJfrStatementImpl(node);
+      else if (type == SYSPROP_COMMAND) {
+        return new ArthasSyspropCommandImpl(node);
       }
-      else if (type == UNHANDLED_MBEAN_STATEMENT) {
-        return new ArthasUnhandledMbeanStatementImpl(node);
+      else if (type == TEE_COMMAND) {
+        return new ArthasTeeCommandImpl(node);
       }
-      else if (type == UNHANDLED_MONITOR_STATEMENT) {
-        return new ArthasUnhandledMonitorStatementImpl(node);
+      else if (type == THREAD_COMMAND) {
+        return new ArthasThreadCommandImpl(node);
       }
-      else if (type == UNHANDLED_OPTIONS_STATEMENT) {
-        return new ArthasUnhandledOptionsStatementImpl(node);
+      else if (type == TRACE_COMMAND) {
+        return new ArthasTraceCommandImpl(node);
       }
-      else if (type == UNHANDLED_PERFCOUNTER_EXPRESSION) {
-        return new ArthasUnhandledPerfcounterExpressionImpl(node);
+      else if (type == TT_COMMAND) {
+        return new ArthasTtCommandImpl(node);
       }
-      else if (type == UNHANDLED_PROFILER_STATEMENT) {
-        return new ArthasUnhandledProfilerStatementImpl(node);
+      else if (type == VERSION_COMMAND) {
+        return new ArthasVersionCommandImpl(node);
       }
-      else if (type == UNHANDLED_REDEFINE_STATEMENT) {
-        return new ArthasUnhandledRedefineStatementImpl(node);
+      else if (type == VMOPTION_COMMAND) {
+        return new ArthasVmoptionCommandImpl(node);
       }
-      else if (type == UNHANDLED_RESET_STATEMENT) {
-        return new ArthasUnhandledResetStatementImpl(node);
+      else if (type == VMTOOL_COMMAND) {
+        return new ArthasVmtoolCommandImpl(node);
       }
-      else if (type == UNHANDLED_TEE_EXPRESSION) {
-        return new ArthasUnhandledTeeExpressionImpl(node);
-      }
-      else if (type == UNHANDLED_VMTOOL_STATEMENT) {
-        return new ArthasUnhandledVmtoolStatementImpl(node);
-      }
-      else if (type == VERSION_EXPRESSION) {
-        return new ArthasVersionExpressionImpl(node);
-      }
-      else if (type == VMOPTION_EXPRESSION) {
-        return new ArthasVmoptionExpressionImpl(node);
-      }
-      else if (type == WATCH_STATEMENT) {
-        return new ArthasWatchStatementImpl(node);
+      else if (type == WATCH_COMMAND) {
+        return new ArthasWatchCommandImpl(node);
       }
       throw new AssertionError("Unknown element type: " + type);
     }

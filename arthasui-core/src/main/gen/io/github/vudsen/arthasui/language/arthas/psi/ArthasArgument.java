@@ -5,12 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ArthasArgument extends ArthasCommand {
+public interface ArthasArgument extends PsiElement {
 
   @NotNull
-  PsiElement getArgs();
+  PsiElement getArgumentHead();
 
   @Nullable
-  PsiElement getIdentifier();
+  PsiElement getNonWhitespaceSequence();
 
 }

@@ -1,0 +1,2 @@
+tt -t demo.MathGame primeFactors;
+tt -t -m 1 demo.MathGame primeFactors;

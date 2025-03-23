@@ -1,5 +1,5 @@
 {
-    extends(".*[statement|expression]")=command
+    extends(".*_command")=command
     parserClass="io.github.vudsen.arthasui.language.arthas.psi.ArthasParser"
     extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
@@ -16,7 +16,6 @@
         semicolon=';'
         dot='.'
         space='regexp:\s+'
-        EOL='regexp:\n'
         string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
 
         COMMAND_AUTH='auth'
@@ -40,6 +39,7 @@
         COMMAND_MBEAN='mbean'
         COMMAND_MC='mc'
         COMMAND_MEMORY='memory'
+        COMMAND_MONITOR='monitor'
         COMMAND_OPTIONS='options'
         COMMAND_OGNL='ognl'
         COMMAND_PERFCOUNTER='perfcounter'
@@ -61,138 +61,220 @@
         COMMAND_TRACE='trace'
         COMMAND_TT='tt'
         COMMAND_VERSION='version'
-        COMMAND_VMOPTIONS='vmoptions'
+        COMMAND_VMOPTION='vmoption'
         COMMAND_VMTOOL='vmtool'
         COMMAND_WATCH='watch'
 
         line_comment="regexp://.*"
-        ARGS='regexp:-[a-zA-Z]+'
+        ARGUMENT_HEAD='regexp:-[a-zA-Z]+'
         CLASS_PATTERN='regexp:[a-zA-Z\d]+(\.[a-zA-Z\d]+)*'
         IDENTIFIER='regexp:[a-zA-Z\d]+'
         NON_WHITESPACE_SEQUENCE='regexp:[^\n ]+'
+        FILE_PATH = ""
     ]
 }
 
 
 root ::= root_item*
-private root_item ::= !<<eof>> command {pin=1}
+private root_item ::= !<<eof>> command semicolon {pin=1}
 
 private recover ::= !(
     'auth' | 'base64' | 'cat' | 'classloader' | 'cls' |
     'dashboard' | 'dump' | 'echo' | 'getstatic' | 'grep' | 'heapdump' | 'history' | 'jad' | 'jfr' | 'jvm' | 'keymap' |
     'logger' | 'mbean' | 'mc' | 'memory' | 'monitor' | 'ognl' | 'options' | 'perfcounter' | 'help' |
     'profiler' | 'pwd' | 'quit' | 'redefine' | 'reset' | 'retransform' | 'sc' | 'session' | 'sm' | 'stack' |
-    'stop' | 'sysenv' | 'sysprop' | 'tee' | 'thread' | 'trace' | 'tt' | 'version' | 'vmoptions' | 'vmtool' | 'watch'
+    'stop' | 'sysenv' | 'sysprop' | 'tee' | 'thread' | 'trace' | 'tt' | 'version' | 'vmoption' | 'vmtool' | 'watch' | ';'
 )
-command ::= auth_expression
-    | unhandled_base64_expression
-    | cat_expression
-    | classloader_expression
-    | cls_statement
-    | dashboard_statement
-    | unhandled_dump_statement
-    | echo_expression
-    | unhandled_getstatic_expression
-    | unhandled_grep_expression
-    | heapdump_statement
-    | history_expression
-    | help_expression
-    | jad_expression
-    | unhandled_jfr_statement
-    | jvm_expression
-    | keymap_expression
-    | logger_expression
-    | unhandled_mbean_statement
-    | mc_statement
-    | memory_expression
-    | unhandled_monitor_statement
-    | ognl_statement
-    | unhandled_options_statement
-    | unhandled_perfcounter_expression
-    | unhandled_profiler_statement
-    | pwd_expression
-    | quit_statement
-    | unhandled_redefine_statement
-    | unhandled_reset_statement
-    | retransform_statement
-    | sc_expression
-    | session_expression
-    | sm_expression
-    | stack_statement
-    | stop_statement
-    | sysenv_expression
-    | sysprop_expression
-    | unhandled_tee_expression
-    | thread_expression
-    | trace_statement
-    | tt_t_statement
-    | tt_expression
-    | version_expression
-    | vmoption_expression
-    | unhandled_vmtool_statement
-    | watch_statement{recoverWhile=recover name="Command"}
+command ::= auth_command
+    | base64_command
+    | cat_command
+    | classloader_command
+    | cls_command
+    | dashboard_command
+    | dump_command
+    | echo_command
+    | getstatic_command
+    | grep_command
+    | heapdump_command
+    | history_command
+    | help_command
+    | jad_command
+    | jfr_command
+    | jvm_command
+    | keymap_command
+    | logger_command
+    | mbean_command
+    | mc_command
+    | memory_command
+    | monitor_command
+    | ognl_command
+    | options_command
+    | perfcounter_command
+    | profiler_command
+    | pwd_command
+    | quit_command
+    | redefine_command
+    | reset_command
+    | retransform_command
+    | sc_command
+    | session_command
+    | sm_command
+    | stack_command
+    | stop_command
+    | sysenv_command
+    | sysprop_command
+    | tee_command
+    | thread_command
+    | trace_command
+    | tt_command
+    | version_command
+    | vmoption_command
+    | vmtool_command
+    | watch_command{recoverWhile=recover name="Command" methods=[getCommand="/expr[0]"]}
 
 
 // alias
-private ognl_item ::= string {name='Ognl Expression'}
-private any_sequence ::= NON_WHITESPACE_SEQUENCE | IDENTIFIER | ARGS {name='String'}
+private tip_ognl ::= string {name='Ognl Expression'}
+private tip_auth_pwd ::= NON_WHITESPACE_SEQUENCE {name='Password'}
+private tip_clazz ::= CLASS_PATTERN {name="Class"}
+private tip_method ::= IDENTIFIER {name='Method'}
+private tip_any_seq ::= NON_WHITESPACE_SEQUENCE {name='Any Characters'}
+private tip_method_or_field ::= IDENTIFIER {name='Method Or Field'}
+private tip_argument_value ::= NON_WHITESPACE_SEQUENCE {name='Argument Value'}
+private tip_thread_id ::= IDENTIFIER {name='Thread ID'}
+private tip_name ::= NON_WHITESPACE_SEQUENCE {name='name'}
+private tip_value ::= NON_WHITESPACE_SEQUENCE {name='value'}
+private tip_command ::= IDENTIFIER {name='Command'}
+private tip_action ::= IDENTIFIER {name='Action'}
+private tip_filepath ::= FILE_PATH {name='FilePath'}
+private tip_wait_count ::= IDENTIFIER {name='Count'}
 
+clazz ::= tip_clazz
 
 // common
-clazz ::= CLASS_PATTERN {name="Class"}
-ognl ::= ognl_item
-method ::= IDENTIFIER {name='Method'}
-argument ::= ARGS IDENTIFIER? {name='Argument'}
+argument ::= ARGUMENT_HEAD tip_argument_value? {
+    methods=[
+        name="argumentHead"
+        value="identifier"
+    ]
+}
 
 // expressions
-auth_expression ::= 'auth' argument* any_sequence argument* {pin=1}
-watch_statement ::= 'watch' argument* clazz method ognl? argument* {pin=1}
-help_expression ::= 'help'
-cat_expression ::= 'cat' any_sequence
-classloader_expression ::= 'classloader' argument*
-cls_statement ::= 'cls'
-dashboard_statement ::= 'dashboard' argument*
-echo_expression ::= 'echo' string
-heapdump_statement ::= 'headpdump' argument* any_sequence? argument*
-history_expression ::= 'history' argument?
-jad_expression ::= 'jad' argument* clazz argument*
-jvm_expression ::= 'jvm'
-keymap_expression ::= 'keymap'
-logger_expression ::= 'logger'
-mc_statement ::= 'mc' argument* any_sequence argument*
-memory_expression ::= 'memory'
-ognl_statement ::= 'ognl' argument* ognl argument* {pin=1}
-pwd_expression ::= 'pwd'
-quit_statement ::= 'quit'
-retransform_statement ::= 'retransform' argument* any_sequence argument*
-sc_expression ::= 'sc' argument* clazz method method? argument*
-session_expression ::= 'session'
-sm_expression ::= 'sm' argument* clazz method? argument*
-stack_statement ::= 'stack' argument* clazz method ognl argument*
-stop_statement ::= 'stop'
-sysenv_expression ::= 'sysenv' any_sequence?
-sysprop_expression ::= 'sysprop' (any_sequence | any_sequence any_sequence)?
-thread_expression ::= 'thread' argument* any_sequence argument*
-trace_statement ::= 'trace' argument* clazz method ognl? argument*
-tt_t_statement ::= 'tt' '-t' argument* clazz method argument*
-tt_expression ::= 'tt' argument*
-version_expression ::= 'version'
-vmoption_expression ::= 'vmoptions' (any_sequence | any_sequence any_sequence)?
-
-
-
-// temporary unhandled expressions
-unhandled_base64_expression ::= 'base64' any_sequence*
-unhandled_dump_statement ::= 'dump' any_sequence*
-unhandled_getstatic_expression ::= 'getstatic' any_sequence*
-unhandled_grep_expression ::= 'grep' any_sequence*
-unhandled_jfr_statement ::= 'jfr' any_sequence*
-unhandled_mbean_statement ::= 'mbean' any_sequence*
-unhandled_monitor_statement ::= 'monitor' any_sequence*
-unhandled_options_statement ::= 'options' any_sequence*
-unhandled_perfcounter_expression ::= 'perfcounter' any_sequence*
-unhandled_profiler_statement ::= 'unhandled' any_sequence*
-unhandled_redefine_statement ::= 'redefine' any_sequence*
-unhandled_reset_statement ::= 'reset' any_sequence*
-unhandled_tee_expression ::= 'tee' any_sequence*
-unhandled_vmtool_statement ::= 'vmtool' any_sequence*
+auth_command ::= 'auth' argument* tip_auth_pwd argument* {
+    methods=[
+        password="nonWhitespaceSequence"
+    ]
+}
+watch_command ::= 'watch' argument* clazz tip_method tip_ognl? argument* {
+    methods=[
+        ognl="string"
+        clazz="CLASS_PATTERN"
+        method="identifier"
+    ]
+}
+help_command ::= 'help'
+cat_command ::= 'cat' tip_any_seq {
+    methods=[
+        content="nonWhitespaceSequence"
+    ]
+}
+classloader_command ::= 'classloader' argument*
+cls_command ::= 'cls'
+dashboard_command ::= 'dashboard' argument*
+echo_command ::= 'echo' string
+heapdump_command ::= 'heapdump' argument* tip_any_seq? argument* {
+  methods=[
+      filePath="nonWhitespaceSequence"
+  ]
+}
+history_command ::= 'history' argument* tip_wait_count? argument*
+jad_command ::= 'jad' argument* tip_clazz tip_method? argument* {
+  methods=[
+      clazz="CLASS_PATTERN"
+  ]
+}
+jvm_command ::= 'jvm'
+keymap_command ::= 'keymap'
+logger_command ::= 'logger' argument*
+mc_command ::= 'mc' argument* tip_any_seq argument* {
+  methods=[
+      filePath="nonWhitespaceSequence"
+  ]
+}
+memory_command ::= 'memory'
+ognl_command ::= 'ognl' argument* tip_ognl argument* {
+    methods=[
+        ognl="string"
+    ]
+}
+pwd_command ::= 'pwd'
+quit_command ::= 'quit'
+retransform_command ::= 'retransform' argument* tip_filepath argument* {
+  methods=[
+      filePath="nonWhitespaceSequence"
+  ]
+}
+sc_command ::= 'sc' argument* tip_clazz tip_method? argument* {
+    methods=[
+        clazz="CLASS_PATTERN"
+        method="identifier"
+    ]
+}
+session_command ::= 'session'
+sm_command ::= 'sm' argument* tip_clazz tip_method? argument* {
+    methods=[
+        clazz="CLASS_PATTERN"
+        method="IDENTIFIER"
+    ]
+}
+stack_command ::= 'stack' argument* tip_clazz tip_method tip_ognl? argument* {
+    methods=[
+        ognl="string"
+        clazz="CLASS_PATTERN"
+        method="identifier"
+    ]
+}
+stop_command ::= 'stop'
+sysenv_command ::= 'sysenv' tip_any_seq?
+// TODO
+sysprop_command ::= 'sysprop' (tip_name tip_value?)?
+thread_command ::= 'thread' argument* tip_thread_id? argument*
+trace_command ::= 'trace' argument* tip_clazz tip_method tip_ognl? argument* {
+    methods=[
+        ognl="string"
+        clazz="CLASS_PATTERN"
+        method="IDENTIFIER"
+    ]
+}
+tt_command ::= 'tt' argument* (tip_clazz tip_method)? argument* {
+    methods=[
+        clazz="CLASS_PATTERN"
+        method="IDENTIFIER"
+    ]
+}
+version_command ::= 'version'
+vmoption_command ::= 'vmoption' (tip_name tip_value?)?
+base64_command ::= 'base64' argument* (tip_any_seq argument*)?
+dump_command ::= 'dump' argument* (tip_clazz argument*)? {
+    methods=[
+        clazz="CLASS_PATTERN"
+    ]
+}
+getstatic_command ::= 'getstatic' argument* tip_clazz tip_method_or_field tip_ognl? argument* {
+    methods=[
+        ognl="string"
+        clazz="CLASS_PATTERN"
+        method="IDENTIFIER"
+    ]
+}
+grep_command ::= 'grep' argument* tip_any_seq* argument*
+jfr_command ::= 'jfr' argument* tip_command argument*
+mbean_command ::= 'mbean' tip_any_seq*
+monitor_command ::= 'monitor' argument* tip_clazz tip_method argument*
+options_command ::= 'options' (tip_name tip_value?)?
+perfcounter_command ::= 'perfcounter' argument*
+profiler_command ::= 'profiler' argument* tip_action argument*
+redefine_command ::= 'redefine' argument* tip_filepath+ argument*
+reset_command ::= 'reset' argument* (tip_clazz argument*)?
+tee_command ::= 'tee' tip_any_seq*
+vmtool_command ::= 'vmtool' argument*
