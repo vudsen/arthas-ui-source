@@ -1,0 +1,2 @@
+trace --skipJDKMethod false demo.MathGame run;
+trace demo.MathGame run -n 1;

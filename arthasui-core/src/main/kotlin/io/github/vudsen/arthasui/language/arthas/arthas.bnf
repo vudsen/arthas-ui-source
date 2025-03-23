@@ -16,7 +16,6 @@
         semicolon=';'
         dot='.'
         space='regexp:\s+'
-        EOL='regexp:\n'
         string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
 
         COMMAND_AUTH='auth'
@@ -40,6 +39,7 @@
         COMMAND_MBEAN='mbean'
         COMMAND_MC='mc'
         COMMAND_MEMORY='memory'
+        COMMAND_MONITOR='monitor'
         COMMAND_OPTIONS='options'
         COMMAND_OGNL='ognl'
         COMMAND_PERFCOUNTER='perfcounter'
@@ -61,7 +61,7 @@
         COMMAND_TRACE='trace'
         COMMAND_TT='tt'
         COMMAND_VERSION='version'
-        COMMAND_VMOPTIONS='vmoptions'
+        COMMAND_VMOPTION='vmoption'
         COMMAND_VMTOOL='vmtool'
         COMMAND_WATCH='watch'
 
@@ -76,14 +76,14 @@
 
 
 root ::= root_item*
-private root_item ::= !<<eof>> command {pin=1}
+private root_item ::= !<<eof>> command semicolon {pin=1}
 
 private recover ::= !(
     'auth' | 'base64' | 'cat' | 'classloader' | 'cls' |
     'dashboard' | 'dump' | 'echo' | 'getstatic' | 'grep' | 'heapdump' | 'history' | 'jad' | 'jfr' | 'jvm' | 'keymap' |
     'logger' | 'mbean' | 'mc' | 'memory' | 'monitor' | 'ognl' | 'options' | 'perfcounter' | 'help' |
     'profiler' | 'pwd' | 'quit' | 'redefine' | 'reset' | 'retransform' | 'sc' | 'session' | 'sm' | 'stack' |
-    'stop' | 'sysenv' | 'sysprop' | 'tee' | 'thread' | 'trace' | 'tt' | 'version' | 'vmoptions' | 'vmtool' | 'watch'
+    'stop' | 'sysenv' | 'sysprop' | 'tee' | 'thread' | 'trace' | 'tt' | 'version' | 'vmoption' | 'vmtool' | 'watch' | ';'
 )
 command ::= auth_command
     | base64_command
@@ -106,7 +106,7 @@ command ::= auth_command
     | mbean_command
     | mc_command
     | memory_command
-    | unhandled_monitor_command
+    | monitor_command
     | ognl_command
     | options_command
     | perfcounter_command
@@ -139,14 +139,15 @@ private tip_auth_pwd ::= NON_WHITESPACE_SEQUENCE {name='Password'}
 private tip_clazz ::= CLASS_PATTERN {name="Class"}
 private tip_method ::= IDENTIFIER {name='Method'}
 private tip_any_seq ::= NON_WHITESPACE_SEQUENCE {name='Any Characters'}
-private tip_method_or_field ::= NON_WHITESPACE_SEQUENCE {name='Method Or Field'}
-private tip_argument_value ::= IDENTIFIER {name='Argument Value'}
-private tip_thread_id ::= NON_WHITESPACE_SEQUENCE {name='Thread ID'}
+private tip_method_or_field ::= IDENTIFIER {name='Method Or Field'}
+private tip_argument_value ::= NON_WHITESPACE_SEQUENCE {name='Argument Value'}
+private tip_thread_id ::= IDENTIFIER {name='Thread ID'}
 private tip_name ::= NON_WHITESPACE_SEQUENCE {name='name'}
 private tip_value ::= NON_WHITESPACE_SEQUENCE {name='value'}
 private tip_command ::= IDENTIFIER {name='Command'}
 private tip_action ::= IDENTIFIER {name='Action'}
 private tip_filepath ::= FILE_PATH {name='FilePath'}
+private tip_wait_count ::= IDENTIFIER {name='Count'}
 
 clazz ::= tip_clazz
 
@@ -180,25 +181,21 @@ cat_command ::= 'cat' tip_any_seq {
 classloader_command ::= 'classloader' argument*
 cls_command ::= 'cls'
 dashboard_command ::= 'dashboard' argument*
-echo_command ::= 'echo' tip_any_seq {
-   methods=[
-       filePath="nonWhitespaceSequence"
-   ]
-}
-heapdump_command ::= 'headpdump' argument* tip_any_seq? argument* {
+echo_command ::= 'echo' string
+heapdump_command ::= 'heapdump' argument* tip_any_seq? argument* {
   methods=[
       filePath="nonWhitespaceSequence"
   ]
 }
-history_command ::= 'history' argument?
-jad_command ::= 'jad' argument* tip_clazz argument* {
+history_command ::= 'history' argument* tip_wait_count? argument*
+jad_command ::= 'jad' argument* tip_clazz tip_method? argument* {
   methods=[
       clazz="CLASS_PATTERN"
   ]
 }
 jvm_command ::= 'jvm'
 keymap_command ::= 'keymap'
-logger_command ::= 'logger'
+logger_command ::= 'logger' argument*
 mc_command ::= 'mc' argument* tip_any_seq argument* {
   methods=[
       filePath="nonWhitespaceSequence"
@@ -206,14 +203,13 @@ mc_command ::= 'mc' argument* tip_any_seq argument* {
 }
 memory_command ::= 'memory'
 ognl_command ::= 'ognl' argument* tip_ognl argument* {
-    pin=1
     methods=[
         ognl="string"
     ]
 }
 pwd_command ::= 'pwd'
 quit_command ::= 'quit'
-retransform_command ::= 'retransform' argument* tip_any_seq argument* {
+retransform_command ::= 'retransform' argument* tip_filepath argument* {
   methods=[
       filePath="nonWhitespaceSequence"
   ]
@@ -231,7 +227,7 @@ sm_command ::= 'sm' argument* tip_clazz tip_method? argument* {
         method="IDENTIFIER"
     ]
 }
-stack_command ::= 'stack' argument* tip_clazz tip_method? tip_ognl argument* {
+stack_command ::= 'stack' argument* tip_clazz tip_method tip_ognl? argument* {
     methods=[
         ognl="string"
         clazz="CLASS_PATTERN"
@@ -241,8 +237,8 @@ stack_command ::= 'stack' argument* tip_clazz tip_method? tip_ognl argument* {
 stop_command ::= 'stop'
 sysenv_command ::= 'sysenv' tip_any_seq?
 // TODO
-sysprop_command ::= 'sysprop' (tip_any_seq | tip_any_seq tip_any_seq)?
-thread_command ::= 'thread' argument* tip_thread_id argument*
+sysprop_command ::= 'sysprop' (tip_name tip_value?)?
+thread_command ::= 'thread' argument* tip_thread_id? argument*
 trace_command ::= 'trace' argument* tip_clazz tip_method tip_ognl? argument* {
     methods=[
         ognl="string"
@@ -257,7 +253,7 @@ tt_command ::= 'tt' argument* (tip_clazz tip_method)? argument* {
     ]
 }
 version_command ::= 'version'
-vmoption_command ::= 'vmoptions' (tip_name | tip_name tip_value)?
+vmoption_command ::= 'vmoption' (tip_name tip_value?)?
 base64_command ::= 'base64' argument* (tip_any_seq argument*)?
 dump_command ::= 'dump' argument* (tip_clazz argument*)? {
     methods=[
@@ -274,10 +270,10 @@ getstatic_command ::= 'getstatic' argument* tip_clazz tip_method_or_field tip_og
 grep_command ::= 'grep' argument* tip_any_seq* argument*
 jfr_command ::= 'jfr' argument* tip_command argument*
 mbean_command ::= 'mbean' tip_any_seq*
-unhandled_monitor_command ::= 'monitor' tip_any_seq*
-options_command ::= 'options' (tip_name | tip_name tip_value)?
+monitor_command ::= 'monitor' argument* tip_clazz tip_method argument*
+options_command ::= 'options' (tip_name tip_value?)?
 perfcounter_command ::= 'perfcounter' argument*
-profiler_command ::= 'unhandled' argument* tip_action argument*
+profiler_command ::= 'profiler' argument* tip_action argument*
 redefine_command ::= 'redefine' argument* tip_filepath+ argument*
 reset_command ::= 'reset' argument* (tip_clazz argument*)?
 tee_command ::= 'tee' tip_any_seq*

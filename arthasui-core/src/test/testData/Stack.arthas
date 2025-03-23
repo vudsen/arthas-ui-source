@@ -1,0 +1,2 @@
+stack demo.MathGame primeFactors;
+stack demo.MathGame primeFactors 'params[0]<0' -n 2;

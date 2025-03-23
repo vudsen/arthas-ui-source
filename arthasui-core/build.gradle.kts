@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 sourceSets {
     main {
@@ -33,6 +34,7 @@ dependencies {
         pluginModule(api(project(":arthasui-api")))
         pluginVerifier()
         zipSigner()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 

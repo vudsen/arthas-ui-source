@@ -1,0 +1,1 @@
+jfr start -n myRecording --duration 60s -f /tmp/myRecording.jfr;
