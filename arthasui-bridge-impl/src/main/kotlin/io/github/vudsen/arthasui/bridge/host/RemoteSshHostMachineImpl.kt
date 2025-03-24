@@ -81,4 +81,9 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
         return config.os
     }
 
+    override fun toString(): String {
+        return "RemoteSshHostMachineImpl(name = ${config.name}, host=${config.ssh.host}, port=${config.ssh.port})"
+    }
+
+
 }

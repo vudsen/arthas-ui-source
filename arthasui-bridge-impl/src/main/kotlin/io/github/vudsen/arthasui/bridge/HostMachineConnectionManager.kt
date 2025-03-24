@@ -100,6 +100,7 @@ class HostMachineConnectionManager {
      * @param hostMachine 宿主机，如果重复注册，则不会发生任何事
      */
     fun register(hostMachine: CloseableHostMachine): ManagedInstance {
+        logger.info("Registered $hostMachine")
         val node = ManagedInstance(hostMachine)
         lock.lock()
         try {
@@ -117,6 +118,7 @@ class HostMachineConnectionManager {
      * @return 是否成功，若返回 false，表示连接已经被关闭了
      */
     fun resetTimeout(node: ManagedInstance): Boolean {
+        logger.info("Timeout rested: ${node.hostMachine}, last use: ${node.lastUse}")
         node.lastUse = System.currentTimeMillis()
         lock.lock()
         try {

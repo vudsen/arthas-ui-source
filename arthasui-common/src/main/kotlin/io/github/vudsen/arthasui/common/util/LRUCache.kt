@@ -16,6 +16,46 @@ class LRUCache<E> : Deque<E> {
             var prev: ListNode<E>? = null,
             var next: ListNode<E>? = null
         )
+
+    }
+
+    private inner class MyMutableIterator(private var current: ListNode<E>?) : MutableIterator<E> {
+
+        override fun hasNext(): Boolean {
+            current ?.let {
+                return it.next != null
+            } ?: return false
+        }
+
+        override fun next(): E {
+            val r = current!!
+            current = r.next
+            return r.element
+        }
+
+        override fun remove() {
+            removeNode(current!!.prev!!)
+        }
+
+    }
+
+    private inner class MyDescendingIterator(private var current: ListNode<E>?) : MutableIterator<E> {
+        override fun hasNext(): Boolean {
+            current ?.let {
+                return it.prev != null
+            } ?: return false
+        }
+
+        override fun next(): E {
+            val r = current!!
+            current = r.prev
+            return r.element
+        }
+
+        override fun remove() {
+            removeNode(current!!.next!!)
+        }
+
     }
 
     /**
@@ -37,6 +77,9 @@ class LRUCache<E> : Deque<E> {
      */
     fun refresh(e: E): Boolean {
         val node = index[e] ?: return false
+        if (index.size == 1) {
+            return true
+        }
         removeNode(node)
         node.next = null
         tail ?.let {
@@ -59,6 +102,7 @@ class LRUCache<E> : Deque<E> {
         for (element in elements) {
             add(element)
         }
+        return true
     }
 
     override fun clear() {
@@ -67,8 +111,9 @@ class LRUCache<E> : Deque<E> {
         index.clear()
     }
 
+
     override fun iterator(): MutableIterator<E> {
-        TODO("Not yet implemented")
+        return MyMutableIterator(head)
     }
 
     override fun remove(): E {
@@ -146,11 +191,25 @@ class LRUCache<E> : Deque<E> {
     }
 
     override fun removeFirstOccurrence(o: Any?): Boolean {
-        TODO("Not yet implemented")
+        val iter = iterator()
+        while (iter.hasNext()) {
+            if (iter.next() == o) {
+                iter.remove()
+                return true
+            }
+        }
+        return false
     }
 
     override fun removeLastOccurrence(o: Any?): Boolean {
-        TODO("Not yet implemented")
+        val iter = descendingIterator()
+        while (iter.hasNext()) {
+            if (iter.next() == o) {
+                iter.remove()
+                return true
+            }
+        }
+        return false
     }
 
     override fun pop(): E {
@@ -158,7 +217,7 @@ class LRUCache<E> : Deque<E> {
     }
 
     override fun descendingIterator(): MutableIterator<E> {
-        TODO("Not yet implemented")
+        return MyDescendingIterator(tail)
     }
 
     override val size: Int
@@ -219,7 +278,15 @@ class LRUCache<E> : Deque<E> {
     }
 
     override fun containsAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        if (elements.size != index.size) {
+            return false
+        }
+        for (element in elements) {
+            if (!index.contains(element)) {
+                return false
+            }
+        }
+        return true
     }
 
     override fun contains(element: E): Boolean {
@@ -227,11 +294,26 @@ class LRUCache<E> : Deque<E> {
     }
 
     override fun retainAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        val toBeKeep = ArrayList<E>()
+        for (element in elements) {
+            index[element] ?.let {
+                toBeKeep.add(it.element)
+            }
+        }
+        clear()
+        addAll(toBeKeep)
+        return true
     }
 
     override fun removeAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        var flag = false
+        for (element in elements) {
+            index[element] ?.let {
+                removeNode(it)
+                flag = true
+            }
+        }
+        return flag
     }
 
     override fun remove(element: E): Boolean {
