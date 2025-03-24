@@ -1,6 +1,9 @@
 package io.github.vudsen.arthasui.bridge.util
 
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 
 
@@ -24,6 +27,18 @@ object BridgeUtils {
         }
         return result
     }
+
+    /**
+     * grep 命令，兼容所有平台
+     */
+    fun grep(hostMachine: HostMachine, source: String, search: String): CommandExecuteResult {
+        when(hostMachine.getOS()) {
+            OS.LINUX -> hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"")
+            OS.WINDOWS -> hostMachine.execute("cmd", "/c", "\"$source | findstr \"${search}\"\"")
+            OS.MAC -> TODO("Support MacOS")
+        }
+    }
+
 
 
 }

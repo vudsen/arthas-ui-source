@@ -1,10 +1,11 @@
-package io.github.vudsen.arthasui.script
+package io.github.vudsen.arthasui.script.helper
 
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.util.BridgeUtils
 import io.github.vudsen.arthasui.bridge.util.ok
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 
@@ -71,15 +72,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
     @Suppress("unused")
     fun findByCommandLineArgs(search: String): List<JVM> {
         val provider = getProvider()
-        val jvms: List<String>
-        if (hostMachine.getOS() == OS.WINDOWS) {
-            jvms = hostMachine.execute("cmd", "/c", "\"\"${provider.jdkHome}/bin/jps\" -v | findstr \"${search}\"\"").ok().split('\n')
-        } else if (hostMachine.getOS() == OS.LINUX) {
-            val safeContent = search.replace("\"", "\\\"")
-            jvms = hostMachine.execute("sh", "-c", "\"${provider.jdkHome}/bin/jps -v | grep ${safeContent}\"").ok().split('\n')
-        } else {
-            TODO("Support MacOS")
-        }
+        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${provider.jdkHome}/bin/jps\" -lv", search).ok().split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {

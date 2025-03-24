@@ -18,6 +18,10 @@ class ResultHolder {
         result.add(jvm)
     }
 
+    fun addAll(jvms: List<JVM>) {
+        result.addAll(jvms)
+    }
+
     /**
      * 输出 debug 消息
      */

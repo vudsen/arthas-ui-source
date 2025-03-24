@@ -17,6 +17,7 @@ import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import io.github.vudsen.arthasui.bridge.util.ok
+import io.github.vudsen.arthasui.common.util.ListMapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
 class DockerJvmProvider : JvmProvider {
@@ -32,7 +33,7 @@ class DockerJvmProvider : JvmProvider {
             TODO("handle non-zero exit code.")
         }
         val jsonArray = "[" + execResult.stdout + "]"
-        val tree = gson.fromJson(jsonArray, object : TypeToken<List<Map<String, String>>>() {})
+        val tree = gson.fromJson(jsonArray, ListMapTypeToken())
         val result = mutableListOf<JVM>()
         for (element in tree) {
             result.add(DockerJvm(element["ID"]!!, "${element["Names"]!!}(${element["Image"]!!})", ))
