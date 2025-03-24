@@ -1,9 +1,11 @@
 package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.script.helper.LocalJvmSearchHelper
 
 @Suppress("unused")
 class MyOgnlContext (
@@ -14,7 +16,9 @@ class MyOgnlContext (
     /**
      * 用于帮助搜素本地 JVM
      */
-    val localHelper: LocalJvmSearchHelper = LocalJvmSearchHelper(hostMachineConfig)
+    val localHelper: LocalJvmSearchHelper = LocalJvmSearchHelper(hostMachine, hostMachineConfig)
+
+    val helpers = LazyLoadHelper(hostMachine, hostMachineConfig)
 
     /**
      * 保存执行结果
@@ -32,6 +36,10 @@ class MyOgnlContext (
             }
             resultHolder.add(LocalJVM(arr[0], arr[1]))
         }
+    }
+
+    fun addAll(jvms: List<JVM>) {
+        resultHolder.addAll(jvms)
     }
 
     /**

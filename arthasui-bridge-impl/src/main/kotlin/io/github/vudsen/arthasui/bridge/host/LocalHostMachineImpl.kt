@@ -7,6 +7,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.common.util.readAllAsString
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 
 
@@ -16,10 +17,13 @@ class LocalHostMachineImpl : HostMachine {
 
     override fun execute(vararg command: String): CommandExecuteResult {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
-        while (!process.waitFor(1, TimeUnit.SECONDS)) {
+        val baos = ByteArrayOutputStream(128)
+        val buf = ByteArray(128)
+        while (process.inputStream.available() > 0 || !process.waitFor(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
+            baos.write(buf, 0, process.inputStream.read(buf))
         }
-        return CommandExecuteResult(process.inputStream.readAllAsString(), process.exitValue())
+        return CommandExecuteResult(baos.toString(), process.exitValue())
     }
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {

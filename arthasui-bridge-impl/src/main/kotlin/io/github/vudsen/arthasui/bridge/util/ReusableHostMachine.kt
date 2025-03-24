@@ -51,15 +51,11 @@ class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineC
     }
 
     private fun getHostMachine(): HostMachine {
-        for (spin in 0..100) {
-            val managedInstance = getInstance()
-            val connectionManager = service<HostMachineConnectionManager>()
-            // 如果没有成功, 说明可能是刚拿到之前的连接后马上就被干掉了.
-            if (connectionManager.resetTimeout(managedInstance)) {
-                return managedInstance.hostMachine
-            }
-        }
-        throw IllegalStateException("Failed to get HostMachine, spin has reach the maximum times.")
+        val managedInstance = getInstance()
+        val connectionManager = service<HostMachineConnectionManager>()
+        // 如果没有成功, 说明可能是刚拿到之前的连接后马上就被干掉了.
+        connectionManager.resetTimeout(managedInstance)
+        return managedInstance.hostMachine
     }
 
     override fun execute(vararg command: String): CommandExecuteResult {
