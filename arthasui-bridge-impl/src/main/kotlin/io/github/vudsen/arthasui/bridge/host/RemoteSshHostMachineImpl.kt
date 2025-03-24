@@ -38,7 +38,7 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
 
 
     override fun isClosed(): Boolean {
-        val clientSession = session ?: return true
+        val clientSession = session
         return clientSession.isClosed
     }
 

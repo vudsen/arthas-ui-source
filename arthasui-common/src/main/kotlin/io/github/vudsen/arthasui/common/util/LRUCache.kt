@@ -35,19 +35,20 @@ class LRUCache<E> : Deque<E> {
     /**
      * 标记当前节点最近被使用过了
      */
-    fun refresh(e: E) {
-        val node = index[e] ?: throw NoSuchElementException()
+    fun refresh(e: E): Boolean {
+        val node = index[e] ?: return false
         removeNode(node)
         node.next = null
         tail ?.let {
             it.next = node
             node.prev = it
             tail = node
-            return
+            return true
         }
         node.prev = null
         head = node
         tail = node
+        return true
     }
 
     override fun add(element: E): Boolean {
