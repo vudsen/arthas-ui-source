@@ -32,7 +32,7 @@ object BridgeUtils {
      * grep 命令，兼容所有平台
      */
     fun grep(hostMachine: HostMachine, source: String, search: String): CommandExecuteResult {
-        when(hostMachine.getOS()) {
+        return when(hostMachine.getOS()) {
             OS.LINUX -> hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"")
             OS.WINDOWS -> hostMachine.execute("cmd", "/c", "\"$source | findstr \"${search}\"\"")
             OS.MAC -> TODO("Support MacOS")
