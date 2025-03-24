@@ -38,7 +38,7 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
 
 
     override fun isClosed(): Boolean {
-        val clientSession = session ?: return true
+        val clientSession = session
         return clientSession.isClosed
     }
 
@@ -80,5 +80,10 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
     override fun getOS(): OS {
         return config.os
     }
+
+    override fun toString(): String {
+        return "RemoteSshHostMachineImpl(name = ${config.name}, host=${config.ssh.host}, port=${config.ssh.port})"
+    }
+
 
 }

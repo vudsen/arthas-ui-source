@@ -36,7 +36,9 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
         val result = mutableListOf<AbstractRecursiveTreeNode>()
         for (provider in config.providers) {
-            result.add(TreeNodeJvmProviderFolder(ctx, provider))
+            if (provider.enabled) {
+                result.add(TreeNodeJvmProviderFolder(ctx, provider))
+            }
         }
         for (searchGroup in config.searchGroups) {
             result.add(CustomSearchGroupTreeNode(searchGroup, ctx))

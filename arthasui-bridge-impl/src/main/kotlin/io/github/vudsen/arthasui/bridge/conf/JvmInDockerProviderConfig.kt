@@ -5,7 +5,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import javax.swing.Icon
 
 class JvmInDockerProviderConfig(
-    var enabled: Boolean = false,
+    enabled: Boolean = false,
     var dockerPath: String = "docker",
     /**
      * 使用容器自带的工具
@@ -19,7 +19,7 @@ class JvmInDockerProviderConfig(
      * arthas 目录
      */
     var arthasHome: String = ""
-) : JvmProviderConfig(TYPE){
+) : JvmProviderConfig(TYPE, enabled){
 
     companion object {
         const val TYPE = "JvmInDockerProviderConfig"
