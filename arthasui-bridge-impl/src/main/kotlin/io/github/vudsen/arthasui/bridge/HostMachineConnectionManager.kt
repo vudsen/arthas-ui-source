@@ -114,15 +114,18 @@ class HostMachineConnectionManager {
 
 
     /**
-     * 重置宿主机的自动关闭时间
-     * @return 是否成功，若返回 false，表示连接已经被关闭了
+     * 重置宿主机的自动关闭时间.
      */
-    fun resetTimeout(node: ManagedInstance): Boolean {
+    fun resetTimeout(node: ManagedInstance) {
         logger.info("Timeout rested: ${node.hostMachine}, last use: ${node.lastUse}")
         node.lastUse = System.currentTimeMillis()
         lock.lock()
         try {
-            return lru.refresh(node)
+            if (lru.refresh(node)) {
+                return
+            }
+            lru.add(node)
+            tryScheduleNext(false)
         } finally {
             lock.unlock()
         }

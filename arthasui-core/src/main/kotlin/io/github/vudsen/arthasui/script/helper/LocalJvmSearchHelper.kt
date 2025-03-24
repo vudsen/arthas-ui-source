@@ -72,7 +72,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
     @Suppress("unused")
     fun findByCommandLineArgs(search: String): List<JVM> {
         val provider = getProvider()
-        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${provider.jdkHome}/bin/jps\" -lv", search).ok().split('\n')
+        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${provider.jdkHome}/bin/jps\" -lv", search).split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {

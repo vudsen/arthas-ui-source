@@ -22,7 +22,7 @@ class DockerSearchHelper(private val hostMachine: HostMachine) {
             hostMachine,
             SEARCH_IMAGE_AND_NAME,
             "\"Image\": \"${image}\""
-        ).ok() + "]"
+        ) + "]"
         val gson = service<SingletonInstanceHolderService>().gson
         return gson.fromJson(output, ListMapTypeToken()).map { ele ->
             return@map DockerJvm(ele["Names"]!!, ele["Names"]!!)
