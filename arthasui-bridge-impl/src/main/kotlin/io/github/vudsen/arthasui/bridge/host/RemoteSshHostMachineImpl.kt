@@ -44,7 +44,7 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
 
     override fun close() {
         session.close()
-        logger.info("Closed connection to ${config.ssh.host}")
+        logger.info("Connection closed: ${config.ssh.host}")
     }
 
     override fun execute(vararg command: String): CommandExecuteResult {
