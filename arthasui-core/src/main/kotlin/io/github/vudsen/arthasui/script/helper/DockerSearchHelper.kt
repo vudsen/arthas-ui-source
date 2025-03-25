@@ -17,7 +17,7 @@ class DockerSearchHelper(private val hostMachine: HostMachine) {
     }
 
     @Suppress("unused")
-    fun findByImage(image: String): List<JVM> {
+    fun findByImage(image: String, name: String?): List<JVM> {
         val output = "[" + BridgeUtils.grep(
             hostMachine,
             SEARCH_IMAGE_AND_NAME,
@@ -25,13 +25,13 @@ class DockerSearchHelper(private val hostMachine: HostMachine) {
         ) + "]"
         val gson = service<SingletonInstanceHolderService>().gson
         return gson.fromJson(output, ListMapTypeToken()).map { ele ->
-            return@map DockerJvm(ele["Names"]!!, ele["Names"]!!)
+            return@map DockerJvm(ele["Names"]!!, name ?: ele["Names"]!!)
         }
     }
 
 
     @Suppress("unused")
-    fun findByImageAndNamePrefix(image: String, prefix: String): List<JVM> {
+    fun findByImageAndNamePrefix(image: String, prefix: String, name: String?): List<JVM> {
         val output = when (hostMachine.getOS()) {
             OS.WINDOWS -> {
                 hostMachine.execute("cmd", "/c", "\"$SEARCH_IMAGE_AND_NAME | grep $image | grep ${prefix}\"")
@@ -45,7 +45,7 @@ class DockerSearchHelper(private val hostMachine: HostMachine) {
         }.ok()
         val gson = service<SingletonInstanceHolderService>().gson
         return gson.fromJson(output, ListMapTypeToken()).map { ele ->
-            return@map DockerJvm(ele["Names"]!!, ele["Names"]!!)
+            return@map DockerJvm(ele["Names"]!!, name ?: ele["Names"]!!)
         }
     }
 

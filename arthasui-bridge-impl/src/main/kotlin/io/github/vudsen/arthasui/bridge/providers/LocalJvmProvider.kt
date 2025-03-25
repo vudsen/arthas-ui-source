@@ -56,7 +56,7 @@ class LocalJvmProvider : JvmProvider {
                         "${localJvmProviderConfig.jdkHome}/bin/java",
                         "-jar",
                         "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                        jvm.getId()
+                        jvm.id
                     ))
                 )
             }
@@ -67,7 +67,7 @@ class LocalJvmProvider : JvmProvider {
                 "${localJvmProviderConfig.jdkHome}/bin/java",
                 "-jar",
                 "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                jvm.getId(),
+                jvm.id,
                 "--telnet-port",
                 "3658",
                 "--attach-only"

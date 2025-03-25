@@ -57,15 +57,16 @@ class DockerJvmProvider : JvmProvider {
                 jdkHome = config.jdkHome
                 arthasHome = config.arthasHome
             } else {
-                hostMachine.execute("docker", "cp", config.arthasHome, "${jvm.getId()}:/tmp/arthas").ok()
-                hostMachine.execute("docker", "cp", config.jdkHome, "${jvm.getId()}:/tmp/jdk").ok()
+                hostMachine.execute("docker", "cp", config.arthasHome, "${jvm.id}:/tmp/arthas").ok()
+                hostMachine.execute("docker", "cp", config.jdkHome, "${jvm.id}:/tmp/jdk").ok()
                 jdkHome = "/tmp/jdk"
                 arthasHome = "/tmp/arthas"
             }
             return@ArthasBridgeFactory ArthasBridgeImpl(
                 InteractiveShell2ArthasProcessAdapter(
                 // TODO, support switch pid.
-                hostMachine.createInteractiveShell("docker", "exec", "-it", jvm.getId(), "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
+                hostMachine.createInteractiveShell("docker", "exec", "-it",
+                    jvm.id, "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
             )
             )
         }

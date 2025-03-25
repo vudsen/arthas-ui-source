@@ -28,7 +28,7 @@ class ArthasConfigurationFactory(
     }
 
     override fun getName(): String {
-        return jvm.getDisplayName()
+        return jvm.name
     }
 
 }

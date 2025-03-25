@@ -105,7 +105,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             return
         }
         val fileEditorManager = FileEditorManager.getInstance(project)
-        val lightVirtualFile = LightVirtualFile(node.jvm.getMainClass(), ArthasFileType, "")
+        val lightVirtualFile = LightVirtualFile(node.jvm.name, ArthasFileType, "")
         lightVirtualFile.putUserData(
             ArthasExecutionManager.VF_ATTRIBUTES,
             VirtualFileAttributes(

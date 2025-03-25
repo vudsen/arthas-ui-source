@@ -53,7 +53,7 @@ class ArthasProcessHandler(
             override fun startNotified(event: ProcessEvent) {
                 ProcessIOExecutorService.INSTANCE.execute {
                     runBlocking {
-                        notifyTextAvailable("Trying to attach to target jvm: ${jvm.getDisplayName()}\n", ProcessOutputTypes.STDOUT)
+                        notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
                         val coordinator = project.service<ArthasExecutionManager>()
                         arthasBridge = try {
                             val arthasBridgeTemplate = coordinator.getTemplate(jvm)!!
@@ -70,7 +70,7 @@ class ArthasProcessHandler(
                                 PrintWriter(result).use { pw ->
                                     e.printStackTrace(pw)
                                     notifyTextAvailable(
-                                        "\nFailed to attach target jvm: ${jvm.getDisplayName()}\n" + result.toString(),
+                                        "\nFailed to attach target jvm: ${jvm.name}\n" + result.toString(),
                                         ProcessOutputTypes.STDERR
                                     )
                                 }

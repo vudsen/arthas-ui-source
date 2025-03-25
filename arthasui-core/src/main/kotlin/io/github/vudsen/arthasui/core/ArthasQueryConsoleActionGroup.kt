@@ -69,7 +69,7 @@ class ArthasQueryConsoleActionGroup(
                         ConfigurationTypeUtil.findConfigurationType(ArthasConfigurationTypeBaseImpl::class.java)
 
                     val runnerAndConfigurationSettings = RunManager.getInstance(project)
-                        .createConfiguration(virtualFileAttributes.jvm.getDisplayName(), ArthasConfigurationFactory(configurationType, virtualFileAttributes.jvm))
+                        .createConfiguration(virtualFileAttributes.jvm.name, ArthasConfigurationFactory(configurationType, virtualFileAttributes.jvm))
 
                     runnerAndConfigurationSettings.isTemporary = true
 

@@ -35,7 +35,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
      * 根据端口找到 jvm
      */
     @Suppress("unused")
-    fun findByPort(port: Int): List<JVM> {
+    fun findByPort(port: Int, name: String?): List<JVM> {
         if (hostMachine.getOS() == OS.WINDOWS) {
             val result = hostMachine.execute("cmd", "/c", "\"netstat -ano | findstr :${port}\"").ok().split('\n')
             return result.map {
@@ -44,12 +44,16 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
                     return@map null
                 }
                 val pid = arr[4]
-                val taskNames =
-                    hostMachine.execute("cmd", "/c", "\"tasklist | findstr ${pid}\"").ok().split(whiteSpacePattern)
-                if (taskNames.isEmpty()) {
-                    return@map LocalJVM(pid, "<Unknown>")
+                var actualName = name
+                if (actualName == null) {
+                    val taskNames =
+                        hostMachine.execute("cmd", "/c", "\"tasklist | findstr ${pid}\"").ok().split(whiteSpacePattern)
+                    if (taskNames.isEmpty()) {
+                        return@map LocalJVM(pid, "<Unknown>")
+                    }
+                    actualName = taskNames[0]
                 }
-                return@map LocalJVM(pid, taskNames[0])
+                return@map LocalJVM(pid, actualName)
             }.filterNotNull()
         } else if (hostMachine.getOS() == OS.LINUX) {
             val result = hostMachine.execute("sh", "-c", "\"netstat -tlpn | grep :${port}\"").ok().split('\n')
@@ -59,7 +63,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
                     return@map null
                 }
                 val pidAndName = arr[6].split('/')
-                return@map LocalJVM(pidAndName[0], pidAndName[1])
+                return@map LocalJVM(pidAndName[0], name ?: pidAndName[1])
             }.filterNotNull()
         } else {
             TODO("Support MacOS")
@@ -70,7 +74,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
      * 根据命令行参数搜索 jvm
      */
     @Suppress("unused")
-    fun findByCommandLineArgs(search: String): List<JVM> {
+    fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
         val provider = getProvider()
         val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${provider.jdkHome}/bin/jps\" -lvm", search).split('\n')
         val result = mutableListOf<JVM>()
@@ -81,8 +85,8 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
             val i = jvm.indexOf(' ')
             val j = jvm.indexOf(' ', i + 1)
 
-            val name = if (j < 0) jvm.substring(i + 1) else jvm.substring(i + 1, j)
-            result.add(LocalJVM(jvm.substring(0, i), name));
+            val actualName = name ?: if (j < 0) jvm.substring(i + 1) else jvm.substring(i + 1, j)
+            result.add(LocalJVM(jvm.substring(0, i), actualName));
         }
         return result
     }

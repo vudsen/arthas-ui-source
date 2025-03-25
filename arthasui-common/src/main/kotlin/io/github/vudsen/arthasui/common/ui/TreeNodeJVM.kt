@@ -32,11 +32,11 @@ class TreeNodeJVM(
             } else {
                 add(JLabel(AllIcons.Nodes.Console))
             }
-            add(JLabel(jvm.getId()))
+            add(JLabel(jvm.id))
             add(
                 JLabel(
                     shortenTextWithEllipsis(
-                        jvm.getMainClass(),
+                        jvm.name,
                         4,
                         10,
                         0.3f,
