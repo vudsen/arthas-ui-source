@@ -18,7 +18,10 @@ fun <T, R> List<T>.mapMutable(cast: (T) -> R): MutableList<R> {
     return result
 }
 
-fun Exception.printStackTraceToString(): String {
+/**
+ * 收集调用栈
+ */
+fun Exception.collectStackTrace(): String {
     val sw = StringWriter();
     this.printStackTrace( PrintWriter(sw, true));
     return sw.buffer.toString();

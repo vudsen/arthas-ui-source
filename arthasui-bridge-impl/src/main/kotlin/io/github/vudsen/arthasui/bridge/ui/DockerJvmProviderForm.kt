@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.ui
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
@@ -11,8 +12,8 @@ import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.common.ui.CheckBoxPredicate
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 
-class DockerJvmProviderForm(oldState: JvmProviderConfig?) :
-    AbstractFormComponent<JvmProviderConfig>() {
+class DockerJvmProviderForm(oldState: JvmProviderConfig?, parentDisposable: Disposable) :
+    AbstractFormComponent<JvmProviderConfig>(parentDisposable) {
 
     private val state: JvmInDockerProviderConfig = if (oldState is JvmInDockerProviderConfig) oldState else JvmInDockerProviderConfig()
 

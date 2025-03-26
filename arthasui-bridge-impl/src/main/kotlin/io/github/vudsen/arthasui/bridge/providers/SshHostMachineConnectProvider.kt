@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers
 
+import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
@@ -13,8 +14,8 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider {
         return "SSH"
     }
 
-    override fun createForm(oldEntity: HostMachineConnectConfig?): FormComponent<HostMachineConnectConfig> {
-        return SshConfigurationForm(oldEntity)
+    override fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig> {
+        return SshConfigurationForm(oldEntity, parentDisposable)
     }
 
     override fun connect(config: HostMachineConnectConfig): CloseableHostMachine {

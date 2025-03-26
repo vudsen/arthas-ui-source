@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.api.extension
 
+import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
@@ -27,7 +28,7 @@ interface JvmProvider {
      * 创建一个表单
      * @param oldState 如果非空，表示更新
      */
-    fun createForm(oldState: JvmProviderConfig?): FormComponent<JvmProviderConfig>
+    fun createForm(oldState: JvmProviderConfig?, parentDisposable: Disposable): FormComponent<JvmProviderConfig>
 
     /**
      * 获取配置的 class

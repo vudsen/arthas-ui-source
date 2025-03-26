@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers
 
+import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
@@ -90,8 +91,8 @@ class LocalJvmProvider : JvmProvider {
         return createLocalFactory(hostMachine, jvm, jvmProviderConfig as LocalJvmProviderConfig)
     }
 
-    override fun createForm(oldState: JvmProviderConfig?): FormComponent<JvmProviderConfig> {
-        return LocalJvmProviderForm(oldState)
+    override fun createForm(oldState: JvmProviderConfig?, parentDisposable: Disposable): FormComponent<JvmProviderConfig> {
+        return LocalJvmProviderForm(oldState, parentDisposable)
     }
 
     override fun getConfigClass(): Class<out JvmProviderConfig> {

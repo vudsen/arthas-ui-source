@@ -6,7 +6,6 @@ import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.currentOS
-import io.github.vudsen.arthasui.common.util.readAllAsString
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 

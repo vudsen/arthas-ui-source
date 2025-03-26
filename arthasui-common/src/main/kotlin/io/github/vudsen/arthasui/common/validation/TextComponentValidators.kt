@@ -10,6 +10,9 @@ class TextComponentValidators : DialogValidation.WithParameter<JTextComponent> {
     companion object {
         private class MyValidation(private val component: JTextComponent) : DialogValidation {
             override fun validate(): ValidationInfo? {
+                if (!component.isEnabled) {
+                    return null
+                }
                 if (component.text.isEmpty()) {
                     return ValidationInfoBuilder(component).error("Should not be empty.")
                 }

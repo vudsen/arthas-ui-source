@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.ui
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.*
@@ -9,7 +10,7 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 
-class SshConfigurationForm(oldState: HostMachineConnectConfig?) : AbstractFormComponent<HostMachineConnectConfig>() {
+class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable: Disposable) : AbstractFormComponent<HostMachineConnectConfig>(parentDisposable) {
 
     private val state: SshHostMachineConnectConfig = if (oldState is SshHostMachineConnectConfig) {
         oldState

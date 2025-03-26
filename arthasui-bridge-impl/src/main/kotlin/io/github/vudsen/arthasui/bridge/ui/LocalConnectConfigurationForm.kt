@@ -9,7 +9,7 @@ import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class LocalConnectConfigurationForm : AbstractFormComponent<HostMachineConnectConfig>() {
+class LocalConnectConfigurationForm : AbstractFormComponent<HostMachineConnectConfig>(null) {
 
     override fun getState(): HostMachineConnectConfig {
         return LocalConnectConfig()

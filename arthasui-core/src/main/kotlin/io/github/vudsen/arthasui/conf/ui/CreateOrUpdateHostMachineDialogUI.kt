@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.conf.ui
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
@@ -18,7 +19,8 @@ import javax.swing.*
 
 class CreateOrUpdateHostMachineDialogUI(
     oldState: HostMachineConfigV2?,
-    private val onOk: (HostMachineConfigV2) -> Unit
+    private val parentDisposable: Disposable,
+    private val onOk: (HostMachineConfigV2) -> Unit,
 ) : DialogWrapper(false) {
 
     private val state = oldState ?: HostMachineConfigV2()
@@ -27,7 +29,7 @@ class CreateOrUpdateHostMachineDialogUI(
 
     private lateinit var root: DialogPanel
 
-    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers)
+    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers, parentDisposable)
 
     private val providers: List<HostMachineConnectProvider>
 
@@ -41,7 +43,7 @@ class CreateOrUpdateHostMachineDialogUI(
         providers = manager.getProviders()
         oldState ?.let {
             connectType = manager.getProvider(oldState.connect).getName()
-        } ?: {
+        } ?:let {
             connectType = providers[0].getName()
         }
 
@@ -71,7 +73,7 @@ class CreateOrUpdateHostMachineDialogUI(
 
                 for (provider in providers) {
                     row {
-                        val form = provider.createForm(state.connect)
+                        val form = provider.createForm(state.connect, parentDisposable)
                         formMap[provider.getName()] = form
                         cell(form.getComponent())
                     }.visibleIf(ComboBoxPredicate(connectComboBox) { v -> v == provider.getName() })
@@ -83,6 +85,7 @@ class CreateOrUpdateHostMachineDialogUI(
                 }
             }
         }
+        root.registerValidators(parentDisposable)
         this.root = root
         val pane = JBScrollPane(
             root,

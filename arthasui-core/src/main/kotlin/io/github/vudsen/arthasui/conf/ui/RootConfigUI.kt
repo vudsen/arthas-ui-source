@@ -95,13 +95,13 @@ class RootConfigUI(project: Project) : Disposable {
             .setEditAction {
                 val jbTable = it.contextComponent as JBList<*>
 
-                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy()) { item ->
+                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy(), this) { item ->
                     settingState.hostMachines[jbTable.selectedIndex] = item
                     modified = true
                 }.show()
             }
             .setAddAction {
-                CreateOrUpdateHostMachineDialogUI(null) { state ->
+                CreateOrUpdateHostMachineDialogUI(null, this) { state ->
                     @Suppress("UNCHECKED_CAST")
                     val jbTable = it.contextComponent as JBList<HostMachineConfigV2>
                     collectionListModel.add(state)
