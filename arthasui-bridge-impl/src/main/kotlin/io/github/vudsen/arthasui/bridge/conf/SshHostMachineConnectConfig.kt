@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.bridge.bean.SshConfiguration
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class SshHostMachineConnectConfig(
@@ -26,7 +27,7 @@ class SshHostMachineConnectConfig(
     }
 
     override fun getIcon(): Icon {
-        return AllIcons.Nodes.Console
+        return ArthasUIIcons.Server
     }
 
     override fun getOS(): OS {

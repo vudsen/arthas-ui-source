@@ -8,10 +8,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import java.awt.FlowLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTree
+import javax.swing.*
 
 /**
  * 默认的根节点
@@ -51,7 +48,9 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: 
         root ?.let { return it }
         val root = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
             add(JLabel(config.connect.getIcon()))
-            add(JLabel(config.name))
+            add(JLabel(config.name).apply {
+                border = BorderFactory.createEmptyBorder(0, 4, 0, 0)
+            })
         }
 
         this.root = root

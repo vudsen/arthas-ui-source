@@ -5,6 +5,7 @@ import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.currentOS
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
@@ -17,7 +18,7 @@ class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
 
     @JsonIgnore
     override fun getIcon(): Icon {
-        return AllIcons.Nodes.HomeFolder
+        return ArthasUIIcons.Home
     }
 
     override fun getOS(): OS {

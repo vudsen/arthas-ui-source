@@ -48,6 +48,7 @@
         <configurationType implementation="io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl"/>
         <toolWindow id="ArthasUI"
                     anchor="right"
+                    icon="io.github.vudsen.arthasui.common.ArthasUIIcons.Arthas"
                     factoryClass="io.github.vudsen.arthasui.core.HostMachineToolWindowFactory"/>
 
         <completion.contributor language="Arthas" implementationClass="io.github.vudsen.arthasui.language.arthas.completion.ArthasCompletionContributor"/>
@@ -65,6 +66,8 @@
 
         <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.JvmProviderManagerImpl"
                             serviceInterface="io.github.vudsen.arthasui.api.extension.JvmProviderManager"/>
+
+        <iconMapper mappingFile="ArthasUIIconMappings.json"/>
     </extensions>
 
 

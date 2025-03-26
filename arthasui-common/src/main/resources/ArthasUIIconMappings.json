@@ -1,0 +1,9 @@
+{
+  "icons": {
+    "expui": {
+      "toolwindow": {
+        "arthas.svg": "icons/arthas.svg"
+      }
+    }
+  }
+}

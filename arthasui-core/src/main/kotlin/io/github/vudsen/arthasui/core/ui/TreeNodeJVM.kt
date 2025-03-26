@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.common.ui
+package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
@@ -7,11 +7,9 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import java.awt.FlowLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTree
+import javax.swing.*
 
 class TreeNodeJVM(
     private val rootNode: RecursiveTreeNode,
@@ -27,11 +25,7 @@ class TreeNodeJVM(
 
     override fun render(tree: JTree): JComponent {
         return JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-            if (manager.isAttached(jvm)) {
-                add(JLabel(AllIcons.Debugger.AttachToProcess))
-            } else {
-                add(JLabel(AllIcons.Nodes.Console))
-            }
+            add(JLabel(jvm.getIcon()))
             add(JLabel(jvm.id))
             add(
                 JLabel(
@@ -46,6 +40,7 @@ class TreeNodeJVM(
                         })
                 )
             )
+            border = BorderFactory.createEmptyBorder(0, -5, 0, 0)
         }
     }
 

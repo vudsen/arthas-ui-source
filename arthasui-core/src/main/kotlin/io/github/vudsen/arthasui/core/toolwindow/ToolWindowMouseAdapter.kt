@@ -1,6 +1,6 @@
 package io.github.vudsen.arthasui.core.toolwindow
 
-import io.github.vudsen.arthasui.common.ui.TreeNodeJVM
+import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 

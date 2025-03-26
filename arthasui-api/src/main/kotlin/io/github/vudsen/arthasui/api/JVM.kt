@@ -1,5 +1,7 @@
 package io.github.vudsen.arthasui.api
 
+import javax.swing.Icon
+
 
 abstract class JVM(
     /**
@@ -38,5 +40,6 @@ abstract class JVM(
         return id.hashCode()
     }
 
+    abstract fun getIcon(): Icon
 
 }
