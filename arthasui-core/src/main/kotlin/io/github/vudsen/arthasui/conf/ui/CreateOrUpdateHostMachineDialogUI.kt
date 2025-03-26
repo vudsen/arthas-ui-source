@@ -11,6 +11,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import java.awt.Dimension
 import javax.swing.*
@@ -21,6 +22,8 @@ class CreateOrUpdateHostMachineDialogUI(
 ) : DialogWrapper(false) {
 
     private val state = oldState ?: HostMachineConfigV2()
+
+    private val isCreate = oldState == null
 
     private lateinit var root: DialogPanel
 
@@ -49,7 +52,12 @@ class CreateOrUpdateHostMachineDialogUI(
         val root = panel {
             group("Basic Config") {
                 row {
-                    textField().label("Name").bindText(state::name).align(Align.FILL)
+                    textField()
+                        .label("Name")
+                        .bindText(state::name)
+                        .align(Align.FILL)
+                        .validationOnApply(TextComponentValidators())
+                        .enabled(isCreate)
                 }
             }
             lateinit var connectComboBox: ComboBox<String>
@@ -75,7 +83,6 @@ class CreateOrUpdateHostMachineDialogUI(
                 }
             }
         }
-        root.registerValidators {}
         this.root = root
         val pane = JBScrollPane(
             root,

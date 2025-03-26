@@ -37,4 +37,8 @@ class JvmInDockerProviderConfig(
     override fun copy(): JvmProviderConfig {
         return JvmInDockerProviderConfig(enabled, dockerPath, useToolsInContainer, jdkHome, arthasHome)
     }
+
+    override fun deepCopy(): JvmProviderConfig {
+        return JvmInDockerProviderConfig(enabled, dockerPath, useToolsInContainer, jdkHome, arthasHome)
+    }
 }

@@ -29,5 +29,9 @@ class EmptyConnectConfig : HostMachineConnectConfig(TYPE){
         return javaClass.hashCode()
     }
 
+    override fun deepCopy(): HostMachineConnectConfig {
+        return EmptyConnectConfig()
+    }
+
 
 }

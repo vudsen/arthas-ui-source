@@ -10,6 +10,8 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
+import io.github.vudsen.arthasui.common.util.deepCopy
+import io.github.vudsen.arthasui.conf.ArthasUISettings
 import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import javax.swing.JComponent
@@ -20,7 +22,7 @@ class RootConfigUI(project: Project) : Disposable {
     /**
      * 临时状态.
      */
-    val settingState: SettingsUIState
+    val settingState: ArthasUISettings
 
     private var root: DialogPanel? = null
 
@@ -28,7 +30,7 @@ class RootConfigUI(project: Project) : Disposable {
 
     init {
         val service = project.getService(ArthasUISettingsPersistent::class.java)
-        settingState = SettingsUIState(service.state.hostMachines)
+        settingState = service.state.deepCopy()
     }
 
     fun isModified(): Boolean {
@@ -93,8 +95,9 @@ class RootConfigUI(project: Project) : Disposable {
             .setEditAction {
                 val jbTable = it.contextComponent as JBList<*>
 
-                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex]) {
-                    // do nothing.
+                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy()) { item ->
+                    settingState.hostMachines[jbTable.selectedIndex] = item
+                    modified = true
                 }.show()
             }
             .setAddAction {

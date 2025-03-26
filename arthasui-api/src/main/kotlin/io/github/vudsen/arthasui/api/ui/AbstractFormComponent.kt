@@ -24,6 +24,9 @@ abstract class AbstractFormComponent<T> : FormComponent<T> {
         return dialogPanel
     }
 
+    override fun isModified(): Boolean {
+        return panel?.isModified() ?: false
+    }
 
     override fun apply(): T? {
         val dialogPanel = panel ?: return null

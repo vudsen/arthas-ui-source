@@ -10,6 +10,11 @@ interface FormComponent<T> {
     fun getComponent(): JComponent
 
     /**
+     * 是否有修改
+     */
+    fun isModified(): Boolean
+
+    /**
      * 验证表单并返回结果，如果非空，表示表单验证通过
      */
     fun apply(): T?

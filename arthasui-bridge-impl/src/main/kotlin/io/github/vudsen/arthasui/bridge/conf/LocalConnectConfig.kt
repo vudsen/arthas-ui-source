@@ -38,6 +38,10 @@ class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
         return os.hashCode()
     }
 
+    override fun deepCopy(): HostMachineConnectConfig {
+        return LocalConnectConfig()
+    }
+
     override fun toString(): String {
         return "Local($os)"
     }

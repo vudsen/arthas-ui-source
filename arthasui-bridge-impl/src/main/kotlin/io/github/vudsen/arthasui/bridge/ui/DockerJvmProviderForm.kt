@@ -9,6 +9,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.common.ui.CheckBoxPredicate
+import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 
 class DockerJvmProviderForm(oldState: JvmProviderConfig?) :
     AbstractFormComponent<JvmProviderConfig>() {
@@ -31,10 +32,10 @@ class DockerJvmProviderForm(oldState: JvmProviderConfig?) :
                 checkBox("Use tools in container").enabledIf(predicate).bindSelected(state::useToolsInContainer)
             }
             row {
-                textField().bindText(state::jdkHome).enabledIf(predicate).label("Jdk home").align(Align.FILL)
+                textField().bindText(state::jdkHome).enabledIf(predicate).label("Jdk home").align(Align.FILL).validationOnApply(TextComponentValidators())
             }
             row {
-                textField().bindText(state::arthasHome).enabledIf(predicate).label("Arthas home").align(Align.FILL)
+                textField().bindText(state::arthasHome).enabledIf(predicate).label("Arthas home").align(Align.FILL).validationOnApply(TextComponentValidators())
             }
         }
         return root

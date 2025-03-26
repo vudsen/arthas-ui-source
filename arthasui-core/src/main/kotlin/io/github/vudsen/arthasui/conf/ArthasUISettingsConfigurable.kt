@@ -28,8 +28,7 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
 
         val service = project.getService(ArthasUISettingsPersistent::class.java)
 
-        service.state.hostMachines = ui.settingState.hostMachines
-        service.notifyStateUpdated()
+        service.updateState(ui.settingState)
     }
 
     override fun getDisplayName(): String {
@@ -37,7 +36,7 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
     }
 
     override fun disposeUIResources() {
-        lastUI?.let {  Disposer.dispose(it) }
+        lastUI?.let { Disposer.dispose(it) }
     }
 
 }

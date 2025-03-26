@@ -58,6 +58,10 @@ class SshHostMachineConnectConfig(
         return result
     }
 
+    override fun deepCopy(): HostMachineConnectConfig {
+        return SshHostMachineConnectConfig(name, ssh, os)
+    }
+
     override fun toString(): String {
         return "SSH(name = $name)"
     }

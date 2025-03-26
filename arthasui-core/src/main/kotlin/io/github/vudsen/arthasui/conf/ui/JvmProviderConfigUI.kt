@@ -26,6 +26,13 @@ class JvmProviderConfigUI(private val oldStates: List<JvmProviderConfig>): FormC
         return pane
     }
 
+    override fun isModified(): Boolean {
+        for (formTab in formTabs) {
+            return formTab.isModified()
+        }
+        return false
+    }
+
     override fun apply(): MutableList<JvmProviderConfig>? {
         val result = mutableListOf<JvmProviderConfig>()
         for (formTab in formTabs) {

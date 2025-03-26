@@ -1,5 +1,7 @@
 package io.github.vudsen.arthasui.conf.bean
 
+import io.github.vudsen.arthasui.api.DeepCopyable
+
 data class JvmSearchGroup(
     /**
      * 搜索组的名称
@@ -9,7 +11,12 @@ data class JvmSearchGroup(
      * 搜索脚本
      */
     var script: String = ""
-) {
+) : DeepCopyable<JvmSearchGroup> {
+
+    override fun deepCopy(): JvmSearchGroup {
+        return JvmSearchGroup(name, script)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
