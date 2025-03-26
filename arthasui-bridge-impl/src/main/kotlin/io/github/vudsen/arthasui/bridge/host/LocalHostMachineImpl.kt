@@ -19,9 +19,16 @@ class LocalHostMachineImpl : HostMachine {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
         val baos = ByteArrayOutputStream(128)
         val buf = ByteArray(128)
-        while (process.inputStream.available() > 0 || !process.waitFor(1, TimeUnit.SECONDS)) {
+        while (true) {
             ProgressManager.checkCanceled()
-            baos.write(buf, 0, process.inputStream.read(buf))
+            val readBytes = process.inputStream.read(buf)
+            if (readBytes == -1) {
+                break
+            }
+            baos.write(buf, 0, readBytes)
+            if (process.waitFor(1, TimeUnit.SECONDS)) {
+                break
+            }
         }
         return CommandExecuteResult(baos.toString(), process.exitValue())
     }

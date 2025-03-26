@@ -10,7 +10,6 @@ import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import io.github.vudsen.arthasui.bridge.util.BridgeUtils
-import io.github.vudsen.arthasui.bridge.util.ok
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
 import java.io.OutputStream

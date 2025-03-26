@@ -1,7 +1,5 @@
 package io.github.vudsen.arthasui.bridge.providers
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
@@ -13,10 +11,8 @@ import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
-import io.github.vudsen.arthasui.bridge.util.ok
 import io.github.vudsen.arthasui.common.util.ListMapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 

@@ -6,4 +6,16 @@ package io.github.vudsen.arthasui.api.bean
 data class CommandExecuteResult(
     var stdout: String,
     var exitCode: Int
-)
+) {
+
+    /**
+     * 断言执行结果成功
+     * @return [CommandExecuteResult.stdout]
+     */
+    fun ok(): String {
+        if (exitCode != 0) {
+            throw IllegalStateException("Command execute failed: $exitCode, stdout: $stdout")
+        }
+        return stdout
+    }
+}

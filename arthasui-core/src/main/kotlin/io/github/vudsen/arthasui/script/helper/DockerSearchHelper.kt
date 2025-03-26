@@ -6,7 +6,6 @@ import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.util.BridgeUtils
-import io.github.vudsen.arthasui.bridge.util.ok
 import io.github.vudsen.arthasui.common.util.ListMapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 

@@ -36,14 +36,3 @@ fun ClientSession.executeCancelable(command: String): CommandExecuteResult {
         return CommandExecuteResult(outputStream.toString(StandardCharsets.UTF_8), exec.exitStatus)
     }
 }
-
-/**
- * 断言执行结果成功
- * @return [CommandExecuteResult.stdout]
- */
-fun CommandExecuteResult.ok(): String {
-    if (exitCode != 0) {
-        throw IllegalStateException("Command execute failed: $exitCode, stdout: $stdout")
-    }
-    return stdout
-}

@@ -6,7 +6,6 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.util.BridgeUtils
-import io.github.vudsen.arthasui.bridge.util.ok
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 
 /**
