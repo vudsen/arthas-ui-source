@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasProcess
@@ -12,7 +12,6 @@ import io.github.vudsen.arthasui.common.bean.StringResult
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import java.io.InputStreamReader
@@ -90,9 +89,8 @@ class ArthasBridgeImpl(
     }
 
     /**
-     * 写入命令
-     * @param command 命令e
-     * @param cb 回调函数，当读取到新的内容时会调用，此时需要在回调中尝试解析出一帧
+     * 写入命令.
+     * @param command 命令，写入前需要按需对命令追加 \n
      * @param updateLastExecuted 是否记录命令的变更
      */
     private suspend fun writeCommand(command: String, updateLastExecuted: Boolean = true) {
@@ -102,7 +100,6 @@ class ArthasBridgeImpl(
         }
         withContext(Dispatchers.IO) {
             outputStream.write(command.toByteArray())
-            outputStream.write("\n".toByteArray())
             outputStream.flush()
         }
     }
@@ -265,6 +262,11 @@ class ArthasBridgeImpl(
     }
 
     override suspend fun execute(command: String): ArthasResultItem {
+        val newCommand = if (!command.endsWith('\n')) {
+            command + '\n'
+        } else {
+            command
+        }
         logger.debug("Trying to execute command: $command")
         ensureNotStop()
         val spinHelper = SpinHelper()
@@ -278,7 +280,7 @@ class ArthasBridgeImpl(
             throw CancellationException()
         }
         try {
-            return execute0(command)
+            return execute0(newCommand)
         } catch (e: CancellationException) {
             cleanOutput()
             throw e
@@ -321,7 +323,7 @@ class ArthasBridgeImpl(
                 spinHelper.sleepSuspend()
             }
             withContext(NonCancellable) {
-                writeCommand("stop", true)
+                writeCommand("stop\n", true)
                 // 读取剩余所有内容
                 parse0(DefaultFrameDecoder(), false)
             }
@@ -336,13 +338,6 @@ class ArthasBridgeImpl(
             }
         }
     }
-
-    /**
-     * 取消正在执行的命令。
-     */
-    @Deprecated("Cancel the coroutine directly.")
-    override suspend fun cancel() {}
-
 
 
 

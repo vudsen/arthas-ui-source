@@ -55,8 +55,8 @@ class ArthasProcessHandler(
                     runBlocking {
                         notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
                         val coordinator = project.service<ArthasExecutionManager>()
+                        val arthasBridgeTemplate = coordinator.getTemplate(jvm)!!
                         arthasBridge = try {
-                            val arthasBridgeTemplate = coordinator.getTemplate(jvm)!!
                             arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
                                 override fun onContent(result: String) {
                                     notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
@@ -75,6 +75,7 @@ class ArthasProcessHandler(
                                     )
                                 }
                             }
+                            arthasBridgeTemplate.notifyBridgeCreateError(e)
                             notifyProcessTerminated(1)
                             return@runBlocking
                         }

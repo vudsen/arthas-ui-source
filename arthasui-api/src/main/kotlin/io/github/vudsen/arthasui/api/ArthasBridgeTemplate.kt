@@ -57,6 +57,15 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         getOrInitOriginalBridge()
     }
 
+    /**
+     * 通知创建 Bridge 失败，并唤醒所有由于 [waitUntilAttached] 而挂起的协程
+     */
+    fun notifyBridgeCreateError(e: Exception) {
+        if (!attachDeferred.isCompleted) {
+            attachDeferred.completeExceptionally(e)
+        }
+    }
+
 
     override fun addListener(arthasBridgeListener: ArthasBridgeListener) {
         val d = delegate
@@ -69,10 +78,6 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
 
     override fun stop(): Int {
         return delegate?.stop() ?: 0
-    }
-
-    override suspend fun cancel() {
-        delegate?.cancel()
     }
 
     /**

@@ -30,9 +30,5 @@ interface ArthasBridge {
      */
     fun stop(): Int
 
-    /**
-     * 取消正在执行的命令
-     */
-    @Deprecated("Cancel the coroutine directly.")
-    suspend fun cancel()
+
 }
