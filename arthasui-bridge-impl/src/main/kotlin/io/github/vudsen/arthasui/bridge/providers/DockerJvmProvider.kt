@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
@@ -68,8 +69,8 @@ class DockerJvmProvider : JvmProvider {
         }
     }
 
-    override fun createForm(oldState: JvmProviderConfig?): FormComponent<JvmProviderConfig> {
-        return DockerJvmProviderForm(oldState)
+    override fun createForm(oldState: JvmProviderConfig?, parentDisposable: Disposable): FormComponent<JvmProviderConfig> {
+        return DockerJvmProviderForm(oldState, parentDisposable)
     }
 
     override fun getConfigClass(): Class<out JvmProviderConfig> {

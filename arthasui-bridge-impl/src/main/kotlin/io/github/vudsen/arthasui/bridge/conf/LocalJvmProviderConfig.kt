@@ -26,4 +26,8 @@ class LocalJvmProviderConfig(
         return LocalJvmProviderConfig(enabled, arthasHome, jdkHome)
     }
 
+    override fun deepCopy(): JvmProviderConfig {
+        return LocalJvmProviderConfig(enabled, arthasHome, jdkHome)
+    }
+
 }

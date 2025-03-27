@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers
 
+import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
@@ -13,7 +14,7 @@ class LocalHostMachineConnectProvider : HostMachineConnectProvider {
         return "Local"
     }
 
-    override fun createForm(oldEntity: HostMachineConnectConfig?): FormComponent<HostMachineConnectConfig> {
+    override fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig> {
         return LocalConnectConfigurationForm()
     }
 

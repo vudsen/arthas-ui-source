@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.conf.ui
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
@@ -11,20 +12,24 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 import java.awt.Dimension
 import javax.swing.*
 
 class CreateOrUpdateHostMachineDialogUI(
     oldState: HostMachineConfigV2?,
-    private val onOk: (HostMachineConfigV2) -> Unit
+    private val parentDisposable: Disposable,
+    private val onOk: (HostMachineConfigV2) -> Unit,
 ) : DialogWrapper(false) {
 
     private val state = oldState ?: HostMachineConfigV2()
 
+    private val isCreate = oldState == null
+
     private lateinit var root: DialogPanel
 
-    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers)
+    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers, parentDisposable)
 
     private val providers: List<HostMachineConnectProvider>
 
@@ -38,7 +43,7 @@ class CreateOrUpdateHostMachineDialogUI(
         providers = manager.getProviders()
         oldState ?.let {
             connectType = manager.getProvider(oldState.connect).getName()
-        } ?: {
+        } ?:let {
             connectType = providers[0].getName()
         }
 
@@ -49,7 +54,12 @@ class CreateOrUpdateHostMachineDialogUI(
         val root = panel {
             group("Basic Config") {
                 row {
-                    textField().label("Name").bindText(state::name).align(Align.FILL)
+                    textField()
+                        .label("Name")
+                        .bindText(state::name)
+                        .align(Align.FILL)
+                        .validationOnApply(TextComponentValidators())
+                        .enabled(isCreate)
                 }
             }
             lateinit var connectComboBox: ComboBox<String>
@@ -63,7 +73,7 @@ class CreateOrUpdateHostMachineDialogUI(
 
                 for (provider in providers) {
                     row {
-                        val form = provider.createForm(state.connect)
+                        val form = provider.createForm(state.connect, parentDisposable)
                         formMap[provider.getName()] = form
                         cell(form.getComponent())
                     }.visibleIf(ComboBoxPredicate(connectComboBox) { v -> v == provider.getName() })
@@ -75,7 +85,7 @@ class CreateOrUpdateHostMachineDialogUI(
                 }
             }
         }
-        root.registerValidators {}
+        root.registerValidators(parentDisposable)
         this.root = root
         val pane = JBScrollPane(
             root,

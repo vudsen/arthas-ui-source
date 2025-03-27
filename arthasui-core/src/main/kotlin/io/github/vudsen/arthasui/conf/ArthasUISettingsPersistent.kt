@@ -25,6 +25,14 @@ class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
         this.myState = state
     }
 
+    /**
+     * 更新并通知配置更新
+     */
+    fun updateState(state: ArthasUISettings) {
+        myState = state
+        notifyStateUpdated()
+    }
+
     fun addUpdatedListener(listener: () -> Unit) {
         listeners.add(listener)
     }

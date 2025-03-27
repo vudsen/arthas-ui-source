@@ -19,7 +19,7 @@ import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.exception.BridgeException
-import io.github.vudsen.arthasui.common.util.printStackTraceToString
+import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.util.ui.CardJPanel
 import io.github.vudsen.arthasui.util.ui.TagLabel
 import java.awt.BorderLayout
@@ -84,7 +84,7 @@ class ExecuteHistoryUI(project: Project, jvm: JVM) : AdditionalTabComponent() {
                     } else {
                         contentRight.add(HistoryDetailUI(project, rawContent +
                                 "\n\nPlugin Stack Trace(Our plugin is currently unstable, and we cannot determine whether the error originates from our plugin or your command. Therefore, we are providing the full stack trace below.):\n"
-                                + exception.printStackTraceToString(), null), item.id)
+                                + exception.collectStackTrace(), null), item.id)
                     }
                 }
             }

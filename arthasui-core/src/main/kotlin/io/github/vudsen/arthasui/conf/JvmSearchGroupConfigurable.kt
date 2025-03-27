@@ -12,6 +12,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.util.preferredHeight
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.common.ui.SimpleDialog
+import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType
 import io.github.vudsen.arthasui.script.OgnlJvmSearcher
@@ -22,10 +23,11 @@ import javax.swing.JComponent
 
 class JvmSearchGroupConfigurable(
     private val project: Project,
-    private val hostMachineConfigV2: HostMachineConfigV2 = HostMachineConfigV2(),
+    private val hostMachineConfigV2: HostMachineConfigV2,
     oldState: JvmSearchGroup? = null,
 ) : Configurable {
 
+    private val isCreate = oldState == null
 
     private val state = oldState ?: JvmSearchGroup()
 
@@ -42,7 +44,7 @@ class JvmSearchGroupConfigurable(
 
         val root = panel {
             row {
-                textField().label("Name").bindText(state::name)
+                textField().label("Name").bindText(state::name).enabled(isCreate).align(Align.FILL)
             }
             group("Ognl Script") {
                 row {
@@ -78,7 +80,7 @@ class JvmSearchGroupConfigurable(
             val resultHolder = context.getResultHolder()
             SimpleDialog("Script execute success", "Searched jvms: ${resultHolder.result}\nDebug message:\n${resultHolder.collectDebugMessages()}").show()
         } catch (e: Exception) {
-            SimpleDialog("Script execute failed", "${e.cause?.message ?: e.toString()}, debugMessage:\n${context.getResultHolder().collectDebugMessages()}").show()
+            SimpleDialog("Script execute failed", e.collectStackTrace()).show()
             if (logger.isDebugEnabled) {
                 logger.debug("Failed to execute script", e)
             }
