@@ -16,18 +16,25 @@ class LocalHostMachineImpl : HostMachine {
 
     override fun execute(vararg command: String): CommandExecuteResult {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
-        val baos = ByteArrayOutputStream(128)
-        val buf = ByteArray(128)
+        val baos = ByteArrayOutputStream(512)
+        val buf = ByteArray(512)
         while (true) {
             ProgressManager.checkCanceled()
-            val readBytes = process.inputStream.read(buf)
-            if (readBytes == -1) {
+            if (process.inputStream.read(buf).also { readBytes ->
+                    if (readBytes == -1) {
+                        return@also
+                    }
+                    baos.write(buf, 0, readBytes)
+                } == -1 && process.waitFor(1, TimeUnit.SECONDS)) {
                 break
             }
-            baos.write(buf, 0, readBytes)
-            if (process.waitFor(1, TimeUnit.SECONDS)) {
-                break
-            }
+        }
+        // Ensure all remaining data is read
+        while (process.inputStream.read(buf).also { readBytes ->
+                if (readBytes == -1) return@also
+                baos.write(buf, 0, readBytes)
+            } != -1) {
+            ProgressManager.checkCanceled()
         }
         return CommandExecuteResult(baos.toString(), process.exitValue())
     }
