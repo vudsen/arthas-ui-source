@@ -19,7 +19,6 @@ import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.Reader
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.text.toByteArray
 
 class ArthasBridgeImpl(
@@ -28,14 +27,17 @@ class ArthasBridgeImpl(
 
     private val executionLock = Mutex()
 
+
     /**
-     * 停止执行标志. 
+     * 停止运行标志
      */
-    private val stopExecuteFlag = AtomicBoolean(false)
+    @Volatile
+    private var stopFlag = false
 
     companion object {
         private val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
-        val EOT = Char(3).toString()
+        // ctrl c
+        private val EOT = Char(3).toString()
     }
 
     private val reader: Reader = InputStreamReader(arthasProcess.getInputStream())
@@ -91,10 +93,13 @@ class ArthasBridgeImpl(
      * 写入命令
      * @param command 命令e
      * @param cb 回调函数，当读取到新的内容时会调用，此时需要在回调中尝试解析出一帧
+     * @param updateLastExecuted 是否记录命令的变更
      */
-    private suspend fun writeCommand(command: String) {
+    private suspend fun writeCommand(command: String, updateLastExecuted: Boolean = true) {
         ensureAttachStatus()
-        lastExecuted = command
+        if (updateLastExecuted) {
+            lastExecuted = command
+        }
         withContext(Dispatchers.IO) {
             outputStream.write(command.toByteArray())
             outputStream.write("\n".toByteArray())
@@ -102,19 +107,20 @@ class ArthasBridgeImpl(
         }
     }
 
-    private suspend fun parse0(decoder: ArthasFrameDecoder, cancelable: Boolean): ArthasResultItem {
+    private suspend fun parse0(decoder: ArthasFrameDecoder, handleStop: Boolean): ArthasResultItem {
         var data: ArthasResultItem? = null
         val spinHelper = SpinHelper()
         while (true) {
             val len: Int = withContext(Dispatchers.IO) {
                 val len: Int
                 while (true) {
+                    ensureActive()
+                    if (handleStop) {
+                        ensureNotStop()
+                    }
                     if (reader.ready()) {
                         spinHelper.reportSuccess()
                         len = reader.read(readBuffer)
-                        break
-                    } else if (stopExecuteFlag.get() && cancelable){
-                        len = -1
                         break
                     } else {
                         spinHelper.sleepSuspend()
@@ -252,18 +258,44 @@ class ArthasBridgeImpl(
         return item
     }
 
+    private fun ensureNotStop() {
+        if (stopFlag) {
+            throw CancellationException()
+        }
+    }
 
     override suspend fun execute(command: String): ArthasResultItem {
         logger.debug("Trying to execute command: $command")
+        ensureNotStop()
         val spinHelper = SpinHelper()
         while (!executionLock.tryLock()) {
+            ensureNotStop()
             spinHelper.sleepSuspend()
             logger.debug("Failed to acquire lock for command: $command")
         }
+        if (stopFlag) {
+            executionLock.unlock()
+            throw CancellationException()
+        }
         try {
             return execute0(command)
+        } catch (e: CancellationException) {
+            cleanOutput()
+            throw e
         } finally {
             executionLock.unlock()
+        }
+    }
+
+    /**
+     * 当命令被取消后，做收尾操作.
+     */
+    private suspend fun cleanOutput() {
+        withContext(NonCancellable) {
+            logger.info("Trying to cancel command: $lastExecuted")
+            writeCommand(EOT, false)
+            // 读取剩余所有内容
+            parse0(DefaultFrameDecoder(), true)
         }
     }
 
@@ -282,9 +314,17 @@ class ArthasBridgeImpl(
 
     override fun stop(): Int {
         logger.info("Stopping arthas...")
+        stopFlag = true
         runBlocking {
-            cancel()
-            execute("stop\n")
+            val spinHelper = SpinHelper()
+            if (!executionLock.tryLock()) {
+                spinHelper.sleepSuspend()
+            }
+            withContext(NonCancellable) {
+                writeCommand("stop", true)
+                // 读取剩余所有内容
+                parse0(DefaultFrameDecoder(), false)
+            }
         }
         try {
             return arthasProcess.stop()
@@ -297,30 +337,11 @@ class ArthasBridgeImpl(
         }
     }
 
-    override suspend fun cancel() {
-        if (!stopExecuteFlag.compareAndSet(false, true)) {
-            return
-        }
-        var locked = false
-        try {
-            // wait until execute exit.
-            val spinHelper = SpinHelper()
-            if (!executionLock.tryLock()) {
-                spinHelper.sleepSuspend()
-            }
-            locked = true
-            val prev = lastExecuted
-            writeCommand(EOT)
-            lastExecuted = prev
-            parse0(DefaultFrameDecoder(), false)
-            outputBuffer.clear()
-        } finally {
-            stopExecuteFlag.set(false)
-            if (locked) {
-                executionLock.unlock()
-            }
-        }
-    }
+    /**
+     * 取消正在执行的命令。
+     */
+    @Deprecated("Cancel the coroutine directly.")
+    override suspend fun cancel() {}
 
 
 

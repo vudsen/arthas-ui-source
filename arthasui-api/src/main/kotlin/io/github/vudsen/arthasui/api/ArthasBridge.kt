@@ -4,12 +4,12 @@ import io.github.vudsen.arthasui.api.exception.BridgeException
 import kotlin.jvm.Throws
 
 /**
- * Arthas 桥接。**对于调用者需要严格处理并发问题**，而实现类不需要关心并发问题，即实现类是**非线程安全的**。
+ * Arthas 桥接
  */
 interface ArthasBridge {
 
     /**
-     * 执行任意命令，用于处理部分命令没有专门做过增强，可以直接使用该方法进行调用。
+     * 执行命令.
      * @return 执行后的结果
      */
     @Throws(BridgeException::class)
@@ -33,5 +33,6 @@ interface ArthasBridge {
     /**
      * 取消正在执行的命令
      */
+    @Deprecated("Cancel the coroutine directly.")
     suspend fun cancel()
 }
