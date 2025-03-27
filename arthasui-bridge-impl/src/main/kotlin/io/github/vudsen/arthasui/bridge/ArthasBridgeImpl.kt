@@ -63,6 +63,7 @@ class ArthasBridgeImpl(
             }
             return
         }
+        logger.info("Start init the arthas bridge.")
         val result = parse0(DefaultFrameDecoder(), true)
         if (logger.isDebugEnabled) {
             logger.debug(result.toString())
@@ -88,7 +89,7 @@ class ArthasBridgeImpl(
 
     /**
      * 写入命令
-     * @param command 命令
+     * @param command 命令e
      * @param cb 回调函数，当读取到新的内容时会调用，此时需要在回调中尝试解析出一帧
      */
     private suspend fun writeCommand(command: String) {
@@ -102,23 +103,24 @@ class ArthasBridgeImpl(
     }
 
     private suspend fun parse0(decoder: ArthasFrameDecoder, cancelable: Boolean): ArthasResultItem {
-        var len: Int
         var data: ArthasResultItem? = null
         val spinHelper = SpinHelper()
         while (true) {
-            withContext(Dispatchers.IO) {
+            val len: Int = withContext(Dispatchers.IO) {
+                val len: Int
                 while (true) {
                     if (reader.ready()) {
-                        len = reader.read(readBuffer)
                         spinHelper.reportSuccess()
+                        len = reader.read(readBuffer)
                         break
                     } else if (stopExecuteFlag.get() && cancelable){
                         len = -1
-                        return@withContext
+                        break
                     } else {
                         spinHelper.sleepSuspend()
                     }
                 }
+                return@withContext len
             }
             if (len == -1) {
                 // canceled.
@@ -252,9 +254,11 @@ class ArthasBridgeImpl(
 
 
     override suspend fun execute(command: String): ArthasResultItem {
+        logger.debug("Trying to execute command: $command")
         val spinHelper = SpinHelper()
         while (!executionLock.tryLock()) {
             spinHelper.sleepSuspend()
+            logger.debug("Failed to acquire lock for command: $command")
         }
         try {
             return execute0(command)
@@ -279,6 +283,7 @@ class ArthasBridgeImpl(
     override fun stop(): Int {
         logger.info("Stopping arthas...")
         runBlocking {
+            cancel()
             execute("stop\n")
         }
         try {
