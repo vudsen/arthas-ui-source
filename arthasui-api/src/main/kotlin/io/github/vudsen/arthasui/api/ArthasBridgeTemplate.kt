@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.api
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -32,13 +33,18 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
 
     private fun getOrInitOriginalBridge(): ArthasBridge {
         delegate ?.let { return it }
-        kotlin.synchronized(ArthasBridge::class.java) {
+        synchronized(ArthasBridge::class.java) {
             delegate ?.let { return it }
-            val bridge = factory.createBridge()
-            afterBridgeCreated(bridge)
-            delegate = bridge
-            attachDeferred.complete(Unit)
-            return bridge
+            try {
+                val bridge = factory.createBridge()
+                afterBridgeCreated(bridge)
+                delegate = bridge
+                attachDeferred.complete(Unit)
+                return bridge
+            } catch (e: Exception) {
+                notifyBridgeCreateError(e)
+                throw e
+            }
         }
     }
 
@@ -60,7 +66,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     /**
      * 通知创建 Bridge 失败，并唤醒所有由于 [waitUntilAttached] 而挂起的协程
      */
-    fun notifyBridgeCreateError(e: Exception) {
+    private fun notifyBridgeCreateError(e: Exception) {
         if (!attachDeferred.isCompleted) {
             attachDeferred.completeExceptionally(e)
         }
@@ -77,6 +83,9 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     }
 
     override fun stop(): Int {
+        if (!attachDeferred.isCompleted) {
+            attachDeferred.completeExceptionally(CancellationException())
+        }
         return delegate?.stop() ?: 0
     }
 
