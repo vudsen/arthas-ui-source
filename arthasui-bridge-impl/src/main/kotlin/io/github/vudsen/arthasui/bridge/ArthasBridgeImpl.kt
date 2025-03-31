@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasProcess
@@ -12,14 +12,12 @@ import io.github.vudsen.arthasui.common.bean.StringResult
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.Reader
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.text.toByteArray
 
 class ArthasBridgeImpl(
@@ -28,14 +26,17 @@ class ArthasBridgeImpl(
 
     private val executionLock = Mutex()
 
+
     /**
-     * 停止执行标志. 
+     * 停止运行标志
      */
-    private val stopExecuteFlag = AtomicBoolean(false)
+    @Volatile
+    private var stopFlag = false
 
     companion object {
         private val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
-        val EOT = Char(3).toString()
+        // ctrl c
+        private val EOT = Char(3).toString()
     }
 
     private val reader: Reader = InputStreamReader(arthasProcess.getInputStream())
@@ -63,6 +64,7 @@ class ArthasBridgeImpl(
             }
             return
         }
+        logger.info("Start init the arthas bridge.")
         val result = parse0(DefaultFrameDecoder(), true)
         if (logger.isDebugEnabled) {
             logger.debug(result.toString())
@@ -87,38 +89,41 @@ class ArthasBridgeImpl(
     }
 
     /**
-     * 写入命令
-     * @param command 命令
-     * @param cb 回调函数，当读取到新的内容时会调用，此时需要在回调中尝试解析出一帧
+     * 写入命令.
+     * @param command 命令，写入前需要按需对命令追加 \n
+     * @param updateLastExecuted 是否记录命令的变更
      */
-    private suspend fun writeCommand(command: String) {
+    private suspend fun writeCommand(command: String, updateLastExecuted: Boolean = true) {
         ensureAttachStatus()
-        lastExecuted = command
+        if (updateLastExecuted) {
+            lastExecuted = command
+        }
         withContext(Dispatchers.IO) {
             outputStream.write(command.toByteArray())
-            outputStream.write("\n".toByteArray())
             outputStream.flush()
         }
     }
 
-    private suspend fun parse0(decoder: ArthasFrameDecoder, cancelable: Boolean): ArthasResultItem {
-        var len: Int
+    private suspend fun parse0(decoder: ArthasFrameDecoder, handleStop: Boolean): ArthasResultItem {
         var data: ArthasResultItem? = null
         val spinHelper = SpinHelper()
         while (true) {
-            withContext(Dispatchers.IO) {
+            val len: Int = withContext(Dispatchers.IO) {
+                val len: Int
                 while (true) {
+                    ensureActive()
+                    if (handleStop) {
+                        ensureNotStop()
+                    }
                     if (reader.ready()) {
-                        len = reader.read(readBuffer)
                         spinHelper.reportSuccess()
+                        len = reader.read(readBuffer)
                         break
-                    } else if (stopExecuteFlag.get() && cancelable){
-                        len = -1
-                        return@withContext
                     } else {
                         spinHelper.sleepSuspend()
                     }
                 }
+                return@withContext len
             }
             if (len == -1) {
                 // canceled.
@@ -250,16 +255,49 @@ class ArthasBridgeImpl(
         return item
     }
 
+    private fun ensureNotStop() {
+        if (stopFlag) {
+            throw CancellationException()
+        }
+    }
 
     override suspend fun execute(command: String): ArthasResultItem {
+        val newCommand = if (!command.endsWith('\n')) {
+            command + '\n'
+        } else {
+            command
+        }
+        logger.debug("Trying to execute command: $command")
+        ensureNotStop()
         val spinHelper = SpinHelper()
         while (!executionLock.tryLock()) {
+            ensureNotStop()
             spinHelper.sleepSuspend()
+            logger.debug("Failed to acquire lock for command: $command")
+        }
+        if (stopFlag) {
+            executionLock.unlock()
+            throw CancellationException()
         }
         try {
-            return execute0(command)
+            return execute0(newCommand)
+        } catch (e: CancellationException) {
+            cleanOutput()
+            throw e
         } finally {
             executionLock.unlock()
+        }
+    }
+
+    /**
+     * 当命令被取消后，做收尾操作.
+     */
+    private suspend fun cleanOutput() {
+        withContext(NonCancellable) {
+            logger.info("Trying to cancel command: $lastExecuted")
+            writeCommand(EOT, false)
+            // 读取剩余所有内容
+            parse0(DefaultFrameDecoder(), true)
         }
     }
 
@@ -278,8 +316,17 @@ class ArthasBridgeImpl(
 
     override fun stop(): Int {
         logger.info("Stopping arthas...")
+        stopFlag = true
         runBlocking {
-            execute("stop\n")
+            val spinHelper = SpinHelper()
+            if (!executionLock.tryLock()) {
+                spinHelper.sleepSuspend()
+            }
+            withContext(NonCancellable) {
+                writeCommand("stop\n", true)
+                // 读取剩余所有内容
+                parse0(DefaultFrameDecoder(), false)
+            }
         }
         try {
             return arthasProcess.stop()
@@ -291,32 +338,6 @@ class ArthasBridgeImpl(
             }
         }
     }
-
-    override suspend fun cancel() {
-        if (!stopExecuteFlag.compareAndSet(false, true)) {
-            return
-        }
-        var locked = false
-        try {
-            // wait until execute exit.
-            val spinHelper = SpinHelper()
-            if (!executionLock.tryLock()) {
-                spinHelper.sleepSuspend()
-            }
-            locked = true
-            val prev = lastExecuted
-            writeCommand(EOT)
-            lastExecuted = prev
-            parse0(DefaultFrameDecoder(), false)
-            outputBuffer.clear()
-        } finally {
-            stopExecuteFlag.set(false)
-            if (locked) {
-                executionLock.unlock()
-            }
-        }
-    }
-
 
 
 

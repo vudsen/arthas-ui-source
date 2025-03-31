@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.providers
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
@@ -18,6 +19,8 @@ import java.io.OutputStream
 class LocalJvmProvider : JvmProvider {
 
     companion object {
+        private val logger = Logger.getInstance(LocalJvmProvider::class.java)
+
         private class TelnetArthasProcess(private val client: TelnetClient) : ArthasProcess {
             override fun getInputStream(): InputStream {
                 return client.inputStream
@@ -63,7 +66,9 @@ class LocalJvmProvider : JvmProvider {
         }
 
         return ArthasBridgeFactory {
-            val result = hostMachine.execute(
+            logger.info("Trying to attach ${jvm.id}, binding telnet port on 3658.")
+            // TODO 自动切换端口
+            val stdout = hostMachine.execute(
                 "${localJvmProviderConfig.jdkHome}/bin/java",
                 "-jar",
                 "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
@@ -71,14 +76,17 @@ class LocalJvmProvider : JvmProvider {
                 "--telnet-port",
                 "3658",
                 "--attach-only"
-            )
-            if (result.exitCode != 0) {
-                TODO("Handle non-zero exit code.")
+            ).ok()
+
+            if (logger.isDebugEnabled) {
+                logger.info("Attach success!, stdout: $stdout")
             }
             val client = TelnetClient().apply {
                 connectTimeout = 10000
             }
+            logger.info("Trying to connect by telnet...")
             client.connect("127.0.0.1", 3658)
+            logger.info("Telnet connect successfully!")
             return@ArthasBridgeFactory ArthasBridgeImpl(TelnetArthasProcess(client) as ArthasProcess)
         }
     }

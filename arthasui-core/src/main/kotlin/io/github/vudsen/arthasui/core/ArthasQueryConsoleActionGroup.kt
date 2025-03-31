@@ -83,13 +83,6 @@ class ArthasQueryConsoleActionGroup(
                 }
             }
 
-            override fun onCancel() {
-                runBlocking {
-                    val coordinator = project.getService(ArthasExecutionManager::class.java)
-                    coordinator.getTemplate(virtualFileAttributes.jvm)?.cancel()
-                }
-            }
-
             override fun onFinished() {
                 editorEx.markupModel.removeHighlighter(highlighter)
             }
@@ -101,31 +94,10 @@ class ArthasQueryConsoleActionGroup(
 
     private val actions: Array<AnAction> = arrayOf(
         object : AnAction(AllIcons.RunConfigurations.TestState.Run) {
+
+
             override fun actionPerformed(e: AnActionEvent) {
                 runSelected(editorEx)
-            }
-
-        },
-        object : AnAction(AllIcons.Actions.Suspend) {
-
-            override fun getActionUpdateThread(): ActionUpdateThread {
-                return ActionUpdateThread.EDT
-            }
-
-            override fun actionPerformed(e: AnActionEvent) {
-                runBlocking {
-                    val coordinator = project.getService(ArthasExecutionManager::class.java)
-                    coordinator.getTemplate(virtualFileAttributes.jvm)?.cancel()
-                }
-            }
-
-            override fun update(e: AnActionEvent) {
-                val coordinator = project.getService(ArthasExecutionManager::class.java)
-                coordinator.getTemplate(virtualFileAttributes.jvm) ?.let {
-                    e.presentation.isEnabled = it.isAlive()
-                } ?: let {
-                    e.presentation.isEnabled = false
-                }
             }
 
         }
