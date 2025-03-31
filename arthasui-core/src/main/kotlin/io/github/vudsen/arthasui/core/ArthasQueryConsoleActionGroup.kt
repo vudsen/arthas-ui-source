@@ -56,6 +56,14 @@ class ArthasQueryConsoleActionGroup(
             }
             builder.append(ch)
         }
+        for (i in builder.length - 1 downTo 0) {
+            val ch = builder[i]
+            if (ch == ' ' || ch == ';') {
+                builder.deleteAt(i)
+            } else {
+                break
+            }
+        }
         return builder.toString()
     }
 
