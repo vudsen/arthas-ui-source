@@ -14,10 +14,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowId
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
-import io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
 import io.github.vudsen.arthasui.run.ArthasConfigurationFactory
-import kotlinx.coroutines.runBlocking
+import io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl
 
 /**
  * Arthas Query Console header actions group.
@@ -31,10 +30,40 @@ class ArthasQueryConsoleActionGroup(
     private var lastHighlighter: RangeHighlighter? = null
 
     /**
+     * 移除回车以及命令结尾的分号
+     */
+    private fun compactCommand(cmd: String): String {
+        val builder = StringBuilder(cmd.length)
+        var skipWhiteSpace = false
+        for (ch in cmd) {
+            if (ch == '\n') {
+                // 清除左右空格，只保留一个
+                for (i in builder.length - 1 downTo 0) {
+                    if (builder[i] == ' ') {
+                        builder.deleteAt(i)
+                    } else {
+                        break
+                    }
+                }
+                skipWhiteSpace = true
+                builder.append(' ')
+                continue
+            } else if (skipWhiteSpace) {
+                if (ch == ' ') {
+                    continue
+                }
+                skipWhiteSpace = false
+            }
+            builder.append(ch)
+        }
+        return builder.toString()
+    }
+
+    /**
      * 获取对应的 [ArthasBridge] 实例，若对应的 Bridge 还没有被创建，则创建并缓存
      */
     fun runSelected(editorEx: EditorEx) {
-        val selected = editorEx.selectionModel.selectedText ?: return
+        val selected = compactCommand(editorEx.selectionModel.selectedText ?: return)
 
 
         lastHighlighter?.let {
@@ -51,7 +80,7 @@ class ArthasQueryConsoleActionGroup(
         lastHighlighter = highlighter
         highlighter.gutterIconRenderer = ExecutionGutterIconRenderer(editorEx)
 
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Execute command", true) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, selected, true) {
 
             override fun run(indicator: ProgressIndicator) {
                 runBlockingCancellable {
