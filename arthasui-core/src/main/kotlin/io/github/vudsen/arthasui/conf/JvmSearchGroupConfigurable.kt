@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.conf
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.Configurable
@@ -11,6 +12,7 @@ import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.util.preferredHeight
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.conf.ui.ScriptTestsDialog
 import io.github.vudsen.arthasui.common.ui.SimpleDialog
 import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
@@ -72,19 +74,7 @@ class JvmSearchGroupConfigurable(
             service<HostMachineConnectManager>().connect(hostMachineConfigV2.connect),
             hostMachineConfigV2
         )
-        try {
-            OgnlJvmSearcher.execute(
-                script,
-                context
-            )
-            val resultHolder = context.getResultHolder()
-            SimpleDialog("Script execute success", "Searched jvms: ${resultHolder.result}\nDebug message:\n${resultHolder.collectDebugMessages()}").show()
-        } catch (e: Exception) {
-            SimpleDialog("Script execute failed", e.collectStackTrace()).show()
-            if (logger.isDebugEnabled) {
-                logger.debug("Failed to execute script", e)
-            }
-        }
+        ScriptTestsDialog(script, context).show()
     }
 
     override fun isModified(): Boolean {

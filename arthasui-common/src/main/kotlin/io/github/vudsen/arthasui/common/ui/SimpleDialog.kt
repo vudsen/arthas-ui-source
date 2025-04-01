@@ -3,10 +3,8 @@ package io.github.vudsen.arthasui.common.ui
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
-import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.JComponent
-import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants
 
 class SimpleDialog(title: String, private val content: String) : DialogWrapper(false) {
