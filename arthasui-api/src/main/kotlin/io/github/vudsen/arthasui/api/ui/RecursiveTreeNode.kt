@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.api.ui
 
-import com.intellij.openapi.Disposable
 import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode

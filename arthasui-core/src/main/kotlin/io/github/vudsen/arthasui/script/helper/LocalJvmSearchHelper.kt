@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.script.helper
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.util.BridgeUtils
@@ -11,24 +12,11 @@ import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 /**
  * 提供所有可执行文件的路径
  */
-class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConfig: HostMachineConfigV2) {
+class LocalJvmSearchHelper(private val hostMachine: HostMachine, private val providerConfig: LocalJvmProviderConfig) {
 
     private val whiteSpacePattern = Regex(" +")
 
-    private var _provider: LocalJvmProviderConfig? = null
-
-    init {
-        for (entity in hostMachineConfig.providers) {
-            if (entity is LocalJvmProviderConfig) {
-                _provider = entity
-                break
-            }
-        }
-    }
-
-    private fun getProvider(): LocalJvmProviderConfig {
-        return _provider ?: throw IllegalStateException("LocalJvmProvider is configured.")
-    }
+    private val ctx = JvmContext(hostMachine, providerConfig)
 
     /**
      * 根据端口找到 jvm
@@ -48,11 +36,11 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
                     val taskNames =
                         hostMachine.execute("cmd", "/c", "\"tasklist | findstr ${pid}\"").ok().split(whiteSpacePattern)
                     if (taskNames.isEmpty()) {
-                        return@map LocalJVM(pid, "<Unknown>")
+                        return@map LocalJVM(pid, "<Unknown>", ctx)
                     }
                     actualName = taskNames[0]
                 }
-                return@map LocalJVM(pid, actualName)
+                return@map LocalJVM(pid, actualName, ctx)
             }.filterNotNull()
         } else if (hostMachine.getOS() == OS.LINUX) {
             val result = hostMachine.execute("sh", "-c", "\"netstat -tlpn | grep :${port}\"").ok().split('\n')
@@ -62,7 +50,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
                     return@map null
                 }
                 val pidAndName = arr[6].split('/')
-                return@map LocalJVM(pidAndName[0], name ?: pidAndName[1])
+                return@map LocalJVM(pidAndName[0], name ?: pidAndName[1], ctx)
             }.filterNotNull()
         } else {
             TODO("Support MacOS")
@@ -74,8 +62,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val provider = getProvider()
-        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${provider.jdkHome}/bin/jps\" -lvm", search).split('\n')
+        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${providerConfig.jdkHome}/bin/jps\" -lvm", search).split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {
@@ -85,7 +72,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, hostMachineConf
             val j = jvm.indexOf(' ', i + 1)
 
             val actualName = name ?: if (j < 0) jvm.substring(i + 1) else jvm.substring(i + 1, j)
-            result.add(LocalJVM(jvm.substring(0, i), actualName));
+            result.add(LocalJVM(jvm.substring(0, i), actualName, ctx));
         }
         return result
     }

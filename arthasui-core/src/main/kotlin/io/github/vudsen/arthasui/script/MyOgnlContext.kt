@@ -13,11 +13,6 @@ class MyOgnlContext (
     val hostMachineConfig: HostMachineConfigV2,
 ) {
 
-    /**
-     * 用于帮助搜素本地 JVM
-     */
-    val localHelper: LocalJvmSearchHelper = LocalJvmSearchHelper(hostMachine, hostMachineConfig)
-
     val helpers = LazyLoadHelper(hostMachine, hostMachineConfig)
 
     /**
@@ -25,29 +20,11 @@ class MyOgnlContext (
      */
     private val resultHolder = ResultHolder()
 
-    /**
-     * 添加一个本地 JVM.
-     * @param pidNameArray 一个二维数组，内部数组的长度应该为 2，第一个参数为 jvm 的pid，第二个为名称
-     */
-    fun addLocal(pidNameArray: List<Array<String>>) {
-        for (arr in pidNameArray) {
-            if (arr.size < 2) {
-                continue
-            }
-            resultHolder.add(LocalJVM(arr[0], arr[1]))
-        }
-    }
 
     fun addAll(jvms: List<JVM>) {
         resultHolder.addAll(jvms)
     }
 
-    /**
-     * 添加一个 docker 中的 jvm
-     */
-    fun addDocker(pid: String, name: String?) {
-        resultHolder.add(DockerJvm(pid, name ?: "<null>"))
-    }
 
     /**
      * debug

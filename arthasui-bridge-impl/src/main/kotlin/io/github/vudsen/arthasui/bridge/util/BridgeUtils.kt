@@ -9,46 +9,25 @@ import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 
 object BridgeUtils {
 
-    fun parseJpsOutput(out: String): MutableList<JVM> {
-        val lines = out.split("\n")
-        val result = ArrayList<JVM>(lines.size)
-
-        for (line in lines) {
-            val split = line.split(" ")
-            if (split.isEmpty()) {
-                continue
-            } else if (split.size == 1) {
-                result.add(LocalJVM(split[0].trim(), "<null>"))
-            } else if (split.size == 2) {
-                result.add(LocalJVM(split[0].trim(), split[1].trim()))
-            } else {
-                throw IllegalStateException("Unreachable code.")
-            }
-        }
-        return result
-    }
-
     /**
      * grep 命令，兼容所有平台
      * @return 输出
      */
     fun grep(hostMachine: HostMachine, source: String, search: String): String {
-        return when(hostMachine.getOS()) {
-            OS.LINUX -> {
-                val result = hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"")
-                // grep 没找到会返回 1
-                if (result.exitCode == 0) {
-                    return result.stdout
-                }
-                if (result.exitCode == 1 && result.stdout == "") {
-                    return ""
-                }
-                // throw error.
-                return result.ok()
-            }
-            OS.WINDOWS -> hostMachine.execute("cmd", "/c", "\"$source | findstr \"${search}\"\"").ok()
+        val result: CommandExecuteResult =  when(hostMachine.getOS()) {
+            OS.LINUX -> hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"")
+            OS.WINDOWS -> hostMachine.execute("cmd", "/c", "\"$source | findstr \"${search}\"\"")
             OS.MAC -> TODO("Support MacOS")
         }
+        // grep 没找到会返回 1
+        if (result.exitCode == 0) {
+            return result.stdout
+        }
+        if (result.exitCode == 1 && result.stdout == "") {
+            return ""
+        }
+        // throw error.
+        throw IllegalStateException("Failed to execute script: ${result.stdout}")
     }
 
 

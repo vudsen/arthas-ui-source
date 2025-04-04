@@ -21,6 +21,8 @@ interface JvmProviderManager {
      */
     fun getProvider(providerConfig: JvmProviderConfig): JvmProvider
 
+    fun getProvider(clazz: Class<out JvmProviderConfig>): JvmProvider
+
     /**
      * 根据 JVM 找到对应的 [JvmProviderConfig]
      */
