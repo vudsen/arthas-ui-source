@@ -29,7 +29,11 @@ class JvmProviderManagerImpl : JvmProviderManager {
     }
 
     override fun getProvider(providerConfig: JvmProviderConfig): JvmProvider {
-        return providers[providerConfig::class.java] ?: throw IllegalArgumentException("No provider registered for config $providerConfig")
+        return getProvider(providerConfig::class.java)
+    }
+
+    override fun getProvider(clazz: Class<out JvmProviderConfig>): JvmProvider {
+        return providers[clazz] ?: throw IllegalArgumentException("No provider registered for config $clazz")
     }
 
     override fun findProviderByJvm(providerConfigs: List<JvmProviderConfig>, jvm: JVM): JvmProviderConfig? {

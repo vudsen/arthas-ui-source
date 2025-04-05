@@ -1,11 +1,14 @@
 package io.github.vudsen.arthasui.core.toolwindow
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.testFramework.LightVirtualFile
@@ -13,6 +16,7 @@ import com.intellij.ui.treeStructure.Tree
 import com.intellij.ui.util.minimumWidth
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
@@ -104,16 +108,37 @@ class ToolWindowTree(val project: Project) : Disposable {
         if (node !is TreeNodeJVM) {
             return
         }
-        val fileEditorManager = FileEditorManager.getInstance(project)
-        val lightVirtualFile = LightVirtualFile(node.jvm.name, ArthasFileType, "")
-        lightVirtualFile.putUserData(
-            ArthasExecutionManager.VF_ATTRIBUTES,
-            VirtualFileAttributes(
-                node.jvm,
-                (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
-                node.providerConfig)
-        )
-        fileEditorManager.openFile(lightVirtualFile, true)
+        node.loading = true
+
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Ensure JVM is alive", true) {
+
+            override fun run(indicator: ProgressIndicator) {
+                try {
+                    val provider = service<JvmProviderManager>().getProvider(node.jvm.context.providerConfig)
+                    if (provider.isJvmInactive(node.jvm)) {
+                        ApplicationManager.getApplication().invokeLater {
+                            Messages.showWarningDialog(project, "Jvm ${node.jvm.name} is not active, please refresh and try again!", "Jvm Not Available")
+                        }
+                        return
+                    }
+
+                    val fileEditorManager = FileEditorManager.getInstance(project)
+                    val lightVirtualFile = LightVirtualFile(node.jvm.name, ArthasFileType, "")
+                    lightVirtualFile.putUserData(
+                        ArthasExecutionManager.VF_ATTRIBUTES,
+                        VirtualFileAttributes(
+                            node.jvm,
+                            (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
+                            node.providerConfig)
+                    )
+                    fileEditorManager.openFile(lightVirtualFile, true)
+                } finally {
+                    node.loading = false
+                }
+            }
+
+        })
+
     }
 
     /**

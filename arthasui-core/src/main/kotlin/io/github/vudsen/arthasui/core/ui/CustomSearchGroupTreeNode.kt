@@ -1,7 +1,9 @@
 package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.ui.Messages
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
@@ -24,8 +26,15 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
     }
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
-        return OgnlJvmSearcher.executeByGroup(group, MyOgnlContext(ctx.hostMachine, ctx.config)).map {
-            jvm -> mapToJvmNode(jvm)
+        try {
+            return OgnlJvmSearcher.executeByGroup(group, MyOgnlContext(ctx.hostMachine, ctx.config)).map {
+                jvm -> mapToJvmNode(jvm)
+            }
+        } catch (e: Exception) {
+            ApplicationManager.getApplication().invokeLater {
+                Messages.showErrorDialog(e.toString(), "Failed To Execute Script")
+            }
+            return emptyList()
         }
     }
 

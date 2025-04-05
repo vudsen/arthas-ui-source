@@ -40,4 +40,8 @@ interface JvmProvider {
      */
     fun getJvmClass(): Class<out JVM>
 
+    /**
+     * jvm 是否存活
+     */
+    fun isJvmInactive(jvm: JVM): Boolean
 }

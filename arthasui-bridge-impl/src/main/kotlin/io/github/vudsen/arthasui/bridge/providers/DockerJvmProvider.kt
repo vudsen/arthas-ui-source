@@ -6,6 +6,7 @@ import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
@@ -33,7 +34,11 @@ class DockerJvmProvider : JvmProvider {
         val tree = gson.fromJson(jsonArray, ListMapTypeToken())
         val result = mutableListOf<JVM>()
         for (element in tree) {
-            result.add(DockerJvm(element["ID"]!!, "${element["Names"]!!}(${element["Image"]!!})", ))
+            result.add(DockerJvm(
+                element["ID"]!!,
+                "${element["Names"]!!}(${element["Image"]!!})",
+                JvmContext(hostMachine, providerConfig))
+            )
         }
         return result
     }
@@ -80,5 +85,13 @@ class DockerJvmProvider : JvmProvider {
     override fun getJvmClass(): Class<out JVM> {
         return DockerJvm::class.java
     }
+
+    override fun isJvmInactive(jvm: JVM): Boolean {
+        val ctx = jvm.context
+        val config = ctx.providerConfig as JvmInDockerProviderConfig
+        val execResult = ctx.hostMachine.execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
+        return execResult.isEmpty()
+    }
+
 
 }

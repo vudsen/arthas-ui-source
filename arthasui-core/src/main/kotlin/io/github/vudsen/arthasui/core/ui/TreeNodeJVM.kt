@@ -1,8 +1,8 @@
 package io.github.vudsen.arthasui.core.ui
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.shortenTextWithEllipsis
+import com.intellij.ui.AnimatedIcon
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.JVM
@@ -17,6 +17,11 @@ class TreeNodeJVM(
     val jvm: JVM,
     project: Project) : AbstractRecursiveTreeNode() {
 
+    /**
+     * 设置加载状态.
+     */
+    var loading: Boolean = false
+
     private val manager = project.getService(ArthasExecutionManager::class.java)
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
@@ -25,7 +30,11 @@ class TreeNodeJVM(
 
     override fun render(tree: JTree): JComponent {
         return JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-            add(JLabel(jvm.getIcon()))
+            if (loading) {
+                add(JLabel(AnimatedIcon.Default.INSTANCE))
+            } else {
+                add(JLabel(jvm.getIcon()))
+            }
             add(JLabel(jvm.id))
             add(
                 JLabel(
