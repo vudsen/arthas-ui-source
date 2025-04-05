@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.conf
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.Configurable
@@ -13,11 +12,8 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.util.preferredHeight
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.conf.ui.ScriptTestsDialog
-import io.github.vudsen.arthasui.common.ui.SimpleDialog
-import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType
-import io.github.vudsen.arthasui.script.OgnlJvmSearcher
 import io.github.vudsen.arthasui.script.MyOgnlContext
 import io.github.vudsen.arthasui.util.ui.KMutableProperty2MutablePropertyAdapter;
 import java.awt.Dimension
@@ -25,7 +21,7 @@ import javax.swing.JComponent
 
 class JvmSearchGroupConfigurable(
     private val project: Project,
-    private val hostMachineConfigV2: HostMachineConfigV2,
+    private val hostMachineConfig: HostMachineConfig,
     oldState: JvmSearchGroup? = null,
 ) : Configurable {
 
@@ -71,8 +67,8 @@ class JvmSearchGroupConfigurable(
 
     private fun testScript(script: String) {
         val context = MyOgnlContext(
-            service<HostMachineConnectManager>().connect(hostMachineConfigV2.connect),
-            hostMachineConfigV2
+            service<HostMachineConnectManager>().connect(hostMachineConfig.connect),
+            hostMachineConfig
         )
         ScriptTestsDialog(script, context).show()
     }
@@ -90,7 +86,7 @@ class JvmSearchGroupConfigurable(
         val newEntity = JvmSearchGroup(state.name, state.script)
         val persistent = project.getService(ArthasUISettingsPersistent::class.java)
 
-        val target = persistent.state.hostMachines.find { config -> config == hostMachineConfigV2 }
+        val target = persistent.state.hostMachines.find { config -> config == hostMachineConfig }
         target ?: let {
             throw IllegalStateException("Unreachable code.")
         }

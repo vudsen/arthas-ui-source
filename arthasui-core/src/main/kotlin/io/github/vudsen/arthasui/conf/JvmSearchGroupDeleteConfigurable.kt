@@ -9,7 +9,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 class JvmSearchGroupDeleteConfigurable(private val project: Project,
-                                       private val hostMachineConfig: HostMachineConfigV2,
+                                       private val hostMachineConfig: HostMachineConfig,
                                        private val jvmSearchGroup: JvmSearchGroup) : Configurable {
 
     override fun createComponent(): JComponent {

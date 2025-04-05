@@ -7,7 +7,6 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.util.BridgeUtils
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 
 /**
  * 提供所有可执行文件的路径

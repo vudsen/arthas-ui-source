@@ -3,7 +3,7 @@ package io.github.vudsen.arthasui.core.ui
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
@@ -13,7 +13,7 @@ import javax.swing.*
 /**
  * 默认的根节点
  */
-open class DefaultHostMachineTreeNode(val config: HostMachineConfigV2, project: Project) : AbstractRecursiveTreeNode() {
+open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Project) : AbstractRecursiveTreeNode() {
 
 
     protected val ctx: TreeNodeContext

@@ -10,10 +10,9 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
-import io.github.vudsen.arthasui.common.util.deepCopy
 import io.github.vudsen.arthasui.conf.ArthasUISettings
 import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.conf.HostMachineConfig
 import javax.swing.JComponent
 import javax.swing.JList
 
@@ -70,11 +69,11 @@ class RootConfigUI(project: Project) : Disposable {
         val collectionListModel = CollectionListModel(settingState.hostMachines, true)
         val table = JBList(collectionListModel)
 
-        table.setCellRenderer(object : ColoredListCellRenderer<HostMachineConfigV2>() {
+        table.setCellRenderer(object : ColoredListCellRenderer<HostMachineConfig>() {
 
             override fun customizeCellRenderer(
-                list: JList<out HostMachineConfigV2>,
-                value: HostMachineConfigV2?,
+                list: JList<out HostMachineConfig>,
+                value: HostMachineConfig?,
                 index: Int,
                 selected: Boolean,
                 hasFocus: Boolean
@@ -103,7 +102,7 @@ class RootConfigUI(project: Project) : Disposable {
             .setAddAction {
                 CreateOrUpdateHostMachineDialogUI(null, this) { state ->
                     @Suppress("UNCHECKED_CAST")
-                    val jbTable = it.contextComponent as JBList<HostMachineConfigV2>
+                    val jbTable = it.contextComponent as JBList<HostMachineConfig>
                     collectionListModel.add(state)
                     modified = true
                     jbTable.updateUI()

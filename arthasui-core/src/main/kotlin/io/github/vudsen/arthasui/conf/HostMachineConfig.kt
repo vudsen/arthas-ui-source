@@ -8,7 +8,7 @@ import io.github.vudsen.arthasui.api.bean.EmptyConnectConfig
 import io.github.vudsen.arthasui.common.util.mapMutable
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
 
-data class HostMachineConfigV2(
+data class HostMachineConfig(
     var name: String = "",
     /**
      * 连接配置
@@ -25,10 +25,10 @@ data class HostMachineConfigV2(
      * 用户自定义搜索组
      */
     var searchGroups: MutableList<JvmSearchGroup> = mutableListOf()
-) : DeepCopyable<HostMachineConfigV2> {
+) : DeepCopyable<HostMachineConfig> {
 
-    override fun deepCopy(): HostMachineConfigV2 {
-        return HostMachineConfigV2(
+    override fun deepCopy(): HostMachineConfig {
+        return HostMachineConfig(
             name,
             connect.deepCopy(),
             providers.mapMutable { v -> v.deepCopy() },

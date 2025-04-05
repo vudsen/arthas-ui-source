@@ -13,17 +13,17 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.conf.HostMachineConfig
 import java.awt.Dimension
 import javax.swing.*
 
 class CreateOrUpdateHostMachineDialogUI(
-    oldState: HostMachineConfigV2?,
+    oldState: HostMachineConfig?,
     private val parentDisposable: Disposable,
-    private val onOk: (HostMachineConfigV2) -> Unit,
+    private val onOk: (HostMachineConfig) -> Unit,
 ) : DialogWrapper(false) {
 
-    private val state = oldState ?: HostMachineConfigV2()
+    private val state = oldState ?: HostMachineConfig()
 
     private val isCreate = oldState == null
 

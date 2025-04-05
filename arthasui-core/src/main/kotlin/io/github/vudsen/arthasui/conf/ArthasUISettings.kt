@@ -8,7 +8,7 @@ class ArthasUISettings(
     /**
      * 宿主机
      */
-    var hostMachines: MutableList<HostMachineConfigV2> = mutableListOf()
+    var hostMachines: MutableList<HostMachineConfig> = mutableListOf()
 ) : DeepCopyable<ArthasUISettings> {
 
 
