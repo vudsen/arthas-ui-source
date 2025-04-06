@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.CollectionListModel
@@ -28,7 +29,7 @@ class RootConfigUI(project: Project) : Disposable {
     private var modified = false
 
     init {
-        val service = project.getService(ArthasUISettingsPersistent::class.java)
+        val service = service<ArthasUISettingsPersistent>()
         settingState = service.state.deepCopy()
     }
 
@@ -100,7 +101,7 @@ class RootConfigUI(project: Project) : Disposable {
                 }.show()
             }
             .setAddAction {
-                CreateOrUpdateHostMachineDialogUI(null, this) { state ->
+                NewHostMachineSetupUI(this) { state ->
                     @Suppress("UNCHECKED_CAST")
                     val jbTable = it.contextComponent as JBList<HostMachineConfig>
                     collectionListModel.add(state)

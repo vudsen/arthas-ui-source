@@ -4,6 +4,10 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.DialogPanel
 import javax.swing.JComponent
 
+/**
+ * 使用 Kotlin DSL 创建组件.
+ * @param parentDisposable 如果不提供该值，则不会创建表单验证器
+ */
 abstract class AbstractFormComponent<T>(private val parentDisposable: Disposable?) : FormComponent<T> {
 
     private var panel: DialogPanel? = null
@@ -16,7 +20,7 @@ abstract class AbstractFormComponent<T>(private val parentDisposable: Disposable
     /**
      * 创建一个新的 [DialogPanel]
      */
-    abstract fun createDialogPanel(): DialogPanel
+    protected abstract fun createDialogPanel(): DialogPanel
 
     override fun getComponent(): JComponent {
         panel ?.let { return it }

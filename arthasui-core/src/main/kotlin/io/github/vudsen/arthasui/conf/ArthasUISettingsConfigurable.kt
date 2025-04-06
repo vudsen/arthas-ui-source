@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.conf
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -26,9 +27,7 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
         ui.component().apply()
         ui.resetModifiedStatus()
 
-        val service = project.getService(ArthasUISettingsPersistent::class.java)
-
-        service.updateState(ui.settingState)
+        service<ArthasUISettingsPersistent>().updateState(ui.settingState)
     }
 
     override fun getDisplayName(): String {
