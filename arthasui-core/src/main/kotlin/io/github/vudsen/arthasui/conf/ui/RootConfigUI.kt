@@ -17,7 +17,7 @@ import io.github.vudsen.arthasui.conf.HostMachineConfig
 import javax.swing.JComponent
 import javax.swing.JList
 
-class RootConfigUI(project: Project) : Disposable {
+class RootConfigUI(private val project: Project) : Disposable {
 
     /**
      * 临时状态.
@@ -101,7 +101,7 @@ class RootConfigUI(project: Project) : Disposable {
                 }.show()
             }
             .setAddAction {
-                NewHostMachineSetupUI(this) { state ->
+                NewHostMachineSetupUI(project, this) { state ->
                     @Suppress("UNCHECKED_CAST")
                     val jbTable = it.contextComponent as JBList<HostMachineConfig>
                     collectionListModel.add(state)

@@ -30,7 +30,7 @@ class LocalJvmProviderForm(oldState: JvmProviderConfig?, parentDisposable: Dispo
                 predicate = CheckBoxPredicate(checkbox, state.enabled)
             }
             row {
-                textField().bindText(state::jdkHome).enabledIf(predicate).label("Jdk home").align(Align.FILL).validationOnApply(TextComponentValidators())
+                textField().bindText(state::javaHome).enabledIf(predicate).label("Jdk home").align(Align.FILL).validationOnApply(TextComponentValidators())
             }
             row {
                 textField().bindText(state::arthasHome).enabledIf(predicate).label("Arthas home").align(Align.FILL).validationOnApply(TextComponentValidators())

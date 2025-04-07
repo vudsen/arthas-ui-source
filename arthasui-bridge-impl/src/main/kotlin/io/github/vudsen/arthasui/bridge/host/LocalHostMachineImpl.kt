@@ -7,6 +7,9 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.currentOS
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 
@@ -54,6 +57,20 @@ class LocalHostMachineImpl : HostMachine {
 
     override fun getOS(): OS {
         return os
+    }
+
+    override fun transferFile(src: String, dest: String) {
+        val actualDest = if (File(dest).isDirectory) {
+            val name = File(src).name
+            "$dest/$name"
+        } else {
+            dest
+        }
+        FileInputStream(src).channel.use { ins ->
+            FileOutputStream(actualDest).channel.use { out ->
+                out.transferFrom(ins, 0, ins.size())
+            }
+        }
     }
 
 

@@ -1,35 +1,58 @@
 package io.github.vudsen.arthasui.bridge.util
 
 import io.github.vudsen.arthasui.api.HostMachine
-import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
-import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 
-
-object BridgeUtils {
-
-    /**
-     * grep 命令，兼容所有平台
-     * @return 输出
-     */
-    fun grep(hostMachine: HostMachine, source: String, search: String): String {
-        val result: CommandExecuteResult =  when(hostMachine.getOS()) {
-            OS.LINUX -> hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"")
-            OS.WINDOWS -> hostMachine.execute("cmd", "/c", "\"$source | findstr \"${search}\"\"")
-            OS.MAC -> TODO("Support MacOS")
-        }
-        // grep 没找到会返回 1
-        if (result.exitCode == 0) {
-            return result.stdout
-        }
-        if (result.exitCode == 1 && result.stdout == "") {
-            return ""
-        }
-        // throw error.
-        throw IllegalStateException("Failed to execute script: ${result.stdout}")
+/**
+ * grep 命令，兼容所有平台
+ * @return 输出
+ */
+fun HostMachine.grep(source: String, search: String): String {
+    val result: CommandExecuteResult =  when(getOS()) {
+        OS.LINUX -> execute("sh", "-c", "\"$source | grep ${search}\"")
+        OS.WINDOWS -> execute("cmd", "/c", "\"$source | findstr \"${search}\"\"")
+        OS.MAC -> TODO("Support MacOS")
     }
+    // grep 没找到会返回 1
+    if (result.exitCode == 0) {
+        return result.stdout
+    }
+    if (result.exitCode == 1 && result.stdout == "") {
+        return ""
+    }
+    // throw error.
+    throw IllegalStateException("Failed to execute script: ${result.stdout}")
+}
 
+/**
+ * 获取环境变量
+ */
+fun HostMachine.env(name: String): String? {
+    val result =  when(getOS()) {
+        OS.LINUX -> execute("echo", "$${name}")
+        OS.WINDOWS -> execute("echo", "%${name}%")
+        OS.MAC -> TODO("Support MacOS")
+    }.ok()
+    if (result.isEmpty()) {
+        return null
+    }
+    return result
+}
 
-
+/**
+ * 下载文件
+ * @param url 文件的 url
+ * @param dest 要下载到哪里，需要文件名
+ */
+fun HostMachine.download(url: String, dest: String) {
+    if (execute("curl", "--version").exitCode == 0) {
+        execute("curl", "-o", dest, url).ok()
+        return
+    }
+    if (execute("wget", "--version").exitCode == 0) {
+        execute("wget", "-O", dest, url).ok()
+        return
+    }
+    throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
 }

@@ -44,4 +44,11 @@ interface JvmProvider {
      * jvm 是否存活
      */
     fun isJvmInactive(jvm: JVM): Boolean
+
+    /**
+     * 尝试在宿主机上生成对应的配置
+     * @return 对应的 [JvmProviderConfig], 如果不支持, [JvmProviderConfig.enabled] 为 false
+     */
+    fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig
+
 }

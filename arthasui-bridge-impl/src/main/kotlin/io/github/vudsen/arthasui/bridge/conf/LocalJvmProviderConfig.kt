@@ -7,7 +7,7 @@ import javax.swing.Icon
 class LocalJvmProviderConfig(
     enabled: Boolean = false,
     var arthasHome: String = "",
-    var jdkHome: String = ""
+    var javaHome: String = ""
 ) : JvmProviderConfig(TYPE, enabled) {
 
     companion object {
@@ -23,11 +23,11 @@ class LocalJvmProviderConfig(
     }
 
     override fun copy(): JvmProviderConfig {
-        return LocalJvmProviderConfig(enabled, arthasHome, jdkHome)
+        return LocalJvmProviderConfig(enabled, arthasHome, javaHome)
     }
 
     override fun deepCopy(): JvmProviderConfig {
-        return LocalJvmProviderConfig(enabled, arthasHome, jdkHome)
+        return LocalJvmProviderConfig(enabled, arthasHome, javaHome)
     }
 
 }

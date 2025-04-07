@@ -24,4 +24,11 @@ interface HostMachine {
      */
     fun getOS(): OS
 
+    /**
+     * 将本地的文件发送到宿主机上面
+     * @param src 文件路径
+     * @param dest 目标路径，可以是文件夹或者具体的名称
+     */
+    fun transferFile(src: String, dest: String)
+
 }

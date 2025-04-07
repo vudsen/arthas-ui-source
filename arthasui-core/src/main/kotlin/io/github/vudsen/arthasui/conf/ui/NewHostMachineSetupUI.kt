@@ -2,37 +2,37 @@ package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
-import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.ui.Messages
 import com.intellij.ui.components.JBSlidingPanel
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.bindItem
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.layout.ComboBoxPredicate
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
-import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
-import io.github.vudsen.arthasui.api.ui.FormComponent
-import io.github.vudsen.arthasui.common.validation.TextComponentValidators
+import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.conf.HostMachineConfig
 import java.awt.event.ActionEvent
 import javax.swing.Action
-import javax.swing.JButton
 import javax.swing.JComponent
 
-class NewHostMachineSetupUI(private val parentDisposable: Disposable,
+class NewHostMachineSetupUI(private val project: Project,
+                            parentDisposable: Disposable,
                             private val onOk: (HostMachineConfig) -> Unit)
-    : DialogWrapper(false) {
+    : DialogWrapper(project, false) {
 
-    private val state = HostMachineConfig()
+    companion object {
 
-    private val formMap = mutableMapOf<String, FormComponent<HostMachineConnectConfig>>()
+        private const val TAB_COUNT = 2
 
-    private var connectType: String? = null
+        private val logger = Logger.getInstance(NewHostMachineSetupUI::class.java)
 
-    private val connectProviders: List<HostMachineConnectProvider>
+    }
 
-    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers, parentDisposable)
+    private val jvmConnectUI = JvmConnectSetupUI(parentDisposable)
+
+    private val jvmProviderConfigUI: JvmProviderSetupUI = JvmProviderSetupUI(parentDisposable)
 
     private var currentIndex = 0
 
@@ -42,13 +42,9 @@ class NewHostMachineSetupUI(private val parentDisposable: Disposable,
 
     private lateinit var myNextAction: Action
 
-    private val tabCount = 2
 
     init {
         title = "New Host Machine"
-        val manager = service<HostMachineConnectManager>()
-        connectProviders = manager.getProviders()
-        connectType = connectProviders[0].getName()
         setOKButtonText("Next")
         setCancelButtonText("Back")
         createSouthPanel()
@@ -56,71 +52,43 @@ class NewHostMachineSetupUI(private val parentDisposable: Disposable,
     }
 
 
-    /**
-     * 设置宿主机名称和连接方式
-     */
-    private fun page1(): JComponent {
-        return panel {
-            row {
-                textField().label("Name").validationOnApply(TextComponentValidators())
-            }
-            lateinit var connectComboBox: ComboBox<String>
-            row {
-                val box =
-                    comboBox(connectProviders.map { pv -> pv.getName() }).bindItem(this@NewHostMachineSetupUI::connectType)
-                        .label("Connect type")
-                connectComboBox = box.component
-            }
-
-            for (provider in connectProviders) {
-                row {
-                    val form = provider.createForm(state.connect, parentDisposable)
-                    formMap[provider.getName()] = form
-                    cell(form.getComponent())
-                }.visibleIf(ComboBoxPredicate(connectComboBox) { v -> v == provider.getName() })
-            }
-        }
-    }
-
-    /**
-     * 设置 jvm providers
-     */
-    private fun page2(): JComponent {
-        return panel {
-            row {
-                cell(jvmProviderConfigUI.getComponent()).align(Align.FILL)
-            }
-        }
-    }
-
-
     override fun createCenterPanel(): JComponent {
         val panel = JBSlidingPanel()
-        panel.add("New Host Machine", page1())
-        panel.add("Search Locations", page2())
+        panel.add("New Host Machine", jvmConnectUI.getComponent())
+        panel.add("Search Locations", jvmProviderConfigUI.getComponent())
         root = panel
         return panel
     }
 
-    override fun createDefaultActions() {
-        super.createDefaultActions()
+    private fun updateButtonUI() {
+        val next = buttonMap[myNextAction]!!
+        if (currentIndex == TAB_COUNT - 1) {
+            next.text = "Create"
+        } else {
+            next.text = "Next"
+        }
+        val back = buttonMap[myBackAction]!!
+        back.isEnabled = currentIndex > 0
+        next.updateUI()
+        back.updateUI()
     }
 
+    private fun isCurrentFormInvalid(): Boolean {
+        if (currentIndex == 0) {
+            return jvmConnectUI.apply() == null
+        }
+        return jvmProviderConfigUI.isInvalid()
+    }
 
     override fun createActions(): Array<Action> {
         myBackAction = object : DialogWrapperAction("Back") {
 
             override fun doAction(p0: ActionEvent?) {
+                currentIndex--
+                updateButtonUI()
                 if (currentIndex > 0) {
-                    currentIndex--
                     root.goLeft()
                 }
-                if (currentIndex == 0) {
-                    val source = (p0?.source ?: return) as JButton
-                    source.isEnabled = false
-                    source.updateUI()
-                }
-                okAction.isEnabled = true
             }
         }
 
@@ -131,37 +99,41 @@ class NewHostMachineSetupUI(private val parentDisposable: Disposable,
             }
 
             override fun doAction(p0: ActionEvent?) {
-                if (currentIndex < tabCount - 1) {
-                    currentIndex++
-                    root.goRight()
+                if (isCurrentFormInvalid()) {
+                    return
                 }
-                val source = (p0?.source ?: return) as JButton
-                if (currentIndex == tabCount - 1) {
-                    putValue(NAME, "Create")
-                } else {
-                    putValue(NAME, "Next")
-                }
-                source.updateUI()
-                okAction.isEnabled = true
+                if (currentIndex == 0) {
+                    ProgressManager.getInstance().run(object : Task.Modal(project, "Test Connection", true) {
 
+                        override fun run(p0: ProgressIndicator) {
+                            val hostMachine = service<HostMachineConnectManager>().connect(jvmConnectUI.apply()!!.connect)
+                            try {
+                                hostMachine.execute("echo", "hello")
+                                currentIndex++
+                                updateButtonUI()
+                                root.goRight()
+                            } catch (e: Exception) {
+                                if (logger.isDebugEnabled) {
+                                    logger.debug(e.collectStackTrace())
+                                }
+                                Messages.showErrorDialog(e.message, "Test Connection Failed")
+                            }
+                        }
+                    })
+                    return
+                }
+                currentIndex++
+                updateButtonUI()
+                if (currentIndex < TAB_COUNT - 1) {
+                    root.goRight()
+                    return
+                }
+                TODO("Create the host machine.")
             }
         }
 
         return arrayOf(myBackAction, myNextAction)
     }
 
-    override fun doOKAction() {
-        if (currentIndex < 2) {
-            currentIndex++
-            root.goRight()
-        }
-        if (currentIndex == 2) {
-            okAction.isEnabled = false
-        }
-        myBackAction.isEnabled = true
-        super.repaint()
-//        super.doOKAction()
-//        onOk(state)
-    }
 
 }

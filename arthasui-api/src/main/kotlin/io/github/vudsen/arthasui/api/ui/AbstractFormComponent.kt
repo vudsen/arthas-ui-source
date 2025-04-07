@@ -8,7 +8,7 @@ import javax.swing.JComponent
  * 使用 Kotlin DSL 创建组件.
  * @param parentDisposable 如果不提供该值，则不会创建表单验证器
  */
-abstract class AbstractFormComponent<T>(private val parentDisposable: Disposable?) : FormComponent<T> {
+abstract class AbstractFormComponent<T>(protected val parentDisposable: Disposable) : FormComponent<T> {
 
     private var panel: DialogPanel? = null
 
@@ -25,9 +25,7 @@ abstract class AbstractFormComponent<T>(private val parentDisposable: Disposable
     override fun getComponent(): JComponent {
         panel ?.let { return it }
         val dialogPanel = createDialogPanel()
-        parentDisposable ?.let {
-            dialogPanel.registerValidators(it)
-        }
+        dialogPanel.registerValidators(parentDisposable)
         panel = dialogPanel
         return dialogPanel
     }

@@ -5,11 +5,9 @@ import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
-import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.util.BridgeUtils
+import io.github.vudsen.arthasui.bridge.util.grep
 import io.github.vudsen.arthasui.common.util.ListMapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
@@ -23,8 +21,7 @@ class DockerSearchHelper(hostMachine: HostMachine, providerConfig: JvmInDockerPr
 
     @Suppress("unused")
     fun findByImage(image: String, name: String?): List<JVM> {
-        val output = "[" + BridgeUtils.grep(
-            ctx.hostMachine,
+        val output = "[" + ctx.hostMachine.grep(
             SEARCH_IMAGE_AND_NAME,
             "\"Image\": \"${image}\""
         ) + "]"

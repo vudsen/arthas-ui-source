@@ -2,7 +2,10 @@ dependencies {
     testImplementation(kotlin("test"))
     api(project(":arthasui-api"))
     api(project(":arthasui-common"))
-    implementation("org.apache.sshd:sshd-core:2.14.0") {
+    implementation("org.apache.sshd", "sshd-core", libs.versions.minaSshd.get()) {
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+    implementation("org.apache.sshd", "sshd-sftp", libs.versions.minaSshd.get()) {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
     implementation("commons-net:commons-net:3.11.1") {

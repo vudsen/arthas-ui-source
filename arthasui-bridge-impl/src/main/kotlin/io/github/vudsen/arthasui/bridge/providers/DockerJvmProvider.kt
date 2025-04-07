@@ -93,5 +93,13 @@ class DockerJvmProvider : JvmProvider {
         return execResult.isEmpty()
     }
 
+    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
+        val result = hostMachine.execute("docker", "version")
+        if (result.exitCode != 0) {
+            return JvmInDockerProviderConfig()
+        }
+        return JvmInDockerProviderConfig(true)
+    }
+
 
 }

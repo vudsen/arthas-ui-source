@@ -12,6 +12,7 @@ import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
+import io.github.vudsen.arthasui.bridge.util.env
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
 import java.io.OutputStream
@@ -48,7 +49,7 @@ class LocalJvmProvider : JvmProvider {
 
     override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
         val config = providerConfig as LocalJvmProviderConfig
-        val out = hostMachine.execute("${config.jdkHome}/bin/jps", "-l").ok()
+        val out = hostMachine.execute("${config.javaHome}/bin/jps", "-l").ok()
 
         val lines = out.split("\n")
         val result = ArrayList<JVM>(lines.size)
@@ -87,7 +88,7 @@ class LocalJvmProvider : JvmProvider {
                 ArthasBridgeImpl(
                     InteractiveShell2ArthasProcessAdapter(
                         hostMachine.createInteractiveShell(
-                            "${localJvmProviderConfig.jdkHome}/bin/java",
+                            "${localJvmProviderConfig.javaHome}/bin/java",
                             "-jar",
                             "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
                             jvm.id
@@ -101,7 +102,7 @@ class LocalJvmProvider : JvmProvider {
             logger.info("Trying to attach ${jvm.id}, binding telnet port on 3658.")
             // TODO 自动切换端口
             val stdout = hostMachine.execute(
-                "${localJvmProviderConfig.jdkHome}/bin/java",
+                "${localJvmProviderConfig.javaHome}/bin/java",
                 "-jar",
                 "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
                 jvm.id,
@@ -149,6 +150,18 @@ class LocalJvmProvider : JvmProvider {
     override fun isJvmInactive(jvm: JVM): Boolean {
         val ctx = jvm.context
         return isPidNotExist(ctx.hostMachine, jvm.id)
+    }
+
+    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
+        hostMachine.env("JAVA_HOME") ?.let {
+            return LocalJvmProviderConfig(true, "", it)
+        }
+        hostMachine.execute("java", "-version") .let {
+            if (it.exitCode == 0) {
+                return LocalJvmProviderConfig(true, "", "java")
+            }
+        }
+        return LocalJvmProviderConfig(false)
     }
 
     private fun isPidNotExist(hostMachine: HostMachine, pid: String): Boolean {

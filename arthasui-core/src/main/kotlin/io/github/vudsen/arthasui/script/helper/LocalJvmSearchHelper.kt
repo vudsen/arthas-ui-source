@@ -6,7 +6,7 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.util.BridgeUtils
+import io.github.vudsen.arthasui.bridge.util.grep
 
 /**
  * 提供所有可执行文件的路径
@@ -61,7 +61,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, private val pro
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${providerConfig.jdkHome}/bin/jps\" -lvm", search).split('\n')
+        val jvms: List<String> = hostMachine.grep("\"${providerConfig.javaHome}/bin/jps\" -lvm", search).split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {

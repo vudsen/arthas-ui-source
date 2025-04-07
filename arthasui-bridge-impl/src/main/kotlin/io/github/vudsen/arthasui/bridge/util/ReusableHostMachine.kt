@@ -14,6 +14,8 @@ import java.lang.ref.WeakReference
 
 /**
  * 可以复用的宿主机，在连接关闭后再次使用，会重新创建一个连接
+ *
+ * > 理论上这个类应该命名为容量为 1 的连接池
  */
 class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineConnectProvider, private val config: HostMachineConnectConfig) : CloseableHostMachine {
 
@@ -68,6 +70,10 @@ class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineC
 
     override fun getOS(): OS {
         return config.getOS()
+    }
+
+    override fun transferFile(src: String, dest: String) {
+        return getHostMachine().transferFile(src, dest)
     }
 
 }
