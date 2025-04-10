@@ -8,11 +8,13 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.openapi.ui.Messages
 import com.intellij.ui.components.JBSlidingPanel
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.bridge.util.test
+import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.common.util.collectStackTrace
 import io.github.vudsen.arthasui.conf.HostMachineConfig
+import java.awt.Dimension
 import java.awt.event.ActionEvent
 import javax.swing.Action
 import javax.swing.JComponent
@@ -32,7 +34,7 @@ class NewHostMachineSetupUI(private val project: Project,
 
     private val jvmConnectUI = JvmConnectSetupUI(parentDisposable)
 
-    private val jvmProviderConfigUI: JvmProviderSetupUI = JvmProviderSetupUI(parentDisposable)
+    private val jvmProviderConfigUI: JvmProviderSetupUI = JvmProviderSetupUI(parentDisposable, project)
 
     private var currentIndex = 0
 
@@ -42,6 +44,7 @@ class NewHostMachineSetupUI(private val project: Project,
 
     private lateinit var myNextAction: Action
 
+    private var state: HostMachineConfig? = null
 
     init {
         title = "New Host Machine"
@@ -54,6 +57,7 @@ class NewHostMachineSetupUI(private val project: Project,
 
     override fun createCenterPanel(): JComponent {
         val panel = JBSlidingPanel()
+        panel.preferredSize = Dimension(600, 500)
         panel.add("New Host Machine", jvmConnectUI.getComponent())
         panel.add("Search Locations", jvmProviderConfigUI.getComponent())
         root = panel
@@ -86,9 +90,7 @@ class NewHostMachineSetupUI(private val project: Project,
             override fun doAction(p0: ActionEvent?) {
                 currentIndex--
                 updateButtonUI()
-                if (currentIndex > 0) {
-                    root.goLeft()
-                }
+                root.goLeft()
             }
         }
 
@@ -103,32 +105,37 @@ class NewHostMachineSetupUI(private val project: Project,
                     return
                 }
                 if (currentIndex == 0) {
+                    val hostMachineConfig = jvmConnectUI.apply() ?: return
+                    state = hostMachineConfig
                     ProgressManager.getInstance().run(object : Task.Modal(project, "Test Connection", true) {
 
                         override fun run(p0: ProgressIndicator) {
-                            val hostMachine = service<HostMachineConnectManager>().connect(jvmConnectUI.apply()!!.connect)
+                            val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig.connect)
                             try {
-                                hostMachine.execute("echo", "hello")
+                                hostMachine.test()
                                 currentIndex++
                                 updateButtonUI()
                                 root.goRight()
+                                jvmProviderConfigUI.refresh(hostMachine)
                             } catch (e: Exception) {
                                 if (logger.isDebugEnabled) {
                                     logger.debug(e.collectStackTrace())
                                 }
-                                Messages.showErrorDialog(e.message, "Test Connection Failed")
+                                MessagesUtils.showErrorMessageLater("Test Connection Failed", e.message, project)
                             }
                         }
                     })
+                    currentIndex = 1;
                     return
                 }
-                currentIndex++
+                // currentIndex = 1
                 updateButtonUI()
-                if (currentIndex < TAB_COUNT - 1) {
-                    root.goRight()
-                    return
-                }
-                TODO("Create the host machine.")
+                val providers = jvmProviderConfigUI.apply() ?: return
+
+                state!!.providers = providers
+
+                close(OK_EXIT_CODE)
+                onOk(state!!)
             }
         }
 

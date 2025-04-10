@@ -41,4 +41,8 @@ class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
         listeners.forEach { it() }
     }
 
+    fun removeUpdateListener(listener: () -> Unit) {
+        listeners.remove(listener)
+    }
+
 }

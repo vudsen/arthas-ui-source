@@ -84,7 +84,7 @@ class JvmSearchGroupConfigurable(
             return
         }
         val newEntity = JvmSearchGroup(state.name, state.script)
-        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
+        val persistent = service<ArthasUISettingsPersistent>()
 
         val target = persistent.state.hostMachines.find { config -> config == hostMachineConfig }
         target ?: let {

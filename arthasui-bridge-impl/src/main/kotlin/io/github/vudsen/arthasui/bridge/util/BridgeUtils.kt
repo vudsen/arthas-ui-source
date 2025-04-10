@@ -29,12 +29,19 @@ fun HostMachine.grep(source: String, search: String): String {
  * 获取环境变量
  */
 fun HostMachine.env(name: String): String? {
-    val result =  when(getOS()) {
-        OS.LINUX -> execute("echo", "$${name}")
-        OS.WINDOWS -> execute("echo", "%${name}%")
+    val result: String? =  when(getOS()) {
+        OS.LINUX -> execute("echo", "$${name}").ok()
+        OS.WINDOWS -> {
+            val result = execute("cmd", "/c", "echo %${name}%").ok()
+            if (result == "%${name}%") {
+                null
+            } else {
+                result
+            }
+        }
         OS.MAC -> TODO("Support MacOS")
-    }.ok()
-    if (result.isEmpty()) {
+    }
+    if (result.isNullOrEmpty()) {
         return null
     }
     return result
@@ -55,4 +62,17 @@ fun HostMachine.download(url: String, dest: String) {
         return
     }
     throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
+}
+
+/**
+ * 测试连接并且返回系统版本
+ * @return 系统版本
+ */
+fun HostMachine.test(): String {
+    return when (getOS()) {
+        OS.LINUX -> execute("uname", "-a").ok()
+        OS.WINDOWS -> execute("cmd", "/c", "ver").ok()
+//        OS.WINDOWS -> execute("ver").ok()
+        OS.MAC -> execute("uname", "-a").ok()
+    }
 }

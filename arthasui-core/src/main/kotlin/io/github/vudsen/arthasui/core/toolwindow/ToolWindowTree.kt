@@ -45,15 +45,16 @@ class ToolWindowTree(val project: Project) : Disposable {
      */
     val tree = Tree(DefaultTreeModel(rootModel))
 
+    private val updateListener =  {
+        refreshRootNode()
+    }
 
     init {
         tree.setCellRenderer(ToolWindowTreeCellRenderer())
         tree.addMouseListener(ToolWindowRightClickHandler(this))
         tree.addMouseListener(ToolWindowMouseAdapter(this))
 
-        project.getService(ArthasUISettingsPersistent::class.java).addUpdatedListener {
-            refreshRootNode()
-        }
+        service<ArthasUISettingsPersistent>().addUpdatedListener(updateListener)
         tree.minimumWidth = 301
         refreshRootNode()
         tree.expandRow(0)
@@ -78,7 +79,7 @@ class ToolWindowTree(val project: Project) : Disposable {
      * 刷新根节点
      */
     private fun refreshRootNode() {
-        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
+        val persistent = service<ArthasUISettingsPersistent>()
 
         for (child in rootModel.children()) {
             val treeNode = child as DefaultMutableTreeNode
@@ -101,7 +102,9 @@ class ToolWindowTree(val project: Project) : Disposable {
         }
     }
 
-    override fun dispose() {}
+    override fun dispose() {
+        service<ArthasUISettingsPersistent>().removeUpdateListener(updateListener)
+    }
 
     fun tryOpenQueryConsole() {
         val node = currentFocusedNode()

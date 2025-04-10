@@ -10,7 +10,7 @@ import javax.swing.JComponent
  */
 abstract class AbstractFormComponent<T>(protected val parentDisposable: Disposable) : FormComponent<T> {
 
-    private var panel: DialogPanel? = null
+    protected var panel: DialogPanel? = null
 
     /**
      * 获取状态

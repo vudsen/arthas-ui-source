@@ -95,7 +95,7 @@ class RootConfigUI(private val project: Project) : Disposable {
             .setEditAction {
                 val jbTable = it.contextComponent as JBList<*>
 
-                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy(), this) { item ->
+                UpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy(), this) { item ->
                     settingState.hostMachines[jbTable.selectedIndex] = item
                     modified = true
                 }.show()

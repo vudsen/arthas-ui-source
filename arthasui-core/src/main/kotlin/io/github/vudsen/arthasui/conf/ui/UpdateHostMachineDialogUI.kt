@@ -17,7 +17,7 @@ import io.github.vudsen.arthasui.conf.HostMachineConfig
 import java.awt.Dimension
 import javax.swing.*
 
-class CreateOrUpdateHostMachineDialogUI(
+class UpdateHostMachineDialogUI(
     oldState: HostMachineConfig?,
     private val parentDisposable: Disposable,
     private val onOk: (HostMachineConfig) -> Unit,
@@ -66,7 +66,7 @@ class CreateOrUpdateHostMachineDialogUI(
             group("Connect Config") {
                 row {
                     val box =
-                        comboBox(providers.map { pv -> pv.getName() }).bindItem(this@CreateOrUpdateHostMachineDialogUI::connectType)
+                        comboBox(providers.map { pv -> pv.getName() }).bindItem(this@UpdateHostMachineDialogUI::connectType)
                             .label("Connect type")
                     connectComboBox = box.component
                 }

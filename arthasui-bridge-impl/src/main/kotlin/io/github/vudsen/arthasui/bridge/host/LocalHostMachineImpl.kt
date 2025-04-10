@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.host
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -17,8 +18,19 @@ class LocalHostMachineImpl : HostMachine {
 
     private val os = currentOS()
 
+    companion object {
+        private val logger = Logger.getInstance(LocalHostMachineImpl::class.java.name)
+    }
+
     override fun execute(vararg command: String): CommandExecuteResult {
-        val process = ProcessBuilder(*command).redirectErrorStream(true).start()
+        val process = try {
+            ProcessBuilder(*command).redirectErrorStream(true).start()
+        } catch (e: Exception) {
+            if (logger.isDebugEnabled) {
+                logger.error("Failed to execute command: $command", e)
+            }
+            return CommandExecuteResult(e.message ?: "<Unknown>", 1)
+        }
         val baos = ByteArrayOutputStream(512)
         val buf = ByteArray(512)
         while (true) {

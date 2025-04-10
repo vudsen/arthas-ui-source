@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.conf
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
@@ -23,7 +24,7 @@ class JvmSearchGroupDeleteConfigurable(private val project: Project,
     }
 
     override fun apply() {
-        val persistent = project.getService(ArthasUISettingsPersistent::class.java)
+        val persistent = service<ArthasUISettingsPersistent>()
         val target = persistent.state.hostMachines.find { config -> config == hostMachineConfig } ?: return
         val newList = mutableListOf<JvmSearchGroup>()
         for (searchGroup in target.searchGroups) {
