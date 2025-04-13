@@ -6,23 +6,20 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBSlidingPanel
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
-import io.github.vudsen.arthasui.bridge.util.test
 import io.github.vudsen.arthasui.common.util.MessagesUtils
-import io.github.vudsen.arthasui.common.util.collectStackTrace
-import io.github.vudsen.arthasui.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.util.collectStackTrace
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import javax.swing.Action
 import javax.swing.JComponent
 
-class NewHostMachineSetupUI(private val project: Project,
-                            parentDisposable: Disposable,
+class NewHostMachineSetupUI(parentDisposable: Disposable,
                             private val onOk: (HostMachineConfig) -> Unit)
-    : DialogWrapper(project, false) {
+    : DialogWrapper(false) {
 
     companion object {
 
@@ -34,7 +31,7 @@ class NewHostMachineSetupUI(private val project: Project,
 
     private val jvmConnectUI = JvmConnectSetupUI(parentDisposable)
 
-    private val jvmProviderConfigUI: JvmProviderSetupUI = JvmProviderSetupUI(parentDisposable, project)
+    private val jvmProviderConfigUI: JvmProviderSetupUI = JvmProviderSetupUI(parentDisposable)
 
     private var currentIndex = 0
 
@@ -107,10 +104,10 @@ class NewHostMachineSetupUI(private val project: Project,
                 if (currentIndex == 0) {
                     val hostMachineConfig = jvmConnectUI.apply() ?: return
                     state = hostMachineConfig
-                    ProgressManager.getInstance().run(object : Task.Modal(project, "Test Connection", true) {
+                    ProgressManager.getInstance().run(object : Task.Modal(null, "Test Connection", true) {
 
                         override fun run(p0: ProgressIndicator) {
-                            val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig.connect)
+                            val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig)
                             try {
                                 hostMachine.test()
                                 currentIndex++

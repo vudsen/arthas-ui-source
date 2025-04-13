@@ -1,26 +1,23 @@
 package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.LoadingDecorator
-import com.intellij.openapi.ui.Messages
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTabbedPane
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.util.MessagesUtils
-import io.github.vudsen.arthasui.common.util.collectStackTrace
+import io.github.vudsen.arthasui.api.util.collectStackTrace
 import javax.swing.JComponent
 
-class JvmProviderSetupUI(private val parentDisposable: Disposable, private val project: Project)  {
+class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
     companion object {
         private  val logger = Logger.getInstance(JvmProviderSetupUI::class.java)
@@ -48,9 +45,9 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable, private val p
     /**
      * 刷新组件状态
      */
-    fun refresh(hostMachine: HostMachine) {
+    fun refresh(hostMachine: HostMachineTemplate) {
         loadingDecorator.startLoading(false)
-        ProgressManager.getInstance().run(object : Task.Modal(project, "Auto Detecting Jvm Provider", true)  {
+        ProgressManager.getInstance().run(object : Task.Modal(null, "Auto Detecting Jvm Provider", true)  {
 
             override fun run(indicator: ProgressIndicator) {
                 try {

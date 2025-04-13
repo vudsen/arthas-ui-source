@@ -5,7 +5,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
 import javax.swing.Icon
 
-class EmptyConnectConfig : HostMachineConnectConfig(TYPE){
+class EmptyConnectConfig : HostMachineConnectConfig(TYPE, ""){
 
     companion object {
         const val TYPE = "Empty"

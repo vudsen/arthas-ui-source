@@ -76,3 +76,14 @@ fun HostMachine.test(): String {
         OS.MAC -> execute("uname", "-a").ok()
     }
 }
+
+/**
+ * 递归创建文件夹
+ */
+fun HostMachine.mkdirs(path: String) {
+    when (getOS()) {
+        OS.LINUX -> execute("mkdir", "-p", path).ok()
+        OS.WINDOWS -> execute("cmd", "/c", "mkdir ${path}").ok()
+        OS.MAC -> execute("mkdir", "-p", path).ok()
+    }
+}

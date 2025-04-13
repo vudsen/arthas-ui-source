@@ -1,9 +1,9 @@
 package io.github.vudsen.arthasui.api.bean
 
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 
 data class JvmContext(
-    val hostMachine: HostMachine,
+    val template: HostMachineTemplate,
     val providerConfig: JvmProviderConfig,
 )

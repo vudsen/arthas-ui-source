@@ -8,7 +8,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.CloseableHostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.util.executeCancelable
+import io.github.vudsen.arthasui.bridge.util.mkdirs
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.session.ClientSession
 import org.apache.sshd.sftp.client.SftpClientFactory
@@ -97,6 +99,28 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
             }
             client.put(Path(src), dest)
         }
+    }
+
+    private var dataDirectory: String? = null
+
+    override fun prepareDataDirectory(): String {
+        dataDirectory ?.let { return it }
+        val actualDirectory = if (config.dataDirectory.isEmpty()) {
+            when(config.os) {
+                OS.LINUX -> "/data/arthas-ui"
+                OS.WINDOWS -> execute("cmd", "/c", "echo %USERPROFILE%").ok() + "\\arthas-ui"
+                OS.MAC -> TODO()
+            }
+        } else {
+            config.dataDirectory
+        }
+        mkdirs(actualDirectory)
+        dataDirectory = actualDirectory
+        return actualDirectory
+    }
+
+    override fun getConfiguration(): HostMachineConnectConfig {
+        return config
     }
 
 

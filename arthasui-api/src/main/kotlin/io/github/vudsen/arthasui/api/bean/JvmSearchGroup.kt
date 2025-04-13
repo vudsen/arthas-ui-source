@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.conf.bean
+package io.github.vudsen.arthasui.api.bean
 
 import io.github.vudsen.arthasui.api.DeepCopyable
 

@@ -3,12 +3,12 @@ package io.github.vudsen.arthasui.bridge.providers
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
@@ -23,7 +23,8 @@ class DockerJvmProvider : JvmProvider {
         return "Docker"
     }
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
+        val hostMachine = template.getHostMachine()
         val gson = service<SingletonInstanceHolderService>().gson
         val config = providerConfig as JvmInDockerProviderConfig
         val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json")
@@ -37,18 +38,19 @@ class DockerJvmProvider : JvmProvider {
             result.add(DockerJvm(
                 element["ID"]!!,
                 "${element["Names"]!!}(${element["Image"]!!})",
-                JvmContext(hostMachine, providerConfig))
+                JvmContext(template, providerConfig))
             )
         }
         return result
     }
 
     override fun createArthasBridgeFactory(
-        hostMachine: HostMachine,
+        template: HostMachineTemplate,
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
         val config = jvmProviderConfig as JvmInDockerProviderConfig
+        val hostMachine = template.getHostMachine()
         if (hostMachine.getOS() == OS.WINDOWS && !config.useToolsInContainer) {
             throw IllegalStateException("Docker desktop is not supported. Please embed your jdk and arthas to your image and enable `useToolsInContainer` feature.")
         }
@@ -67,7 +69,7 @@ class DockerJvmProvider : JvmProvider {
             return@ArthasBridgeFactory ArthasBridgeImpl(
                 InteractiveShell2ArthasProcessAdapter(
                 // TODO, support switch pid.
-                hostMachine.createInteractiveShell("docker", "exec", "-it",
+                    hostMachine.createInteractiveShell("docker", "exec", "-it",
                     jvm.id, "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
             )
             )
@@ -89,12 +91,12 @@ class DockerJvmProvider : JvmProvider {
     override fun isJvmInactive(jvm: JVM): Boolean {
         val ctx = jvm.context
         val config = ctx.providerConfig as JvmInDockerProviderConfig
-        val execResult = ctx.hostMachine.execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
+        val execResult = ctx.template.getHostMachine().execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
         return execResult.isEmpty()
     }
 
-    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
-        val result = hostMachine.execute("docker", "version")
+    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
+        val result = template.getHostMachine().execute("docker", "version")
         if (result.exitCode != 0) {
             return JvmInDockerProviderConfig()
         }

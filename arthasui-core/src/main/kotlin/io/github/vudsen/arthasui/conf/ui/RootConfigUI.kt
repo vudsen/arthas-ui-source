@@ -3,7 +3,6 @@ package io.github.vudsen.arthasui.conf.ui
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
 import com.intellij.openapi.components.service
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.CollectionListModel
 import com.intellij.ui.ColoredListCellRenderer
@@ -13,11 +12,11 @@ import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import io.github.vudsen.arthasui.conf.ArthasUISettings
 import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
-import io.github.vudsen.arthasui.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import javax.swing.JComponent
 import javax.swing.JList
 
-class RootConfigUI(private val project: Project) : Disposable {
+class RootConfigUI : Disposable {
 
     /**
      * 临时状态.
@@ -101,7 +100,7 @@ class RootConfigUI(private val project: Project) : Disposable {
                 }.show()
             }
             .setAddAction {
-                NewHostMachineSetupUI(project, this) { state ->
+                NewHostMachineSetupUI(this) { state ->
                     @Suppress("UNCHECKED_CAST")
                     val jbTable = it.contextComponent as JBList<HostMachineConfig>
                     collectionListModel.add(state)

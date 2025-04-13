@@ -15,7 +15,7 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
     private val state: SshHostMachineConnectConfig = if (oldState is SshHostMachineConnectConfig) {
         oldState
     } else {
-        SshHostMachineConnectConfig()
+        SshHostMachineConnectConfig("")
     }
 
     private val osTypeObservableMutableProperty = object : ObservableMutableProperty<OS> {
@@ -38,8 +38,13 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
         return panel {
             group("Connection Config") {
                 row {
-                    label("Os type")
-                    comboBox(OS.values().toList()).bindItem(osTypeObservableMutableProperty)
+                    comboBox(OS.values().toList()).label("Os type").bindItem(osTypeObservableMutableProperty)
+                }
+                row {
+                    textField().label("Data directory")
+                        .bindText(state::dataDirectory)
+                        .comment("The place to save the downloaded toolchain (Optional)")
+                        .align(Align.FILL)
                 }
                 val textComponentValidators = TextComponentValidators()
                 row("host") {

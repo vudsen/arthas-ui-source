@@ -11,11 +11,12 @@ import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.util.preferredHeight
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.conf.ui.ScriptTestsDialog
-import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
+import io.github.vudsen.arthasui.api.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.language.ognl.psi.OgnlFileType
 import io.github.vudsen.arthasui.script.MyOgnlContext
-import io.github.vudsen.arthasui.util.ui.KMutableProperty2MutablePropertyAdapter;
+import io.github.vudsen.arthasui.common.util.KMutableProperty2MutablePropertyAdapter;
 import java.awt.Dimension
 import javax.swing.JComponent
 
@@ -67,7 +68,7 @@ class JvmSearchGroupConfigurable(
 
     private fun testScript(script: String) {
         val context = MyOgnlContext(
-            service<HostMachineConnectManager>().connect(hostMachineConfig.connect),
+            service<HostMachineConnectManager>().connect(hostMachineConfig),
             hostMachineConfig
         )
         ScriptTestsDialog(script, context).show()

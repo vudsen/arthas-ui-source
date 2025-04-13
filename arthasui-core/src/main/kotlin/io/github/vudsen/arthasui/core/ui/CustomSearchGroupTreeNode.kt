@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.core.ui
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.Messages
@@ -9,7 +8,7 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
-import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
+import io.github.vudsen.arthasui.api.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.script.MyOgnlContext
 import io.github.vudsen.arthasui.script.OgnlJvmSearcher
 import java.awt.FlowLayout
@@ -27,7 +26,7 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
         try {
-            return OgnlJvmSearcher.executeByGroup(group, MyOgnlContext(ctx.hostMachine, ctx.config)).map {
+            return OgnlJvmSearcher.executeByGroup(group, MyOgnlContext(ctx.template, ctx.config)).map {
                 jvm -> mapToJvmNode(jvm)
             }
         } catch (e: Exception) {

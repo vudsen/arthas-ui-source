@@ -2,15 +2,16 @@ package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 
 @Suppress("unused")
 class MyOgnlContext (
-    val hostMachine: HostMachine,
+    val template: HostMachineTemplate,
     val hostMachineConfig: HostMachineConfig,
 ) {
 
-    val helpers = LazyLoadHelper(hostMachine, hostMachineConfig)
+    val helpers = LazyLoadHelper(template, hostMachineConfig)
 
     /**
      * 保存执行结果

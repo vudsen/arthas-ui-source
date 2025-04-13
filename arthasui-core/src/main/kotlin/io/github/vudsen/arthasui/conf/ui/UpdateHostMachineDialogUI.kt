@@ -13,7 +13,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
-import io.github.vudsen.arthasui.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import java.awt.Dimension
 import javax.swing.*
 

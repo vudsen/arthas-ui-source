@@ -19,7 +19,7 @@ class LocalHostMachineConnectProvider : HostMachineConnectProvider {
     }
 
     override fun connect(config: HostMachineConnectConfig): HostMachine {
-        return LocalHostMachineImpl()
+        return LocalHostMachineImpl(config as LocalConnectConfig)
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {

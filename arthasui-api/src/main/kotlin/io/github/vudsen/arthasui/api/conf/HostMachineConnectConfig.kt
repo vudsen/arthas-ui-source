@@ -4,7 +4,10 @@ import io.github.vudsen.arthasui.api.DeepCopyable
 import io.github.vudsen.arthasui.api.OS
 import javax.swing.Icon
 
-abstract class HostMachineConnectConfig(val type: String) : DeepCopyable<HostMachineConnectConfig> {
+abstract class HostMachineConnectConfig(
+    val type: String,
+    var dataDirectory: String
+) : DeepCopyable<HostMachineConnectConfig> {
 
     /**
      * 获取对应连接方式的图标

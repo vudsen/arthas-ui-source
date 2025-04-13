@@ -1,16 +1,16 @@
-package io.github.vudsen.arthasui.conf
+package io.github.vudsen.arthasui.bridge.util
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
-import com.intellij.util.xmlb.Converter
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.api.bean.EmptyConnectConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfigConverter
 
 
-class HostMachineConnectConfigConverter : Converter<HostMachineConnectConfig>() {
+class HostMachineConnectConfigConverterImpl : HostMachineConnectConfigConverter {
 
     private val gson: Gson
         init {

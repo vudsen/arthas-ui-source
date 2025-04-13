@@ -6,7 +6,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.currentOS
+import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -14,7 +16,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 
-class LocalHostMachineImpl : HostMachine {
+class LocalHostMachineImpl(private val connectConfig: LocalConnectConfig) : HostMachine {
 
     private val os = currentOS()
 
@@ -83,6 +85,30 @@ class LocalHostMachineImpl : HostMachine {
                 out.transferFrom(ins, 0, ins.size())
             }
         }
+    }
+
+    private var dataDirectory: String? = null
+
+    override fun prepareDataDirectory(): String {
+        dataDirectory ?.let { return it }
+        val actualDirectory = if (connectConfig.dataDirectory.isEmpty()) {
+            System.getProperty("user.dir") + "/arthas-ui"
+        } else {
+            connectConfig.dataDirectory
+        }
+
+        val file = File(actualDirectory)
+        if (!file.isDirectory) {
+            if (!file.mkdirs()) {
+                throw IllegalStateException("Failed to create $actualDirectory")
+            }
+        }
+        dataDirectory = file.absolutePath
+        return file.absolutePath
+    }
+
+    override fun getConfiguration(): HostMachineConnectConfig {
+        return connectConfig
     }
 
 

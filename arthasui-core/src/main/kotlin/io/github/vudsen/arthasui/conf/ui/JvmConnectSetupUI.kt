@@ -4,10 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.bindItem
-import com.intellij.ui.dsl.builder.bindText
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ComboBoxPredicate
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
@@ -15,8 +12,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
-import io.github.vudsen.arthasui.conf.HostMachineConfig
-import java.awt.Dimension
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 
 class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<HostMachineConfig>(parentDisposable) {
 
@@ -44,6 +40,11 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
             group("Basic Config") {
                 row {
                     textField().label("Name").validationOnApply(TextComponentValidators()).bindText(state::name).align(Align.FILL)
+                }
+                row {
+                    checkBox("Transfer local package first")
+                        .bindSelected(state::useLocalPkg)
+                        .comment("Transfer local package to remote host instead of download it in remote host")
                 }
                 row {
                     val box =

@@ -4,7 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
@@ -22,7 +22,7 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
 
         private data class ArthasBridgeHolder(
             val arthasBridge: ArthasBridgeTemplate,
-            var hostMachineConfig: HostMachineConnectConfig
+            var hostMachineConfig: HostMachineConfig
         )
 
     }
@@ -44,7 +44,7 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
     }
 
 
-    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConnectConfig, providerConfig: JvmProviderConfig): ArthasBridgeHolder {
+    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeHolder {
         var holder = getHolderAndEnsureAlive(jvm)
         if (holder != null) {
             return holder
@@ -72,7 +72,7 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
     /**
      * 初始化一个 [ArthasBridgeTemplate]
      */
-    override fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConnectConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate {
+    override fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate {
         return getOrInitHolder(jvm, hostMachineConfig, providerConfig).arthasBridge
     }
 

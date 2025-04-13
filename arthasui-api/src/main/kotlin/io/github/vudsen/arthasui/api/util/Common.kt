@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.common.util
+package io.github.vudsen.arthasui.api.util
 
 import io.github.vudsen.arthasui.api.DeepCopyable
 import java.io.*

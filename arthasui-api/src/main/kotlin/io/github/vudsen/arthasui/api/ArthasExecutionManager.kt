@@ -4,6 +4,7 @@ import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 
 interface ArthasExecutionManager {
 
@@ -17,7 +18,7 @@ interface ArthasExecutionManager {
     /**
      * 初始化一个 [ArthasBridgeTemplate]
      */
-    fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConnectConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate
+    fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate
 
     /**
      * 是否已经连接过了

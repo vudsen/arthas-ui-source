@@ -3,8 +3,7 @@ package io.github.vudsen.arthasui.core.ui
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
-import io.github.vudsen.arthasui.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import java.awt.FlowLayout
@@ -22,12 +21,12 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
 
     init {
         val factory = service<HostMachineConnectManager>()
-        val hostMachine = factory.connect(config.connect)
+        val hostMachine = factory.connect(config)
         ctx = TreeNodeContext(hostMachine, this, project, config)
     }
 
-    fun getConnectConfig(): HostMachineConnectConfig {
-        return config.connect
+    fun getConnectConfig(): HostMachineConfig {
+        return config
     }
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {

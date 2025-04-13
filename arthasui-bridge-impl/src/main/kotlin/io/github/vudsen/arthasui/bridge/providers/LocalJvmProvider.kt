@@ -7,12 +7,12 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
-import io.github.vudsen.arthasui.bridge.util.env
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
 import java.io.OutputStream
@@ -47,7 +47,8 @@ class LocalJvmProvider : JvmProvider {
     }
 
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
+        val hostMachine = template.getHostMachine()
         val config = providerConfig as LocalJvmProviderConfig
         val out = hostMachine.execute("${config.javaHome}/bin/jps", "-l").ok()
 
@@ -59,7 +60,7 @@ class LocalJvmProvider : JvmProvider {
             if (split.isEmpty()) {
                 continue
             }
-            val ctx = JvmContext(hostMachine, providerConfig)
+            val ctx = JvmContext(template, providerConfig)
             when (split.size) {
                 1 -> {
                     result.add(LocalJVM(split[0].trim(), "<null>", ctx))
@@ -75,6 +76,14 @@ class LocalJvmProvider : JvmProvider {
             }
         }
         return result
+    }
+
+    override fun createArthasBridgeFactory(
+        template: HostMachineTemplate,
+        jvm: JVM,
+        jvmProviderConfig: JvmProviderConfig
+    ): ArthasBridgeFactory {
+        return createLocalFactory(template.getHostMachine(), jvm, jvmProviderConfig as LocalJvmProviderConfig)
     }
 
 
@@ -124,13 +133,6 @@ class LocalJvmProvider : JvmProvider {
         }
     }
 
-    override fun createArthasBridgeFactory(
-        hostMachine: HostMachine,
-        jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig
-    ): ArthasBridgeFactory {
-        return createLocalFactory(hostMachine, jvm, jvmProviderConfig as LocalJvmProviderConfig)
-    }
 
     override fun createForm(
         oldState: JvmProviderConfig?,
@@ -149,14 +151,14 @@ class LocalJvmProvider : JvmProvider {
 
     override fun isJvmInactive(jvm: JVM): Boolean {
         val ctx = jvm.context
-        return isPidNotExist(ctx.hostMachine, jvm.id)
+        return isPidNotExist(ctx.template.getHostMachine(), jvm.id)
     }
 
-    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
-        hostMachine.env("JAVA_HOME") ?.let {
+    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
+        template.env("JAVA_HOME") ?.let {
             return LocalJvmProviderConfig(true, "", it)
         }
-        hostMachine.execute("java", "-version") .let {
+        template.getHostMachine().execute("java", "-version") .let {
             if (it.exitCode == 0) {
                 return LocalJvmProviderConfig(true, "", "java")
             }

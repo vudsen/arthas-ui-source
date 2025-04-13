@@ -7,12 +7,12 @@ import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.conf.ui.RootConfigUI
 import javax.swing.JComponent
 
-class ArthasUISettingsConfigurable(private val project: Project) : Configurable {
+class ArthasUISettingsConfigurable() : Configurable {
 
     private var lastUI: RootConfigUI? = null
 
     override fun createComponent(): JComponent {
-        val ui = RootConfigUI(project)
+        val ui = RootConfigUI()
         lastUI = ui
         return ui.component()
     }

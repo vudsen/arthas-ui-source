@@ -76,4 +76,12 @@ class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineC
         return getHostMachine().transferFile(src, dest)
     }
 
+    override fun prepareDataDirectory(): String {
+        return getHostMachine().prepareDataDirectory()
+    }
+
+    override fun getConfiguration(): HostMachineConnectConfig {
+        return config
+    }
+
 }

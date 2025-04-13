@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.util.ui
+package io.github.vudsen.arthasui.common.util
 
 import com.intellij.ui.dsl.builder.MutableProperty
 import kotlin.reflect.KMutableProperty
