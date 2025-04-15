@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.toolchain
 import com.google.gson.JsonObject
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
@@ -68,14 +69,19 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         template.download(asset.asJsonObject.get("browser_download_url").asString, hostMachineConfig.connect.dataDirectory)
     }
 
-    override suspend fun ensureToolChainDownloaded() {
+    override fun ensureToolChainDownloaded() {
         val dataDirectory = template.mkdirs(hostMachineConfig.dataDirectory)
         if (template.isFileNotExist("$dataDirectory/$JATTACH_BUNLDE")) {
-            template.unzip("$dataDirectory/${downloadJattach()}")
+            downloadJattach()
         }
         if (template.isFileNotExist("$dataDirectory/$ARTHAS_BUNDLE")) {
             downloadArthas()
         }
+    }
+
+    override fun isNotAllToolChainExist(): Boolean {
+        val dataDirectory = hostMachineConfig.dataDirectory
+        return template.isFileNotExist("$dataDirectory/$JATTACH_BUNLDE") || template.isFileNotExist("$dataDirectory/$ARTHAS_BUNDLE")
     }
 
     override fun getToolChainPath(toolChain: ToolChain): String {

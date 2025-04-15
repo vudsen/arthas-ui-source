@@ -1,8 +1,20 @@
 package io.github.vudsen.arthasui.api.template
 
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.UserDataHolder
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import java.lang.ref.WeakReference
 
-interface HostMachineTemplate {
+interface HostMachineTemplate : UserDataHolder {
+
+    companion object {
+        /**
+         * 下载进度指示器. 在调用 [HostMachineTemplate.download] 之前设置该属性，实现类就可以通过该对象反馈进度.
+         */
+        val DOWNLOAD_PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
+    }
 
     /**
      * 是否为 arm 架构
@@ -50,4 +62,15 @@ interface HostMachineTemplate {
      * 获取宿主机
      */
     fun getHostMachine(): HostMachine
+
+    /**
+     * 获取配置
+     */
+    fun getHostMachineConfig(): HostMachineConfig
+
+    /**
+     * 生成默认的数据文件夹
+     */
+    fun generateDefaultDataDirectory(): String
+
 }

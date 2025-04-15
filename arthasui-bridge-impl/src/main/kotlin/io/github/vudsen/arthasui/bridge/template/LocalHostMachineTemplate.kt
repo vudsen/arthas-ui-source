@@ -1,6 +1,8 @@
 package io.github.vudsen.arthasui.bridge.template
 
+import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.File
@@ -10,7 +12,7 @@ import java.io.File
  *
  * 由于服务器基本都是 Linux，所以没有必要再给 Windows 和 MacOS 上维护代码了。对于这俩强制要求只能连接本地的 JVM，不提供远程连接的实现。
  */
-class LocalHostMachineTemplate(private val hostMachine: HostMachine) : HostMachineTemplate {
+class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val hostMachineConfig: HostMachineConfig) : HostMachineTemplate {
 
     override fun isArm(): Boolean {
         return false
@@ -89,5 +91,22 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine) : HostMachi
         return hostMachine
     }
 
+    override fun getHostMachineConfig(): HostMachineConfig {
+        return hostMachineConfig
+    }
+
+    override fun generateDefaultDataDirectory(): String {
+        return System.getProperty("user.dir") + "/arthas-ui"
+    }
+
+    private val myData = HashMap<Key<*>, Any?>()
+
+    override fun <T : Any?> getUserData(key: Key<T>): T? {
+        return myData[key] as T?
+    }
+
+    override fun <T : Any?> putUserData(key: Key<T>, value: T?) {
+        myData[key] = value
+    }
 
 }

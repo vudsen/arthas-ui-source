@@ -11,6 +11,7 @@ import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import org.apache.commons.net.telnet.TelnetClient

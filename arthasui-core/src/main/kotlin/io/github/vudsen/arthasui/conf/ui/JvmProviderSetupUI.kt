@@ -6,26 +6,34 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.LoadingDecorator
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTabbedPane
+import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.bindText
+import com.intellij.ui.dsl.builder.panel
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.api.util.collectStackTrace
+import java.awt.Dimension
+import javax.swing.BoxLayout
 import javax.swing.JComponent
+import javax.swing.JPanel
 
 class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
     companion object {
-        private  val logger = Logger.getInstance(JvmProviderSetupUI::class.java)
+        private val logger = Logger.getInstance(JvmProviderSetupUI::class.java)
     }
 
     private lateinit var loadingDecorator: LoadingDecorator
 
-    private lateinit var tabbedPane: JBTabbedPane
+    private lateinit var container: JComponent
 
     private val formTabs: MutableList<FormComponent<JvmProviderConfig>> = mutableListOf()
 
@@ -33,13 +41,67 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
     private val errorColor = JBColor.namedColor("Label.errorForeground")
 
+    private var tabbedPane: JBTabbedPane? = null
+
+    private var commonDialogPanel: DialogPanel? = null
+
+    private val state: HostMachineConfig = HostMachineConfig()
+
+    /**
+     * 重新创建 [container] 中所有的组件
+     */
+    private fun recreateContainer(template: HostMachineTemplate?) {
+        container.removeAll()
+
+        container.add(createCommonConfigUI().apply {
+            commonDialogPanel = this@apply
+            maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
+        })
+        container.add(JBTabbedPane().apply {
+            tabbedPane = this@apply
+            maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
+            template ?.let {
+                formTabs.clear()
+                val providers = service<JvmProviderManager>().getProviders()
+                for (provider in providers) {
+                    val configuration = provider.tryCreateDefaultConfiguration(it)
+                    val form = provider.createForm(configuration, parentDisposable)
+                    addTab(provider.getName(), form.getComponent())
+                    formTabs.add(form)
+                }
+            }
+        })
+        container.updateUI()
+    }
 
     fun getComponent(): JComponent {
-        val root = JBTabbedPane()
-        val decorator = LoadingDecorator(root, parentDisposable, 0)
+        val container = JPanel().apply {
+            layout = BoxLayout(this@apply, BoxLayout.Y_AXIS)
+        }
+        val decorator = LoadingDecorator(container, parentDisposable, 0)
+
+        this.container = container
         loadingDecorator = decorator
-        tabbedPane = root
         return decorator.component
+    }
+
+    private fun createCommonConfigUI(): DialogPanel {
+        return panel {
+            group("Basic Configuration") {
+                row {
+                    textField().bindText(state::dataDirectory).label("Data directory").align(AlignX.FILL)
+                }
+            }
+        }
+    }
+
+    private fun transState(newState: HostMachineConfig) {
+        state.dataDirectory = newState.dataDirectory
+        state.connect = newState.connect
+        state.providers = newState.providers
+        state.name = newState.name
+        state.useLocalPkg = newState.useLocalPkg
+        state.searchGroups = newState.searchGroups
     }
 
     /**
@@ -51,22 +113,9 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
             override fun run(indicator: ProgressIndicator) {
                 try {
-                    val tabs = mutableListOf<FormComponent<JvmProviderConfig>>()
-                    val providers = service<JvmProviderManager>().getProviders()
-                    val update: Boolean = tabbedPane.tabCount == providers.size
-                    formTabs.clear()
-                    for ((index, provider) in providers.withIndex()) {
-                        val configuration = provider.tryCreateDefaultConfiguration(hostMachine)
-                        val form = provider.createForm(configuration, parentDisposable)
-                        tabs.add(form)
-                        if (update) {
-                            tabbedPane.setTabComponentAt(index, form.getComponent())
-                        } else {
-                            tabbedPane.addTab(provider.getName(), form.getComponent())
-                        }
-                        formTabs.add(form)
-                    }
-                    tabbedPane.updateUI()
+                    transState(hostMachine.getHostMachineConfig())
+                    state.dataDirectory = hostMachine.generateDefaultDataDirectory()
+                    recreateContainer(hostMachine)
                     loadingDecorator.stopLoading()
                 } catch (e: Exception) {
                     loadingDecorator.stopLoading()
@@ -81,14 +130,17 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
     }
 
     fun apply(): MutableList<JvmProviderConfig>? {
+        commonDialogPanel ?: return null ?:let {
+            it.apply() ?: return null
+        }
         val result = mutableListOf<JvmProviderConfig>()
         for (i in formTabs.indices) {
             val formTab = formTabs[i]
             formTab.apply() ?.let {
                 result.add(it)
-                tabbedPane.getTabComponentAt(i).foreground = okColor
+                tabbedPane?.getTabComponentAt(i)?.foreground = okColor
             } ?:let {
-                tabbedPane.getTabComponentAt(i).foreground = errorColor
+                tabbedPane?.getTabComponentAt(i)?.foreground = errorColor
             }
 
         }

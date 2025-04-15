@@ -10,9 +10,9 @@ object HostMachineTemplateFactory {
 
     fun getHostMachineTemplate(hostMachineConfig: HostMachineConfig, hostMachine: HostMachine): HostMachineTemplate {
         if (hostMachineConfig.connect is LocalConnectConfig) {
-            return LocalHostMachineTemplate(hostMachine)
+            return LocalHostMachineTemplate(hostMachine, hostMachineConfig)
         }
-        return LinuxHostMachineTemplate(hostMachine)
+        return LinuxHostMachineTemplate(hostMachine, hostMachineConfig)
     }
 
 }

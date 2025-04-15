@@ -40,12 +40,6 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
                 row {
                     comboBox(OS.values().toList()).label("Os type").bindItem(osTypeObservableMutableProperty)
                 }
-                row {
-                    textField().label("Data directory")
-                        .bindText(state::dataDirectory)
-                        .comment("The place to save the downloaded toolchain (Optional)")
-                        .align(Align.FILL)
-                }
                 val textComponentValidators = TextComponentValidators()
                 row("host") {
                     textField().bindText(state.ssh::host).align(Align.FILL).validationOnApply(textComponentValidators)
