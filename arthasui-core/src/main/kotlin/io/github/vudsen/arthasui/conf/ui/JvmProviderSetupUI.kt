@@ -47,6 +47,8 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
     private val state: HostMachineConfig = HostMachineConfig()
 
+    private var ready = false
+
     /**
      * 重新创建 [container] 中所有的组件
      */
@@ -152,13 +154,19 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         }
     }
 
+
     fun isInvalid(): Boolean {
-        for (formTab in formTabs) {
-            if (formTab.apply() == null) {
-                return true
+        var result = false
+        for (i in formTabs.indices) {
+            val formTab = formTabs[i]
+            formTab.apply() ?.let {
+                tabbedPane?.getTabComponentAt(i)?.foreground = okColor
+            } ?:let {
+                tabbedPane?.getTabComponentAt(i)?.foreground = errorColor
+                result = true
             }
         }
-        return false
+        return result
     }
 
 }

@@ -38,13 +38,13 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         File(path).mkdirs()
     }
 
-    override fun download(url: String, destDir: String) {
-        val destFile = File(destDir, url.substringAfterLast("/"))
+    override fun download(url: String, destPath: String) {
+        val destFile = File(destPath)
         if (destFile.exists() && destFile.isFile) {
             return
         }
         if (!destFile.parentFile.mkdirs()) {
-            logger.warn("Failed to create directory for file: $destDir")
+            logger.warn("Failed to create directory for file: $destPath")
         }
 
         val progressIndicator = getUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR)?.get()
@@ -132,9 +132,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         return System.getenv(name)
     }
 
-    override fun test(): Boolean {
-        return true
-    }
+    override fun test() {}
 
     override fun getHostMachine(): HostMachine {
         return hostMachine

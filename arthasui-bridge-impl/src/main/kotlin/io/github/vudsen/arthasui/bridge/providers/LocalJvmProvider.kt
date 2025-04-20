@@ -73,6 +73,7 @@ class LocalJvmProvider : JvmProvider {
                 }
 
                 else -> {
+                    logger.error("Unexpected jps output: $line")
                     throw IllegalStateException("Unreachable code.")
                 }
             }

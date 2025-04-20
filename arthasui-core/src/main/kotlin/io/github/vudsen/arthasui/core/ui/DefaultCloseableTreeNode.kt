@@ -11,7 +11,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 class DefaultCloseableTreeNode(config: HostMachineConfig, project: Project) : DefaultHostMachineTreeNode(config, project),
     CloseableTreeNode {
 
-    private fun getHostMachine(): CloseableHostMachine = ctx.template as CloseableHostMachine
+    private fun getHostMachine(): CloseableHostMachine = ctx.template.getHostMachine() as CloseableHostMachine
 
     override fun isActive(): Boolean {
         return !getHostMachine().isClosed()

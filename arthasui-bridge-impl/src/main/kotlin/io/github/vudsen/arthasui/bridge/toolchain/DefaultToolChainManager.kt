@@ -51,8 +51,9 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             throw IllegalStateException("No suitable jattach asset found for ${hostMachineConfig.connect.getOS()}")
         }
         val asobj = asset.asJsonObject
-        template.download(asobj.get("browser_download_url").asString, hostMachineConfig.dataDirectory)
-        return asobj.get("name").asString
+        val filename = asobj.get("name").asString
+        template.download(asobj.get("browser_download_url").asString, hostMachineConfig.dataDirectory + "/" + filename)
+        return filename
     }
 
     private fun prepareJattach(): String {
@@ -61,6 +62,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             return home
         }
         val filename = downloadJattach()
+        template.mkdirs(home)
         template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
         return home
     }
@@ -71,6 +73,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             return home
         }
         val filename = downloadArthas()
+        template.mkdirs(home)
         template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
         return home
     }
@@ -86,8 +89,9 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             throw IllegalStateException("No suitable arthas asset found for ${hostMachineConfig.connect.getOS()}")
         }
         val asJsonObject = asset.asJsonObject
-        template.download(asJsonObject.get("browser_download_url").asString, hostMachineConfig.dataDirectory)
-        return asJsonObject.get("name").asString
+        val filename = asJsonObject.get("name").asString
+        template.download(asJsonObject.get("browser_download_url").asString, hostMachineConfig.dataDirectory + "/" + filename)
+        return filename
     }
 
 

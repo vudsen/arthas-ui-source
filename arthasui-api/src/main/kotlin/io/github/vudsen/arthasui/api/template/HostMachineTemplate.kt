@@ -35,8 +35,10 @@ interface HostMachineTemplate : UserDataHolder {
 
     /**
      * 将指定文件下载到文件夹中
+     * @param url 下载地址
+     * @param destPath 存放路径，需要指定文件名
      */
-    fun download(url: String, destDir: String)
+    fun download(url: String, destPath: String)
 
     /**
      * 解压压缩包(zip, tar.gz, tgz...)
@@ -58,7 +60,7 @@ interface HostMachineTemplate : UserDataHolder {
     /**
      * 测试连接
      */
-    fun test(): Boolean
+    fun test()
 
     /**
      * 获取宿主机

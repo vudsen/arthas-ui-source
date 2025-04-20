@@ -1,13 +1,20 @@
 package io.github.vudsen.arthasui.bridge.template
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import java.io.BufferedReader
 import java.io.InputStream
 
 class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val hostMachineConfig: HostMachineConfig) : HostMachineTemplate {
+
+    companion object {
+        private val logger = Logger.getInstance(LinuxHostMachineTemplate::class.java)
+    }
 
     override fun isArm(): Boolean {
         val result = hostMachine.execute("uname", "-a").ok()
@@ -25,37 +32,56 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun mkdirs(path: String) {
-        hostMachine.execute("mkdir", "-r", path)
+        hostMachine.execute("mkdir", "-p", path).ok()
     }
 
-    private fun handleCurlOutput(progressIndicator: ProgressIndicator, inputStream: InputStream) {
-        TODO()
+
+    private fun handleDownloadOutput(progressIndicator: ProgressIndicator, inputStream: InputStream) {
+        BufferedReader(inputStream.reader()).use { br ->
+            var line = ""
+            while (br.readLine().also { line = it } != null) {
+                ProgressManager.checkCanceled()
+                if (line.contains("%")) {
+                    val percentStr = line.substringBefore("%").trim()
+                    if (percentStr.isEmpty()) {
+                        progressIndicator.fraction = 0.0
+                        continue
+                    }
+                    try {
+                        progressIndicator.fraction = percentStr.toDouble()
+                    } catch (e: NumberFormatException) {
+                        logger.error("Failed to parse progress: $percentStr", e)
+                    }
+                }
+            }
+        }
     }
 
-    private fun handleWgetOutput(progressIndicator: ProgressIndicator, inputStream: InputStream) {
-        TODO()
-    }
 
-    override fun download(url: String, destDir: String) {
+    override fun download(url: String, destPath: String) {
+        if (!isFileNotExist(destPath)) {
+            return
+        }
         val progressIndicator = getUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR)?.get()
         if (hostMachine.execute("curl", "--version").exitCode == 0) {
             if (progressIndicator == null) {
-                hostMachine.execute("curl", "-L", "-o", destDir, url).ok()
+                hostMachine.execute("curl", "-L", "-o", destPath, url).ok()
             } else {
+                progressIndicator.text = "Downloading $url"
                 val shell =
-                    hostMachine.createInteractiveShell("curl", "--progress-bar", "-L", "-o", destDir, url)
-                handleCurlOutput(progressIndicator, shell.inputStream)
+                    hostMachine.createInteractiveShell("curl", "--progress-bar", "-L", "-o", destPath, "--connect-timeout", "10", url)
+                handleDownloadOutput(progressIndicator, shell.inputStream)
             }
             return
         }
         if (hostMachine.execute("wget", "--version").exitCode == 0) {
-            // TODO, support progressIndicator
             if (progressIndicator == null) {
-                hostMachine.execute("wget", "-O", destDir, url).ok()
+                hostMachine.execute("wget", "-O", destPath, url).ok()
             } else {
+                progressIndicator.text = "Downloading $url"
                 val shell =
-                    hostMachine.createInteractiveShell("wget", "-O", destDir, url)
-                handleWgetOutput(progressIndicator, shell.inputStream)
+                    hostMachine.createInteractiveShell("wget", "-O", destPath, "--timeout=10", url)
+                handleDownloadOutput(progressIndicator, shell.inputStream)
             }
             return
         }
@@ -76,11 +102,11 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun env(name: String): String {
-        return hostMachine.execute("echo", "$${name}").ok()
+        return hostMachine.execute("bash", "-lc", "'echo \$$name'").ok().trim()
     }
 
-    override fun test(): Boolean {
-        return true
+    override fun test() {
+        hostMachine.execute("uname", "-a").ok()
     }
 
     override fun getHostMachine(): HostMachine {
@@ -92,7 +118,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun generateDefaultDataDirectory(): String {
-        return "/opt/arthas"
+        return "/opt/arthas-ui"
     }
 
     private val myData = HashMap<Key<*>, Any?>()

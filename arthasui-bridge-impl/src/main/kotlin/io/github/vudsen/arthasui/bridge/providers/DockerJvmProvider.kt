@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.providers
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
@@ -46,6 +47,10 @@ class DockerJvmProvider : JvmProvider {
         return result
     }
 
+    private fun isDirectoryNotExistInContainer(hostMachine: HostMachine, id: String, path: String): Boolean {
+        return hostMachine.execute("docker", "exec", "-i", id, "test", "-d", path).exitCode != 0
+    }
+
     override fun createArthasBridgeFactory(
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig,
@@ -54,28 +59,29 @@ class DockerJvmProvider : JvmProvider {
         val template = jvm.context.template
         val config = jvmProviderConfig as JvmInDockerProviderConfig
         val hostMachine = template.getHostMachine()
-        if (hostMachine.getOS() == OS.WINDOWS && !config.useToolsInContainer) {
-            throw IllegalStateException("Docker desktop is not supported. Please embed your jdk and arthas to your image and enable `useToolsInContainer` feature.")
+        val javaExecutable = if (config.javaHome.isEmpty()) {
+            "java"
+        }  else {
+            config.javaHome + "/bin/java"
         }
+
         return ArthasBridgeFactory {
-            val jattach: String
-            val arthasHome: String
-            if (config.useToolsInContainer) {
-                jattach = config.jdkHome
-                arthasHome = config.arthasHome
-            } else {
-                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE), "${jvm.id}:/tmp/arthas").ok()
-                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE), "${jvm.id}:/tmp/jattach").ok()
-                jattach = "/tmp/jdk"
-                arthasHome = "/tmp/arthas"
+            val jattach = "/tmp/jdk"
+            val arthasHome = "/tmp/arthas"
+            if (isDirectoryNotExistInContainer(hostMachine, jvm.id, arthasHome)) {
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE), "${jvm.id}:$arthasHome").ok()
             }
+            if (isDirectoryNotExistInContainer(hostMachine, jvm.id, jattach)) {
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE), "${jvm.id}:$jattach").ok()
+            }
+
             // TODO, support switch pid
-            hostMachine.execute("docker", "exec", "-it",
-                jvm.id, "$jattach/jattach", "1", "load", "instrument", "false", "${arthasHome}/arthas-agent.jar").ok()
+            hostMachine.execute("docker", "exec", "-i",
+                jvm.id, "$jattach/jattach", "1", "load", "instrument", "false", "\"${arthasHome}/arthas-agent.jar\"").ok()
             return@ArthasBridgeFactory ArthasBridgeImpl(
                 InteractiveShell2ArthasProcessAdapter(
-                    hostMachine.createInteractiveShell("docker", "exec", "-it",
-                        jvm.id, "$jattach/bin/java", "-jar", "${arthasHome}/arthas-client.jar"),
+                    hostMachine.createInteractiveShell("docker", "exec", "-i",
+                        jvm.id, javaExecutable, "-jar", "${arthasHome}/arthas-client.jar"),
                 )
             )
         }
