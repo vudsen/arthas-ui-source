@@ -5,8 +5,7 @@ import io.github.vudsen.arthasui.api.OS
 import javax.swing.Icon
 
 abstract class HostMachineConnectConfig(
-    val type: String,
-    var dataDirectory: String
+    val type: String
 ) : DeepCopyable<HostMachineConnectConfig> {
 
     /**

@@ -127,9 +127,12 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
                 }
                 // currentIndex = 1
                 updateButtonUI()
-                val providers = jvmProviderConfigUI.apply() ?: return
+                val state2 = jvmProviderConfigUI.apply() ?: return
 
-                state!!.providers = providers
+                state!!.let {
+                    it.providers = state2.providers
+                    it.dataDirectory = state2.dataDirectory
+                }
 
                 close(OK_EXIT_CODE)
                 onOk(state!!)

@@ -26,6 +26,8 @@ interface HostMachineTemplate : UserDataHolder {
      */
     fun isFileNotExist(path: String): Boolean
 
+    fun isDirectoryExist(path: String): Boolean
+
     /**
      * 递归创建文件夹
      */
@@ -39,7 +41,7 @@ interface HostMachineTemplate : UserDataHolder {
     /**
      * 解压压缩包(zip, tar.gz, tgz...)
      */
-    fun unzip(target: String)
+    fun unzip(target: String, destDir: String)
 
     /**
      * 过滤输出

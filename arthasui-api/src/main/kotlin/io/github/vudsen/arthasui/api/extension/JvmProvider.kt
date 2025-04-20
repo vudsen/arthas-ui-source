@@ -6,6 +6,7 @@ import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 
 interface JvmProvider {
@@ -23,7 +24,7 @@ interface JvmProvider {
     /**
      * 创建一个 [ArthasBridgeFactory]
      */
-    fun createArthasBridgeFactory(template: HostMachineTemplate, jvm: JVM, jvmProviderConfig: JvmProviderConfig): ArthasBridgeFactory
+    fun createArthasBridgeFactory(jvm: JVM, jvmProviderConfig: JvmProviderConfig, toolchainManager: ToolchainManager): ArthasBridgeFactory
 
     /**
      * 创建一个表单

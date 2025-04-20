@@ -46,7 +46,9 @@ class ToolWindowTree(val project: Project) : Disposable {
     val tree = Tree(DefaultTreeModel(rootModel))
 
     private val updateListener =  {
-        refreshRootNode()
+        ApplicationManager.getApplication().invokeLater {
+            refreshRootNode()
+        }
     }
 
     init {
@@ -98,8 +100,8 @@ class ToolWindowTree(val project: Project) : Disposable {
                 node = DefaultHostMachineTreeNode(hostMachineConfig, project)
             }
             rootModel.add(node.refreshRootNode())
-            tree.updateUI()
         }
+        tree.updateUI()
     }
 
     override fun dispose() {
@@ -134,7 +136,9 @@ class ToolWindowTree(val project: Project) : Disposable {
                             (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
                             node.providerConfig)
                     )
-                    fileEditorManager.openFile(lightVirtualFile, true)
+                    ApplicationManager.getApplication().invokeLater {
+                        fileEditorManager.openFile(lightVirtualFile, true)
+                    }
                 } finally {
                     node.loading = false
                 }

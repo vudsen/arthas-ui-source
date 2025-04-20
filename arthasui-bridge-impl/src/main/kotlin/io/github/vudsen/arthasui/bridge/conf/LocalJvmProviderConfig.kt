@@ -6,7 +6,6 @@ import javax.swing.Icon
 
 class LocalJvmProviderConfig(
     enabled: Boolean = false,
-    var arthasHome: String = "",
     var javaHome: String = ""
 ) : JvmProviderConfig(TYPE, enabled) {
 
@@ -22,12 +21,13 @@ class LocalJvmProviderConfig(
         return ArthasUIIcons.Box
     }
 
+    @Deprecated("Use deepCopy instead", replaceWith = ReplaceWith("deepCopy"))
     override fun copy(): JvmProviderConfig {
-        return LocalJvmProviderConfig(enabled, arthasHome, javaHome)
+        return LocalJvmProviderConfig(enabled, javaHome)
     }
 
     override fun deepCopy(): JvmProviderConfig {
-        return LocalJvmProviderConfig(enabled, arthasHome, javaHome)
+        return LocalJvmProviderConfig(enabled, javaHome)
     }
 
 }

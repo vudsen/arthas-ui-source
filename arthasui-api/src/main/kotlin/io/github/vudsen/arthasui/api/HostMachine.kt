@@ -32,11 +32,6 @@ interface HostMachine {
      */
     fun transferFile(src: String, dest: String)
 
-    /**
-     * 准备数据文件夹，可以被多次调用，每次将会返回想同的值
-     * @return 存放数据的文件
-     */
-    fun prepareDataDirectory(): String
 
     /**
      * 获取连接配置

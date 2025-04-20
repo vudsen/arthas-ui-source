@@ -7,7 +7,6 @@ import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class SshHostMachineConnectConfig(
-    dataDirectory: String,
     /**
      * 远程主机名称
      */
@@ -20,7 +19,7 @@ class SshHostMachineConnectConfig(
      * 操作系统
      */
     var os: OS = OS.LINUX,
-) : HostMachineConnectConfig(TYPE, dataDirectory) {
+) : HostMachineConnectConfig(TYPE) {
 
     companion object {
         const val TYPE = "SshHostMachineConfig"
@@ -59,7 +58,7 @@ class SshHostMachineConnectConfig(
     }
 
     override fun deepCopy(): HostMachineConnectConfig {
-        return SshHostMachineConnectConfig(dataDirectory, name, ssh, os)
+        return SshHostMachineConnectConfig(name, ssh, os)
     }
 
     override fun toString(): String {

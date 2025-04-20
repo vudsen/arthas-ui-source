@@ -99,7 +99,7 @@ class ArthasQueryConsoleActionGroup(
                     }
 
                     val arthasBridgeTemplate = blockingContext {
-                         coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig)
+                         coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig, indicator)
                     }
 
                     val configurationType =

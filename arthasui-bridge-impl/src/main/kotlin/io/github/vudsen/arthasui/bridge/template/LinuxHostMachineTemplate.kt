@@ -17,7 +17,11 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun isFileNotExist(path: String): Boolean {
-        return hostMachine.execute("test", "-d", path).exitCode != 0
+        return hostMachine.execute("test", "-f", path).exitCode != 0
+    }
+
+    override fun isDirectoryExist(path: String): Boolean {
+        return hostMachine.execute("test", "-d", path).exitCode == 0
     }
 
     override fun mkdirs(path: String) {
@@ -58,13 +62,14 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
     }
 
-    override fun unzip(target: String) {
+    override fun unzip(target: String, destDir: String) {
         if (target.endsWith(".zip")) {
-            hostMachine.execute("unzip", target).ok()
+            hostMachine.execute("unzip", target, "-d", destDir).ok()
         } else if (target.endsWith(".tgz")) {
-            hostMachine.execute("tar", "-zxvf", target).ok()
+            hostMachine.execute("tar", "-zxvf", target, "-C", destDir).ok()
         }
     }
+
 
     override fun grep(source: String, search: String): String {
         return hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"").ok()

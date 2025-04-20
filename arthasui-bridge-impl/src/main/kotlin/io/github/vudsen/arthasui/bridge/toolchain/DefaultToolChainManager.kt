@@ -3,22 +3,21 @@ package io.github.vudsen.arthasui.bridge.toolchain
 import com.google.gson.JsonObject
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.toolchain.ToolChain
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.nio.charset.StandardCharsets
 
-class DefaultToolChainManager(private val template: HostMachineTemplate, private val hostMachineConfig: HostMachineConfig) : ToolchainManager {
+class DefaultToolChainManager(private val template: HostMachineTemplate, private val hostMachineConfig: HostMachineConfig) :
+    ToolchainManager {
 
 
     companion object {
-        private const val JATTACH_BUNLDE = "jattach"
-        private const val ARTHAS_BUNDLE = "arthas-bin.zip"
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
     }
 
@@ -26,7 +25,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
      * @return the file name.
      */
     private fun downloadJattach(): String {
-        val data = fetchLatestData("jattach/attach")
+        val data = fetchLatestData("jattach/jattach")
         val versions = data.get("assets").asJsonArray
         val asset = when (hostMachineConfig.connect.getOS()) {
             OS.LINUX -> {
@@ -52,11 +51,31 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             throw IllegalStateException("No suitable jattach asset found for ${hostMachineConfig.connect.getOS()}")
         }
         val asobj = asset.asJsonObject
-        template.download(asobj.get("browser_download_url").asString, hostMachineConfig.connect.dataDirectory)
+        template.download(asobj.get("browser_download_url").asString, hostMachineConfig.dataDirectory)
         return asobj.get("name").asString
     }
 
-    private fun downloadArthas() {
+    private fun prepareJattach(): String {
+        val home = "${hostMachineConfig.dataDirectory}/pkg/jattach"
+        if (template.isDirectoryExist(home)) {
+            return home
+        }
+        val filename = downloadJattach()
+        template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
+        return home
+    }
+
+    private fun prepareArthas(): String {
+        val home = "${hostMachineConfig.dataDirectory}/pkg/arthas"
+        if (template.isDirectoryExist(home)) {
+            return home
+        }
+        val filename = downloadArthas()
+        template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
+        return home
+    }
+
+    private fun downloadArthas(): String {
         val data = fetchLatestData("alibaba/arthas")
         val versions = data.get("assets").asJsonArray
         val asset = versions.find { v -> v.asJsonObject.get("name").asString == "arthas-bin.zip" }
@@ -66,28 +85,16 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             }
             throw IllegalStateException("No suitable arthas asset found for ${hostMachineConfig.connect.getOS()}")
         }
-        template.download(asset.asJsonObject.get("browser_download_url").asString, hostMachineConfig.connect.dataDirectory)
+        val asJsonObject = asset.asJsonObject
+        template.download(asJsonObject.get("browser_download_url").asString, hostMachineConfig.dataDirectory)
+        return asJsonObject.get("name").asString
     }
 
-    override fun ensureToolChainDownloaded() {
-        val dataDirectory = template.mkdirs(hostMachineConfig.dataDirectory)
-        if (template.isFileNotExist("$dataDirectory/$JATTACH_BUNLDE")) {
-            downloadJattach()
-        }
-        if (template.isFileNotExist("$dataDirectory/$ARTHAS_BUNDLE")) {
-            downloadArthas()
-        }
-    }
 
-    override fun isNotAllToolChainExist(): Boolean {
-        val dataDirectory = hostMachineConfig.dataDirectory
-        return template.isFileNotExist("$dataDirectory/$JATTACH_BUNLDE") || template.isFileNotExist("$dataDirectory/$ARTHAS_BUNDLE")
-    }
-
-    override fun getToolChainPath(toolChain: ToolChain): String {
+    override fun getToolChainHomePath(toolChain: ToolChain): String {
         return when (toolChain) {
-            ToolChain.JATTACH -> "${hostMachineConfig.dataDirectory}/$JATTACH_BUNLDE"
-            ToolChain.ARTHAS -> "${hostMachineConfig.dataDirectory}/$ARTHAS_BUNDLE"
+            ToolChain.JATTACH_BUNDLE -> prepareJattach()
+            ToolChain.ARTHAS_BUNDLE -> prepareArthas()
         }
     }
 
@@ -96,16 +103,24 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         val url = URL("https://api.github.com/repos/$pkg/releases/latest")
 
         val connection = url.openConnection() as HttpURLConnection
+        try {
 
-        connection.requestMethod = "GET"
+            connection.requestMethod = "GET"
 
-        BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
-            val response = StringBuilder()
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                response.append(line)
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                throw IllegalStateException("No suitable artifact found for $pkg")
             }
-            return service<SingletonInstanceHolderService>().gson.toJsonTree(response.toString()).asJsonObject
+
+            val tree = service<SingletonInstanceHolderService>().gson.fromJson(
+                String(
+                    connection.inputStream.readAllBytes(),
+                    StandardCharsets.UTF_8
+                ), JsonObject::class.java
+            )
+            return tree
+        } finally {
+            connection.inputStream.close()
+            connection.disconnect()
         }
     }
 

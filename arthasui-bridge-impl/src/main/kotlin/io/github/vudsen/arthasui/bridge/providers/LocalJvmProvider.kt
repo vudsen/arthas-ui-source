@@ -8,10 +8,11 @@ import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolChain
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import org.apache.commons.net.telnet.TelnetClient
@@ -79,29 +80,29 @@ class LocalJvmProvider : JvmProvider {
         return result
     }
 
+
     override fun createArthasBridgeFactory(
-        template: HostMachineTemplate,
         jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig
+        jvmProviderConfig: JvmProviderConfig,
+        toolchainManager: ToolchainManager
     ): ArthasBridgeFactory {
-        return createLocalFactory(template.getHostMachine(), jvm, jvmProviderConfig as LocalJvmProviderConfig)
-    }
+        val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
+        val template = jvm.context.template
+        val hostMachine = template.getHostMachine()
 
+        val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
+        val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
-    private fun createLocalFactory(
-        hostMachine: HostMachine,
-        jvm: JVM,
-        localJvmProviderConfig: LocalJvmProviderConfig
-    ): ArthasBridgeFactory {
+        // TODO, handle port not available
         if (hostMachine.getOS() != OS.WINDOWS) {
             return ArthasBridgeFactory {
+                hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
                 ArthasBridgeImpl(
                     InteractiveShell2ArthasProcessAdapter(
                         hostMachine.createInteractiveShell(
                             "${localJvmProviderConfig.javaHome}/bin/java",
                             "-jar",
-                            "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                            jvm.id
+                            "$arthasHome/arthas-client.jar"
                         )
                     )
                 )
@@ -109,21 +110,8 @@ class LocalJvmProvider : JvmProvider {
         }
 
         return ArthasBridgeFactory {
-            logger.info("Trying to attach ${jvm.id}, binding telnet port on 3658.")
-            // TODO 自动切换端口
-            val stdout = hostMachine.execute(
-                "${localJvmProviderConfig.javaHome}/bin/java",
-                "-jar",
-                "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                jvm.id,
-                "--telnet-port",
-                "3658",
-                "--attach-only"
-            ).ok()
-
-            if (logger.isDebugEnabled) {
-                logger.info("Attach success!, stdout: $stdout")
-            }
+            val r = hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
+            println(r)
             val client = TelnetClient().apply {
                 connectTimeout = 10000
             }
@@ -157,11 +145,11 @@ class LocalJvmProvider : JvmProvider {
 
     override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
         template.env("JAVA_HOME") ?.let {
-            return LocalJvmProviderConfig(true, "", it)
+            return LocalJvmProviderConfig(true, it)
         }
         template.getHostMachine().execute("java", "-version") .let {
             if (it.exitCode == 0) {
-                return LocalJvmProviderConfig(true, "", "java")
+                return LocalJvmProviderConfig(true, "java")
             }
         }
         return LocalJvmProviderConfig(false)

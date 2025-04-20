@@ -87,25 +87,7 @@ class LocalHostMachineImpl(private val connectConfig: LocalConnectConfig) : Host
         }
     }
 
-    private var dataDirectory: String? = null
 
-    override fun prepareDataDirectory(): String {
-        dataDirectory ?.let { return it }
-        val actualDirectory = if (connectConfig.dataDirectory.isEmpty()) {
-            System.getProperty("user.dir") + "/arthas-ui"
-        } else {
-            connectConfig.dataDirectory
-        }
-
-        val file = File(actualDirectory)
-        if (!file.isDirectory) {
-            if (!file.mkdirs()) {
-                throw IllegalStateException("Failed to create $actualDirectory")
-            }
-        }
-        dataDirectory = file.absolutePath
-        return file.absolutePath
-    }
 
     override fun getConfiguration(): HostMachineConnectConfig {
         return connectConfig

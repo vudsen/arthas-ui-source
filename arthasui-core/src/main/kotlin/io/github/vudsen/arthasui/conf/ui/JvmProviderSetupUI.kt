@@ -59,7 +59,6 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         })
         container.add(JBTabbedPane().apply {
             tabbedPane = this@apply
-            maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
             template ?.let {
                 formTabs.clear()
                 val providers = service<JvmProviderManager>().getProviders()
@@ -70,6 +69,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
                     formTabs.add(form)
                 }
             }
+            maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
         })
         container.updateUI()
     }
@@ -129,7 +129,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         })
     }
 
-    fun apply(): MutableList<JvmProviderConfig>? {
+    fun apply(): HostMachineConfig? {
         commonDialogPanel ?: return null ?:let {
             it.apply() ?: return null
         }
@@ -144,7 +144,12 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
             }
 
         }
-        return if (result.size == formTabs.size) result else null
+        return if (result.size == formTabs.size) {
+            state.providers = result
+            state
+        } else {
+            null
+        }
     }
 
     fun isInvalid(): Boolean {

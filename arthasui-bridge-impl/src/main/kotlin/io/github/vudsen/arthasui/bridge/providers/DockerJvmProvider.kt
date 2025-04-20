@@ -9,6 +9,8 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolChain
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
@@ -45,36 +47,40 @@ class DockerJvmProvider : JvmProvider {
     }
 
     override fun createArthasBridgeFactory(
-        template: HostMachineTemplate,
         jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig
+        jvmProviderConfig: JvmProviderConfig,
+        toolchainManager: ToolchainManager
     ): ArthasBridgeFactory {
+        val template = jvm.context.template
         val config = jvmProviderConfig as JvmInDockerProviderConfig
         val hostMachine = template.getHostMachine()
         if (hostMachine.getOS() == OS.WINDOWS && !config.useToolsInContainer) {
             throw IllegalStateException("Docker desktop is not supported. Please embed your jdk and arthas to your image and enable `useToolsInContainer` feature.")
         }
         return ArthasBridgeFactory {
-            val jdkHome: String
+            val jattach: String
             val arthasHome: String
             if (config.useToolsInContainer) {
-                jdkHome = config.jdkHome
+                jattach = config.jdkHome
                 arthasHome = config.arthasHome
             } else {
-                hostMachine.execute("docker", "cp", config.arthasHome, "${jvm.id}:/tmp/arthas").ok()
-                hostMachine.execute("docker", "cp", config.jdkHome, "${jvm.id}:/tmp/jdk").ok()
-                jdkHome = "/tmp/jdk"
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE), "${jvm.id}:/tmp/arthas").ok()
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE), "${jvm.id}:/tmp/jattach").ok()
+                jattach = "/tmp/jdk"
                 arthasHome = "/tmp/arthas"
             }
+            // TODO, support switch pid
+            hostMachine.execute("docker", "exec", "-it",
+                jvm.id, "$jattach/jattach", "1", "load", "instrument", "false", "${arthasHome}/arthas-agent.jar").ok()
             return@ArthasBridgeFactory ArthasBridgeImpl(
                 InteractiveShell2ArthasProcessAdapter(
-                // TODO, support switch pid.
                     hostMachine.createInteractiveShell("docker", "exec", "-it",
-                    jvm.id, "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
-            )
+                        jvm.id, "$jattach/bin/java", "-jar", "${arthasHome}/arthas-client.jar"),
+                )
             )
         }
     }
+
 
     override fun createForm(oldState: JvmProviderConfig?, parentDisposable: Disposable): FormComponent<JvmProviderConfig> {
         return DockerJvmProviderForm(oldState, parentDisposable)

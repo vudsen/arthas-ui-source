@@ -3,8 +3,6 @@ package io.github.vudsen.arthasui.core
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
@@ -14,7 +12,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
-import io.github.vudsen.arthasui.bridge.toolchain.ToolchainManager
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
@@ -63,15 +61,12 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         val template = factory.connect(hostMachineConfig)
 
         val toolchainManager: ToolchainManager = DefaultToolChainManager(template, template.getHostMachineConfig())
-        if (toolchainManager.isNotAllToolChainExist()) {
-            progressIndicator ?.let {
-                template.putUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR, WeakReference(it))
-            }
-            toolchainManager.ensureToolChainDownloaded()
+        progressIndicator ?.let {
+            template.putUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR, WeakReference(it))
         }
 
         val arthasBridgeFactory =
-            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(template, jvm, providerConfig)
+            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig, toolchainManager)
         val arthasBridgeTemplate = ArthasBridgeTemplate(arthasBridgeFactory)
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {

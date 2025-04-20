@@ -8,7 +8,7 @@ import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
-class LocalConnectConfig(dataDirectory: String) : HostMachineConnectConfig(TYPE, dataDirectory) {
+class LocalConnectConfig : HostMachineConnectConfig(TYPE) {
 
     val os = currentOS()
 
@@ -39,7 +39,7 @@ class LocalConnectConfig(dataDirectory: String) : HostMachineConnectConfig(TYPE,
     }
 
     override fun deepCopy(): HostMachineConnectConfig {
-        return LocalConnectConfig(dataDirectory)
+        return LocalConnectConfig()
     }
 
     override fun toString(): String {
