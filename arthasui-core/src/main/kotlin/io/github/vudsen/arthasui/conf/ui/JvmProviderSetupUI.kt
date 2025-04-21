@@ -101,6 +101,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         state.dataDirectory = newState.dataDirectory
         state.connect = newState.connect
         state.providers = newState.providers
+        state.id = newState.id
         state.name = newState.name
         state.useLocalPkg = newState.useLocalPkg
         state.searchGroups = newState.searchGroups

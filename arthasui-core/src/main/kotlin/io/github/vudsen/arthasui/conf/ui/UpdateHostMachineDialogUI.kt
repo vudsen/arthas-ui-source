@@ -25,8 +25,6 @@ class UpdateHostMachineDialogUI(
 
     private val state = oldState ?: HostMachineConfig()
 
-    private val isCreate = oldState == null
-
     private lateinit var root: DialogPanel
 
     private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers, parentDisposable)
@@ -59,7 +57,13 @@ class UpdateHostMachineDialogUI(
                         .bindText(state::name)
                         .align(Align.FILL)
                         .validationOnApply(TextComponentValidators())
-                        .enabled(isCreate)
+                }
+                row {
+                    textField()
+                        .label("Data directory")
+                        .bindText(state::dataDirectory)
+                        .align(Align.FILL)
+                        .validationOnApply(TextComponentValidators())
                 }
             }
             lateinit var connectComboBox: ComboBox<String>
