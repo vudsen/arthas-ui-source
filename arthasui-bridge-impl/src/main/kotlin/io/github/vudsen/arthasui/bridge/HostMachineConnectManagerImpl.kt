@@ -3,11 +3,14 @@ package io.github.vudsen.arthasui.bridge
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
+import io.github.vudsen.arthasui.bridge.template.HostMachineTemplateFactory
 import io.github.vudsen.arthasui.bridge.util.ReusableHostMachine
 import java.util.*
 
@@ -53,13 +56,15 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
     /**
      * 工具方法，快速连接某个宿主机
      */
-    override fun connect(config: HostMachineConnectConfig): HostMachine {
+    override fun connect(config: HostMachineConfig): HostMachineTemplate {
         logger.info("Connecting to $config")
-        val provider = getProvider(config)
-        if (provider.isCloseableHostMachine()) {
-            return wrapCloseableHostMachine(provider, config)
+        val provider = getProvider(config.connect)
+        val hostMachine: HostMachine = if (provider.isCloseableHostMachine()) {
+            wrapCloseableHostMachine(provider, config.connect)
+        } else {
+            provider.connect(config.connect)
         }
-        return provider.connect(config)
+        return HostMachineTemplateFactory.getHostMachineTemplate(config, hostMachine)
     }
 
     private fun wrapCloseableHostMachine(provider: HostMachineConnectProvider, config: HostMachineConnectConfig): CloseableHostMachine {

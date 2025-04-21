@@ -77,6 +77,8 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
             override fun actionPerformed(e: AnActionEvent) {
                 toolWindow.currentFocusedNode() ?.let {
                     toolWindow.launchRefreshNodeTask(it)
+                } ?: let {
+                    toolWindow.refreshRootNode()
                 }
             }
 

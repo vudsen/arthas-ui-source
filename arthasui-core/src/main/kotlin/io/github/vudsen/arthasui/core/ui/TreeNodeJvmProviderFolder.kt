@@ -11,7 +11,7 @@ import javax.swing.*
 class TreeNodeJvmProviderFolder(private val ctx: TreeNodeContext, private val provider: JvmProviderConfig) : AbstractRecursiveTreeNode() {
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
-        val jvmList = service<JvmProviderManager>().getProvider(provider).searchJvm(ctx.hostMachine, provider)
+        val jvmList = service<JvmProviderManager>().getProvider(provider).searchJvm(ctx.template, provider)
         val result = ArrayList<AbstractRecursiveTreeNode>(jvmList.size)
         for (jvm in jvmList) {
             result.add(TreeNodeJVM(ctx.root, provider, jvm, ctx.project))

@@ -1,17 +1,18 @@
 package io.github.vudsen.arthasui.conf
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.conf.ui.RootConfigUI
 import javax.swing.JComponent
 
-class ArthasUISettingsConfigurable(private val project: Project) : Configurable {
+class ArthasUISettingsConfigurable() : Configurable {
 
     private var lastUI: RootConfigUI? = null
 
     override fun createComponent(): JComponent {
-        val ui = RootConfigUI(project)
+        val ui = RootConfigUI()
         lastUI = ui
         return ui.component()
     }
@@ -26,9 +27,7 @@ class ArthasUISettingsConfigurable(private val project: Project) : Configurable 
         ui.component().apply()
         ui.resetModifiedStatus()
 
-        val service = project.getService(ArthasUISettingsPersistent::class.java)
-
-        service.updateState(ui.settingState)
+        service<ArthasUISettingsPersistent>().updateState(ui.settingState)
     }
 
     override fun getDisplayName(): String {

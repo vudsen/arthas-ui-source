@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList
     name = "io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent",
     storages = [ Storage("ArthasUISettings.xml") ]
 )
-@Service(Service.Level.PROJECT)
+@Service(Service.Level.APP)
 class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
 
     private val listeners = CopyOnWriteArrayList<() -> Unit>()
@@ -39,6 +39,10 @@ class ArthasUISettingsPersistent : PersistentStateComponent<ArthasUISettings> {
 
     fun notifyStateUpdated() {
         listeners.forEach { it() }
+    }
+
+    fun removeUpdateListener(listener: () -> Unit) {
+        listeners.remove(listener)
     }
 
 }

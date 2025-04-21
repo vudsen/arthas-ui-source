@@ -19,7 +19,7 @@ import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.exception.BridgeException
-import io.github.vudsen.arthasui.common.util.collectStackTrace
+import io.github.vudsen.arthasui.api.util.collectStackTrace
 import io.github.vudsen.arthasui.util.ui.CardJPanel
 import io.github.vudsen.arthasui.util.ui.TagLabel
 import java.awt.BorderLayout

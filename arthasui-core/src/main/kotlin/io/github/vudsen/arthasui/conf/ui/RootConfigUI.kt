@@ -2,7 +2,7 @@ package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
-import com.intellij.openapi.project.Project
+import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.CollectionListModel
 import com.intellij.ui.ColoredListCellRenderer
@@ -10,14 +10,13 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
-import io.github.vudsen.arthasui.common.util.deepCopy
 import io.github.vudsen.arthasui.conf.ArthasUISettings
 import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import javax.swing.JComponent
 import javax.swing.JList
 
-class RootConfigUI(project: Project) : Disposable {
+class RootConfigUI : Disposable {
 
     /**
      * 临时状态.
@@ -29,7 +28,7 @@ class RootConfigUI(project: Project) : Disposable {
     private var modified = false
 
     init {
-        val service = project.getService(ArthasUISettingsPersistent::class.java)
+        val service = service<ArthasUISettingsPersistent>()
         settingState = service.state.deepCopy()
     }
 
@@ -70,11 +69,11 @@ class RootConfigUI(project: Project) : Disposable {
         val collectionListModel = CollectionListModel(settingState.hostMachines, true)
         val table = JBList(collectionListModel)
 
-        table.setCellRenderer(object : ColoredListCellRenderer<HostMachineConfigV2>() {
+        table.setCellRenderer(object : ColoredListCellRenderer<HostMachineConfig>() {
 
             override fun customizeCellRenderer(
-                list: JList<out HostMachineConfigV2>,
-                value: HostMachineConfigV2?,
+                list: JList<out HostMachineConfig>,
+                value: HostMachineConfig?,
                 index: Int,
                 selected: Boolean,
                 hasFocus: Boolean
@@ -95,15 +94,15 @@ class RootConfigUI(project: Project) : Disposable {
             .setEditAction {
                 val jbTable = it.contextComponent as JBList<*>
 
-                CreateOrUpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy(), this) { item ->
+                UpdateHostMachineDialogUI(settingState.hostMachines[jbTable.selectedIndex].deepCopy(), this) { item ->
                     settingState.hostMachines[jbTable.selectedIndex] = item
                     modified = true
                 }.show()
             }
             .setAddAction {
-                CreateOrUpdateHostMachineDialogUI(null, this) { state ->
+                NewHostMachineSetupUI(this) { state ->
                     @Suppress("UNCHECKED_CAST")
-                    val jbTable = it.contextComponent as JBList<HostMachineConfigV2>
+                    val jbTable = it.contextComponent as JBList<HostMachineConfig>
                     collectionListModel.add(state)
                     modified = true
                     jbTable.updateUI()

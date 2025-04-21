@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.conf.bean.JvmSearchGroup
+import io.github.vudsen.arthasui.api.bean.JvmSearchGroup
 import ognl.Ognl
 import kotlin.jvm.Throws
 

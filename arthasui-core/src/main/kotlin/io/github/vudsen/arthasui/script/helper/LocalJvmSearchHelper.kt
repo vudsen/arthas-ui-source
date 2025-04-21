@@ -1,28 +1,27 @@
 package io.github.vudsen.arthasui.script.helper
 
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.util.BridgeUtils
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
 
 /**
  * 提供所有可执行文件的路径
  */
-class LocalJvmSearchHelper(private val hostMachine: HostMachine, private val providerConfig: LocalJvmProviderConfig) {
+class LocalJvmSearchHelper(private val template: HostMachineTemplate, private val providerConfig: LocalJvmProviderConfig) {
 
     private val whiteSpacePattern = Regex(" +")
 
-    private val ctx = JvmContext(hostMachine, providerConfig)
+    private val ctx = JvmContext(template, providerConfig)
 
     /**
      * 根据端口找到 jvm
      */
     @Suppress("unused")
     fun findByPort(port: Int, name: String?): List<JVM> {
+        val hostMachine = template.getHostMachine()
         if (hostMachine.getOS() == OS.WINDOWS) {
             val result = hostMachine.execute("cmd", "/c", "\"netstat -ano | findstr :${port}\"").ok().split('\n')
             return result.map {
@@ -62,7 +61,7 @@ class LocalJvmSearchHelper(private val hostMachine: HostMachine, private val pro
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val jvms: List<String> = BridgeUtils.grep(hostMachine, "\"${providerConfig.jdkHome}/bin/jps\" -lvm", search).split('\n')
+        val jvms: List<String> = template.grep("\"${providerConfig.javaHome}/bin/jps\" -lvm", search).split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {

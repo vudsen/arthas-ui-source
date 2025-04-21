@@ -7,6 +7,9 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolChain
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
@@ -46,9 +49,10 @@ class LocalJvmProvider : JvmProvider {
     }
 
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
+        val hostMachine = template.getHostMachine()
         val config = providerConfig as LocalJvmProviderConfig
-        val out = hostMachine.execute("${config.jdkHome}/bin/jps", "-l").ok()
+        val out = hostMachine.execute("${config.javaHome}/bin/jps", "-l").ok()
 
         val lines = out.split("\n")
         val result = ArrayList<JVM>(lines.size)
@@ -58,7 +62,7 @@ class LocalJvmProvider : JvmProvider {
             if (split.isEmpty()) {
                 continue
             }
-            val ctx = JvmContext(hostMachine, providerConfig)
+            val ctx = JvmContext(template, providerConfig)
             when (split.size) {
                 1 -> {
                     result.add(LocalJVM(split[0].trim(), "<null>", ctx))
@@ -69,6 +73,7 @@ class LocalJvmProvider : JvmProvider {
                 }
 
                 else -> {
+                    logger.error("Unexpected jps output: $line")
                     throw IllegalStateException("Unreachable code.")
                 }
             }
@@ -77,20 +82,28 @@ class LocalJvmProvider : JvmProvider {
     }
 
 
-    private fun createLocalFactory(
-        hostMachine: HostMachine,
+    override fun createArthasBridgeFactory(
         jvm: JVM,
-        localJvmProviderConfig: LocalJvmProviderConfig
+        jvmProviderConfig: JvmProviderConfig,
+        toolchainManager: ToolchainManager
     ): ArthasBridgeFactory {
+        val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
+        val template = jvm.context.template
+        val hostMachine = template.getHostMachine()
+
+        val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
+        val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
+
+        // TODO, handle port not available
         if (hostMachine.getOS() != OS.WINDOWS) {
             return ArthasBridgeFactory {
+                hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
                 ArthasBridgeImpl(
                     InteractiveShell2ArthasProcessAdapter(
                         hostMachine.createInteractiveShell(
-                            "${localJvmProviderConfig.jdkHome}/bin/java",
+                            "${localJvmProviderConfig.javaHome}/bin/java",
                             "-jar",
-                            "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                            jvm.id
+                            "$arthasHome/arthas-client.jar"
                         )
                     )
                 )
@@ -98,21 +111,8 @@ class LocalJvmProvider : JvmProvider {
         }
 
         return ArthasBridgeFactory {
-            logger.info("Trying to attach ${jvm.id}, binding telnet port on 3658.")
-            // TODO 自动切换端口
-            val stdout = hostMachine.execute(
-                "${localJvmProviderConfig.jdkHome}/bin/java",
-                "-jar",
-                "${localJvmProviderConfig.arthasHome}/arthas-boot.jar",
-                jvm.id,
-                "--telnet-port",
-                "3658",
-                "--attach-only"
-            ).ok()
-
-            if (logger.isDebugEnabled) {
-                logger.info("Attach success!, stdout: $stdout")
-            }
+            val r = hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
+            println(r)
             val client = TelnetClient().apply {
                 connectTimeout = 10000
             }
@@ -123,13 +123,6 @@ class LocalJvmProvider : JvmProvider {
         }
     }
 
-    override fun createArthasBridgeFactory(
-        hostMachine: HostMachine,
-        jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig
-    ): ArthasBridgeFactory {
-        return createLocalFactory(hostMachine, jvm, jvmProviderConfig as LocalJvmProviderConfig)
-    }
 
     override fun createForm(
         oldState: JvmProviderConfig?,
@@ -148,7 +141,19 @@ class LocalJvmProvider : JvmProvider {
 
     override fun isJvmInactive(jvm: JVM): Boolean {
         val ctx = jvm.context
-        return isPidNotExist(ctx.hostMachine, jvm.id)
+        return isPidNotExist(ctx.template.getHostMachine(), jvm.id)
+    }
+
+    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
+        template.env("JAVA_HOME") ?.let {
+            return LocalJvmProviderConfig(true, it)
+        }
+        template.getHostMachine().execute("java", "-version") .let {
+            if (it.exitCode == 0) {
+                return LocalJvmProviderConfig(true, "java")
+            }
+        }
+        return LocalJvmProviderConfig(false)
     }
 
     private fun isPidNotExist(hostMachine: HostMachine, pid: String): Boolean {

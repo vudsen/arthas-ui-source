@@ -15,11 +15,11 @@ class LocalHostMachineConnectProvider : HostMachineConnectProvider {
     }
 
     override fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig> {
-        return LocalConnectConfigurationForm()
+        return LocalConnectConfigurationForm(parentDisposable)
     }
 
     override fun connect(config: HostMachineConnectConfig): HostMachine {
-        return LocalHostMachineImpl()
+        return LocalHostMachineImpl(config as LocalConnectConfig)
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {

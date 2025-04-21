@@ -24,7 +24,6 @@ plugins {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("ognl:ognl:3.4.6")
-    implementation("com.google.code.gson:gson:2.11.0")
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
         bundledPlugins("com.intellij.java")
@@ -43,8 +42,8 @@ group = "io.github.vudsen.arthasui"
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "232"
-            untilBuild = "243.*"
+            sinceBuild = "241"
+            untilBuild = "251.*"
         }
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest

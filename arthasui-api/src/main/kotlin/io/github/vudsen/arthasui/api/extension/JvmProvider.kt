@@ -5,6 +5,8 @@ import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 
 interface JvmProvider {
@@ -17,12 +19,12 @@ interface JvmProvider {
     /**
      * 搜索默认位置下的 jvm
      */
-    fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM>
+    fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM>
 
     /**
      * 创建一个 [ArthasBridgeFactory]
      */
-    fun createArthasBridgeFactory(hostMachine: HostMachine, jvm: JVM, jvmProviderConfig: JvmProviderConfig): ArthasBridgeFactory
+    fun createArthasBridgeFactory(jvm: JVM, jvmProviderConfig: JvmProviderConfig, toolchainManager: ToolchainManager): ArthasBridgeFactory
 
     /**
      * 创建一个表单
@@ -44,4 +46,11 @@ interface JvmProvider {
      * jvm 是否存活
      */
     fun isJvmInactive(jvm: JVM): Boolean
+
+    /**
+     * 尝试在宿主机上生成对应的配置
+     * @return 对应的 [JvmProviderConfig], 如果不支持, [JvmProviderConfig.enabled] 为 false
+     */
+    fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig
+
 }

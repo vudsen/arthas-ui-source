@@ -8,10 +8,14 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.CloseableHostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.util.executeCancelable
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.session.ClientSession
+import org.apache.sshd.sftp.client.SftpClientFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.Path
 import kotlin.text.toByteArray
 
 class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) : CloseableHostMachine {
@@ -80,6 +84,27 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
     override fun getOS(): OS {
         return config.os
     }
+
+    override fun transferFile(src: String, dest: String) {
+        SftpClientFactory.instance().createSftpClient(session).use { client ->
+            val filename = File(src).name
+            val baseDir = if (dest.endsWith(filename)) {
+                dest.substring(0, dest.length - filename.length - 1)
+            } else {
+                dest
+            }
+            if (!client.stat(baseDir).isDirectory) {
+                client.mkdir(baseDir)
+            }
+            client.put(Path(src), dest)
+        }
+    }
+
+
+    override fun getConfiguration(): HostMachineConnectConfig {
+        return config
+    }
+
 
     override fun toString(): String {
         return "RemoteSshHostMachineImpl(name = ${config.name}, host=${config.ssh.host}, port=${config.ssh.port})"

@@ -13,7 +13,7 @@ import com.intellij.ui.util.minimumHeight
 import com.intellij.ui.util.preferredHeight
 import com.intellij.ui.util.preferredWidth
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.common.util.collectStackTrace
+import io.github.vudsen.arthasui.api.util.collectStackTrace
 import io.github.vudsen.arthasui.script.MyOgnlContext
 import io.github.vudsen.arthasui.script.OgnlJvmSearcher
 import java.awt.BorderLayout

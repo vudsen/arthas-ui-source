@@ -2,18 +2,24 @@ package io.github.vudsen.arthasui.core
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
+import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 协调命令的执行
  */
-class ArthasExecutionManagerImpl : ArthasExecutionManager {
+class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecutionManager {
 
 
     companion object {
@@ -22,7 +28,7 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
 
         private data class ArthasBridgeHolder(
             val arthasBridge: ArthasBridgeTemplate,
-            var hostMachineConfig: HostMachineConnectConfig
+            var hostMachineConfig: HostMachineConfig
         )
 
     }
@@ -44,7 +50,7 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
     }
 
 
-    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConnectConfig, providerConfig: JvmProviderConfig): ArthasBridgeHolder {
+    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig, progressIndicator: ProgressIndicator?): ArthasBridgeHolder {
         var holder = getHolderAndEnsureAlive(jvm)
         if (holder != null) {
             return holder
@@ -52,9 +58,15 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
         log.info("Creating new arthas bridge for $jvm")
 
         val factory = service<HostMachineConnectManager>()
-        val hostMachine = factory.connect(hostMachineConfig)
+        val template = factory.connect(hostMachineConfig)
+
+        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, template.getHostMachineConfig())
+        progressIndicator ?.let {
+            template.putUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR, WeakReference(it))
+        }
+
         val arthasBridgeFactory =
-            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(hostMachine, jvm, providerConfig)
+            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig, toolchainManager)
         val arthasBridgeTemplate = ArthasBridgeTemplate(arthasBridgeFactory)
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
@@ -72,8 +84,17 @@ class ArthasExecutionManagerImpl : ArthasExecutionManager {
     /**
      * 初始化一个 [ArthasBridgeTemplate]
      */
-    override fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConnectConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate {
-        return getOrInitHolder(jvm, hostMachineConfig, providerConfig).arthasBridge
+    override fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate {
+        return getOrInitHolder(jvm, hostMachineConfig, providerConfig, null).arthasBridge
+    }
+
+    override fun initTemplate(
+        jvm: JVM,
+        hostMachineConfig: HostMachineConfig,
+        providerConfig: JvmProviderConfig,
+        progressIndicator: ProgressIndicator?
+    ): ArthasBridgeTemplate {
+        return getOrInitHolder(jvm, hostMachineConfig, providerConfig, progressIndicator).arthasBridge
     }
 
     /**

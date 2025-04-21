@@ -1,18 +1,17 @@
 package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
-import io.github.vudsen.arthasui.conf.HostMachineConfigV2
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 
 /**
  * 默认可关闭的树节点
  */
-class DefaultCloseableTreeNode(config: HostMachineConfigV2, project: Project) : DefaultHostMachineTreeNode(config, project),
+class DefaultCloseableTreeNode(config: HostMachineConfig, project: Project) : DefaultHostMachineTreeNode(config, project),
     CloseableTreeNode {
 
-    private fun getHostMachine(): CloseableHostMachine = ctx.hostMachine as CloseableHostMachine
+    private fun getHostMachine(): CloseableHostMachine = ctx.template.getHostMachine() as CloseableHostMachine
 
     override fun isActive(): Boolean {
         return !getHostMachine().isClosed()

@@ -9,6 +9,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.toolchain.ToolChain
+import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
@@ -23,7 +26,8 @@ class DockerJvmProvider : JvmProvider {
         return "Docker"
     }
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
+        val hostMachine = template.getHostMachine()
         val gson = service<SingletonInstanceHolderService>().gson
         val config = providerConfig as JvmInDockerProviderConfig
         val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json")
@@ -37,42 +41,52 @@ class DockerJvmProvider : JvmProvider {
             result.add(DockerJvm(
                 element["ID"]!!,
                 "${element["Names"]!!}(${element["Image"]!!})",
-                JvmContext(hostMachine, providerConfig))
+                JvmContext(template, providerConfig))
             )
         }
         return result
     }
 
+    private fun isDirectoryNotExistInContainer(hostMachine: HostMachine, id: String, path: String): Boolean {
+        return hostMachine.execute("docker", "exec", "-i", id, "test", "-d", path).exitCode != 0
+    }
+
     override fun createArthasBridgeFactory(
-        hostMachine: HostMachine,
         jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig
+        jvmProviderConfig: JvmProviderConfig,
+        toolchainManager: ToolchainManager
     ): ArthasBridgeFactory {
+        val template = jvm.context.template
         val config = jvmProviderConfig as JvmInDockerProviderConfig
-        if (hostMachine.getOS() == OS.WINDOWS && !config.useToolsInContainer) {
-            throw IllegalStateException("Docker desktop is not supported. Please embed your jdk and arthas to your image and enable `useToolsInContainer` feature.")
+        val hostMachine = template.getHostMachine()
+        val javaExecutable = if (config.javaHome.isEmpty()) {
+            "java"
+        }  else {
+            config.javaHome + "/bin/java"
         }
+
         return ArthasBridgeFactory {
-            val jdkHome: String
-            val arthasHome: String
-            if (config.useToolsInContainer) {
-                jdkHome = config.jdkHome
-                arthasHome = config.arthasHome
-            } else {
-                hostMachine.execute("docker", "cp", config.arthasHome, "${jvm.id}:/tmp/arthas").ok()
-                hostMachine.execute("docker", "cp", config.jdkHome, "${jvm.id}:/tmp/jdk").ok()
-                jdkHome = "/tmp/jdk"
-                arthasHome = "/tmp/arthas"
+            val jattach = "/tmp/jdk"
+            val arthasHome = "/tmp/arthas"
+            if (isDirectoryNotExistInContainer(hostMachine, jvm.id, arthasHome)) {
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE), "${jvm.id}:$arthasHome").ok()
             }
+            if (isDirectoryNotExistInContainer(hostMachine, jvm.id, jattach)) {
+                hostMachine.execute("docker", "cp", toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE), "${jvm.id}:$jattach").ok()
+            }
+
+            // TODO, support switch pid
+            hostMachine.execute("docker", "exec", "-i",
+                jvm.id, "$jattach/jattach", "1", "load", "instrument", "false", "\"${arthasHome}/arthas-agent.jar\"").ok()
             return@ArthasBridgeFactory ArthasBridgeImpl(
                 InteractiveShell2ArthasProcessAdapter(
-                // TODO, support switch pid.
-                hostMachine.createInteractiveShell("docker", "exec", "-it",
-                    jvm.id, "$jdkHome/bin/java", "-jar", "${arthasHome}/arthas-boot.jar", "1"),
-            )
+                    hostMachine.createInteractiveShell("docker", "exec", "-i",
+                        jvm.id, javaExecutable, "-jar", "${arthasHome}/arthas-client.jar"),
+                )
             )
         }
     }
+
 
     override fun createForm(oldState: JvmProviderConfig?, parentDisposable: Disposable): FormComponent<JvmProviderConfig> {
         return DockerJvmProviderForm(oldState, parentDisposable)
@@ -89,8 +103,16 @@ class DockerJvmProvider : JvmProvider {
     override fun isJvmInactive(jvm: JVM): Boolean {
         val ctx = jvm.context
         val config = ctx.providerConfig as JvmInDockerProviderConfig
-        val execResult = ctx.hostMachine.execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
+        val execResult = ctx.template.getHostMachine().execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
         return execResult.isEmpty()
+    }
+
+    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
+        val result = template.getHostMachine().execute("docker", "version")
+        if (result.exitCode != 0) {
+            return JvmInDockerProviderConfig()
+        }
+        return JvmInDockerProviderConfig(true)
     }
 
 

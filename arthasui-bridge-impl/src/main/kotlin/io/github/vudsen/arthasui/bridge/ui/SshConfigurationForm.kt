@@ -15,19 +15,7 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
     private val state: SshHostMachineConnectConfig = if (oldState is SshHostMachineConnectConfig) {
         oldState
     } else {
-        SshHostMachineConnectConfig()
-    }
-
-    private val osTypeObservableMutableProperty = object : ObservableMutableProperty<OS> {
-        override fun set(value: OS) {
-            state.os = value
-        }
-
-        override fun afterChange(listener: (OS) -> Unit) {}
-
-        override fun get(): OS {
-            return state.os
-        }
+        SshHostMachineConnectConfig("")
     }
 
     override fun getState(): HostMachineConnectConfig {
@@ -38,8 +26,7 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
         return panel {
             group("Connection Config") {
                 row {
-                    label("Os type")
-                    comboBox(OS.values().toList()).bindItem(osTypeObservableMutableProperty)
+                    comment("Only Linux is supported!")
                 }
                 val textComponentValidators = TextComponentValidators()
                 row("host") {

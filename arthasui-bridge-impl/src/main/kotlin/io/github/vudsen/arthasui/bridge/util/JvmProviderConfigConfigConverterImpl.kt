@@ -1,15 +1,15 @@
-package io.github.vudsen.arthasui.conf
+package io.github.vudsen.arthasui.bridge.util
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
-import com.intellij.util.xmlb.Converter
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.conf.JvmProviderConfigConfigConverter
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 
-class JvmProviderConfigConfigConverter : Converter<MutableList<JvmProviderConfig>>() {
+class JvmProviderConfigConfigConverterImpl : JvmProviderConfigConfigConverter {
 
     private val gson: Gson
     init {
@@ -20,12 +20,12 @@ class JvmProviderConfigConfigConverter : Converter<MutableList<JvmProviderConfig
     }
 
 
-    override fun toString(value: MutableList<JvmProviderConfig>): String {
-        return gson.toJson(value)
+    override fun toString(p0: MutableList<JvmProviderConfig>): String {
+        return gson.toJson(p0)
     }
 
-    override fun fromString(value: String): MutableList<JvmProviderConfig> {
-        return gson.fromJson(value, object : TypeToken<MutableList<JvmProviderConfig>>() {})
+    override fun fromString(p0: String): MutableList<JvmProviderConfig> {
+        return gson.fromJson(p0, object : TypeToken<MutableList<JvmProviderConfig>>() {})
     }
 
 }

@@ -40,7 +40,7 @@
         <completion.contributor language="Ognl"
                                 implementationClass="io.github.vudsen.arthasui.language.ognl.completion.OgnlCompletionContributor"/>
 
-        <projectConfigurable id="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"
+        <applicationConfigurable id="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"
                                  displayName="Arthas UI"
                                  parentId="tools"
                                  instance="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"/>
@@ -66,6 +66,13 @@
 
         <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.JvmProviderManagerImpl"
                             serviceInterface="io.github.vudsen.arthasui.api.extension.JvmProviderManager"/>
+
+
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.util.HostMachineConnectConfigConverterImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.conf.HostMachineConnectConfigConverter"/>
+
+        <applicationService serviceImplementation="io.github.vudsen.arthasui.bridge.util.JvmProviderConfigConfigConverterImpl"
+                            serviceInterface="io.github.vudsen.arthasui.api.conf.JvmProviderConfigConfigConverter"/>
 
         <iconMapper mappingFile="ArthasUIIconMappings.json"/>
     </extensions>

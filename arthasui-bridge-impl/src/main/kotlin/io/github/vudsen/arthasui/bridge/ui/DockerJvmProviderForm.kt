@@ -10,12 +10,11 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.common.ui.CheckBoxPredicate
-import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 
 class DockerJvmProviderForm(oldState: JvmProviderConfig?, parentDisposable: Disposable) :
     AbstractFormComponent<JvmProviderConfig>(parentDisposable) {
 
-    private val state: JvmInDockerProviderConfig = if (oldState is JvmInDockerProviderConfig) oldState else JvmInDockerProviderConfig()
+    private val state: JvmInDockerProviderConfig = if (oldState is JvmInDockerProviderConfig) oldState else JvmInDockerProviderConfig(javaHome = "java")
 
     override fun getState(): JvmProviderConfig {
         return state
@@ -30,13 +29,11 @@ class DockerJvmProviderForm(oldState: JvmProviderConfig?, parentDisposable: Disp
                 predicate = CheckBoxPredicate(checkBox, state.enabled)
             }
             row {
-                checkBox("Use tools in container").enabledIf(predicate).bindSelected(state::useToolsInContainer)
-            }
-            row {
-                textField().bindText(state::jdkHome).enabledIf(predicate).label("Jdk home").align(Align.FILL).validationOnApply(TextComponentValidators())
-            }
-            row {
-                textField().bindText(state::arthasHome).enabledIf(predicate).label("Arthas home").align(Align.FILL).validationOnApply(TextComponentValidators())
+                textField().bindText(state::javaHome)
+                    .enabledIf(predicate)
+                    .label("Java home")
+                    .align(Align.FILL)
+                    .comment("Replace the Java home in container")
             }
         }
         return root
