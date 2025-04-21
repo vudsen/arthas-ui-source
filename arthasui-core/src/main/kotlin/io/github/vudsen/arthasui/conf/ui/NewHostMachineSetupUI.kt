@@ -1,13 +1,13 @@
 package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.JBCardLayout
 import com.intellij.ui.components.JBSlidingPanel
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.common.util.MessagesUtils
@@ -28,6 +28,9 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
 
         private val logger = Logger.getInstance(NewHostMachineSetupUI::class.java)
 
+        private const val PAGE1 = "New Host Machine"
+
+        private const val PAGE2 = "Search Locations"
     }
 
     private val jvmConnectUI = JvmConnectSetupUI(parentDisposable)
@@ -56,8 +59,8 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
     override fun createCenterPanel(): JComponent {
         val panel = JBSlidingPanel()
         panel.preferredSize = Dimension(600, 500)
-        panel.add("New Host Machine", jvmConnectUI.getComponent())
-        panel.add("Search Locations", jvmProviderConfigUI.getComponent())
+        panel.add(PAGE1, jvmConnectUI.getComponent())
+        panel.add(PAGE2, jvmProviderConfigUI.getComponent())
         root = panel
         return panel
     }
@@ -88,7 +91,7 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
             override fun doAction(p0: ActionEvent?) {
                 currentIndex--
                 updateButtonUI()
-                root.goLeft()
+                root.swipe(PAGE1, JBCardLayout.SwipeDirection.BACKWARD)
             }
         }
 
@@ -113,7 +116,7 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
                                 hostMachine.test()
                                 currentIndex++
                                 updateButtonUI()
-                                root.goRight()
+                                root.swipe(PAGE2, JBCardLayout.SwipeDirection.FORWARD)
                                 jvmProviderConfigUI.refresh(hostMachine)
                             } catch (e: Exception) {
                                 if (logger.isDebugEnabled) {

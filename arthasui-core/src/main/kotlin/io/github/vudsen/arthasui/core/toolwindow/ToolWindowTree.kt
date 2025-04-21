@@ -16,6 +16,7 @@ import com.intellij.ui.treeStructure.Tree
 import com.intellij.ui.util.minimumWidth
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
@@ -37,6 +38,8 @@ import javax.swing.tree.DefaultTreeModel
 class ToolWindowTree(val project: Project) : Disposable {
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
+
+    private var lastState: List<HostMachineConfig>? = null
 
     /**
      * Structure:
@@ -80,8 +83,14 @@ class ToolWindowTree(val project: Project) : Disposable {
     /**
      * 刷新根节点
      */
-    private fun refreshRootNode() {
+    fun refreshRootNode() {
         val persistent = service<ArthasUISettingsPersistent>()
+        lastState ?.let {
+            if (it == persistent.state.hostMachines) {
+                return
+            }
+        }
+        lastState = persistent.state.hostMachines
 
         for (child in rootModel.children()) {
             val treeNode = child as DefaultMutableTreeNode

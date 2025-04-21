@@ -14,6 +14,8 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
     }
+
+    implementation("com.google.code.gson:gson:2.11.0")
 }
 group = "io.github.vudsen.arthasui.bridge"
 tasks.test {
