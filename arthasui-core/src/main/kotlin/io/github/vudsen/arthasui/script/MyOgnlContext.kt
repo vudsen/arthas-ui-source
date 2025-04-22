@@ -1,38 +1,46 @@
 package io.github.vudsen.arthasui.script
 
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 
+/**
+ * Ognl context.
+ */
 @Suppress("unused")
 class MyOgnlContext (
     val template: HostMachineTemplate,
     val hostMachineConfig: HostMachineConfig,
 ) {
 
+    /**
+     * Store some helper functions.
+     */
     val helpers = LazyLoadHelper(template, hostMachineConfig)
 
     /**
-     * 保存执行结果
+     * Collect and save result.
      */
     private val resultHolder = ResultHolder()
 
 
+    /**
+     * Add all jvm to [resultHolder].
+     */
     fun addAll(jvms: List<JVM>) {
         resultHolder.addAll(jvms)
     }
 
 
     /**
-     * debug
+     * Generate debug message.
      */
     fun debug(obj: Any) {
         resultHolder.debug(obj)
     }
 
     /**
-     * 获取执行结果
+     * Get the [ResultHolder].
      */
     fun getResultHolder(): ResultHolder = resultHolder
 

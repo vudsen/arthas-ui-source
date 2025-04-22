@@ -10,14 +10,22 @@ import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.common.util.ListMapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
+/**
+ * A helper for docker container search
+ */
 class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDockerProviderConfig) {
 
     companion object {
-        const val SEARCH_IMAGE_AND_NAME = "docker ps --format '{\\\"Names\\\": \\\"{{ .Names }}, \\\"Image\\\": \\\"{{ .Image }}\\\"}'"
+        private const val SEARCH_IMAGE_AND_NAME = "docker ps --format '{\\\"Names\\\": \\\"{{ .Names }}, \\\"Image\\\": \\\"{{ .Image }}\\\"}'"
     }
 
     private val ctx = JvmContext(template, providerConfig)
 
+    /**
+     * Find the jvm by the image.
+     * @param image The image name
+     * @param name Customize the jvm name. Will use the container name if it's null.
+     */
     @Suppress("unused")
     fun findByImage(image: String, name: String?): List<JVM> {
         val output = "[" + ctx.template.grep(
@@ -31,6 +39,12 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
     }
 
 
+    /**
+     * Find the jvm by image and name prefix.
+     * @param image The image name.
+     * @param prefix The name prefix.
+     * @param name Customize the jvm name. Will use the container name if it's null.
+     */
     @Suppress("unused")
     fun findByImageAndNamePrefix(image: String, prefix: String, name: String?): List<JVM> {
         val hostMachine = ctx.template.getHostMachine()
