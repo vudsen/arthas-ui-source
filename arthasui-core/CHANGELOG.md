@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.3.0 - 2025-04-22
+
+- fix: 测试OGNL脚本时在 EDT 线程 #17 
+- feat: 打开查询窗口前检查 JVM 是否存活 #18
+- refactor: 重构代码架构，使用 jattach 取代 jdk #19
+- enhance: 使用 id 辨别每项配置, 支持更新时修改名称 #20
+- ci: release 时自动上传 API 文档 #21
+- fix: 当 jps 不存在时使用 ps 搜索 jvm 
+- fix: 当第一次添加宿主机时，工具栏不会自动刷新 
+- fix: 使用 docker 时，若容器大于一个，则会报错
+
 ## 0.2.0-alpha - 2025-03-31
 
 - refactor: 重构代码架构 by @vudsen in https://github.com/vudsen/arthas-ui-source/pull/6
