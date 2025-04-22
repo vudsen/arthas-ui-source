@@ -18,7 +18,7 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
 
     private val formMap = mutableMapOf<String, FormComponent<HostMachineConnectConfig>>()
 
-    private val state = HostMachineConfig()
+    private val state = HostMachineConfig(System.currentTimeMillis())
 
     private var connectType: String? = null
 

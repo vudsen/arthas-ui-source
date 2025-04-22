@@ -7,6 +7,13 @@ import io.github.vudsen.arthasui.api.bean.JvmSearchGroup
 import io.github.vudsen.arthasui.api.util.mapMutable
 
 data class HostMachineConfig(
+    /**
+     * 唯一 id
+     */
+    var id: Long = -1,
+    /**
+     * 名称
+     */
     var name: String = "",
     /**
      * 优先使用本地的包进行传输，而不是让宿主机自己下载
@@ -35,11 +42,13 @@ data class HostMachineConfig(
 
     override fun deepCopy(): HostMachineConfig {
         return HostMachineConfig(
+            id,
             name,
             useLocalPkg,
             connect.deepCopy(),
             providers.mapMutable { v -> v.deepCopy() },
-            searchGroups.mapMutable { v -> v.deepCopy() }
+            searchGroups.mapMutable { v -> v.deepCopy() },
+            dataDirectory
         )
     }
 
