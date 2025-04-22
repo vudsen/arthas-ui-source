@@ -5,7 +5,6 @@ import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
@@ -18,7 +17,7 @@ import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
-import io.github.vudsen.arthasui.common.util.ListMapTypeToken
+import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
 class DockerJvmProvider : JvmProvider {
@@ -30,17 +29,18 @@ class DockerJvmProvider : JvmProvider {
         val hostMachine = template.getHostMachine()
         val gson = service<SingletonInstanceHolderService>().gson
         val config = providerConfig as JvmInDockerProviderConfig
-        val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json")
-        if (execResult.exitCode != 0) {
-            TODO("handle non-zero exit code.")
-        }
-        val jsonArray = "[" + execResult.stdout + "]"
-        val tree = gson.fromJson(jsonArray, ListMapTypeToken())
+        val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json").ok()
+
+        val containers = execResult.split('\n')
         val result = mutableListOf<JVM>()
-        for (element in tree) {
+        for (container in containers) {
+            if (container.isEmpty()) {
+                continue
+            }
+            val tree = gson.fromJson(container, MapTypeToken())
             result.add(DockerJvm(
-                element["ID"]!!,
-                "${element["Names"]!!}(${element["Image"]!!})",
+                tree["ID"]!!,
+                "${tree["Names"]!!}(${tree["Image"]!!})",
                 JvmContext(template, providerConfig))
             )
         }

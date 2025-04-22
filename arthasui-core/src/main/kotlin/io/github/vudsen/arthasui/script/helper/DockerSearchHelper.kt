@@ -7,7 +7,7 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.common.util.ListMapTypeToken
+import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
 /**
@@ -32,10 +32,7 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
             SEARCH_IMAGE_AND_NAME,
             "\"Image\": \"${image}\""
         ) + "]"
-        val gson = service<SingletonInstanceHolderService>().gson
-        return gson.fromJson(output, ListMapTypeToken()).map { ele ->
-            return@map DockerJvm(ele["Names"]!!, name ?: ele["Names"]!!, ctx)
-        }
+        return parseOutput(output, name)
     }
 
 
@@ -59,8 +56,17 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
                 TODO("Support MacOS")
             }
         }.ok()
+        return parseOutput(output, name)
+    }
+
+    private fun parseOutput(
+        output: String,
+        name: String?
+    ): List<DockerJvm> {
         val gson = service<SingletonInstanceHolderService>().gson
-        return gson.fromJson(output, ListMapTypeToken()).map { ele ->
+        val mapTypeToken = MapTypeToken()
+        return output.split('\n').map {
+            val ele = gson.fromJson(it, mapTypeToken)
             return@map DockerJvm(ele["Names"]!!, name ?: ele["Names"]!!, ctx)
         }
     }
