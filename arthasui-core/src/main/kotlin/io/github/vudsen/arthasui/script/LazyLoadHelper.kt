@@ -7,12 +7,18 @@ import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.script.helper.DockerSearchHelper
 import io.github.vudsen.arthasui.script.helper.LocalJvmSearchHelper
 
+/**
+ * Lazy load all helpers, the helper instance will be cached after first creation.
+ */
 class LazyLoadHelper(private val template: HostMachineTemplate, private val hostMachineConfig: HostMachineConfig) {
 
     private var _local: LocalJvmSearchHelper? = null
 
     private var _docker: DockerSearchHelper? = null
 
+    /**
+     * Create a helper for local jvm search
+     */
     @Suppress("unused")
     fun local(): LocalJvmSearchHelper {
         _local ?.let { return it }
@@ -25,6 +31,9 @@ class LazyLoadHelper(private val template: HostMachineTemplate, private val host
         return instance
     }
 
+    /**
+     * Create a helper for docker container search
+     */
     @Suppress("unused")
     fun docker(): DockerSearchHelper {
         _docker ?.let { return it }

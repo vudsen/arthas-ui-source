@@ -2,28 +2,37 @@ package io.github.vudsen.arthasui.script
 
 import io.github.vudsen.arthasui.api.JVM
 
+/**
+ * Hold the search result.
+ */
 class ResultHolder {
 
     /**
-     * 结果集
+     * The result.
      */
     val result: MutableList<JVM> = mutableListOf()
 
     /**
-     * debug 输出
+     * THe debug output.
      */
     private val debugOutput = StringBuilder()
 
+    /**
+     * Add a jvm
+     */
     fun add(jvm: JVM) {
         result.add(jvm)
     }
 
+    /**
+     * Add all jvm
+     */
     fun addAll(jvms: List<JVM>) {
         result.addAll(jvms)
     }
 
     /**
-     * 输出 debug 消息
+     * Append the debug message.
      */
     fun debug(obj: Any) {
         debugOutput.append(obj.toString())
@@ -32,7 +41,7 @@ class ResultHolder {
 
 
     /**
-     * 收集debug消息
+     * Collect all debug message.
      */
     fun collectDebugMessages(): String {
         return debugOutput.toString()

@@ -8,7 +8,7 @@ import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 
 /**
- * 提供所有可执行文件的路径
+ * A helper for local jvm search
  */
 class LocalJvmSearchHelper(private val template: HostMachineTemplate, private val providerConfig: LocalJvmProviderConfig) {
 
@@ -17,7 +17,9 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
     private val ctx = JvmContext(template, providerConfig)
 
     /**
-     * 根据端口找到 jvm
+     * Find the jvm by port.
+     * @param port The port
+     * @param name Customize the jvm name. Will use the main class if it's null.
      */
     @Suppress("unused")
     fun findByPort(port: Int, name: String?): List<JVM> {
@@ -57,7 +59,9 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
     }
 
     /**
-     * 根据命令行参数搜索 jvm
+     * Find all JVM by command line args.
+     * @param search The command line args that you want to match
+     * @param name Customize the jvm name. Will use the main class if it's null.
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
