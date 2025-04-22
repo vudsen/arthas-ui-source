@@ -52,31 +52,29 @@ class LocalJvmProvider : JvmProvider {
     override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
         val hostMachine = template.getHostMachine()
         val config = providerConfig as LocalJvmProviderConfig
-        val out = hostMachine.execute("${config.javaHome}/bin/jps", "-l").ok()
+        val out: String = hostMachine.execute("${config.javaHome}/bin/jps", "-l").let {
+            if (it.exitCode == 0) {
+                it.stdout
+            } else {
+                template.grep("ps -eo pid,command", "java")
+            }
+        }
 
         val lines = out.split("\n")
         val result = ArrayList<JVM>(lines.size)
 
         for (line in lines) {
-            val split = line.split(" ")
-            if (split.isEmpty()) {
+            val i = line.indexOf(' ')
+            if (i < 0) {
                 continue
             }
-            val ctx = JvmContext(template, providerConfig)
-            when (split.size) {
-                1 -> {
-                    result.add(LocalJVM(split[0].trim(), "<null>", ctx))
-                }
-
-                2 -> {
-                    result.add(LocalJVM(split[0].trim(), split[1].trim(), ctx))
-                }
-
-                else -> {
-                    logger.error("Unexpected jps output: $line")
-                    throw IllegalStateException("Unreachable code.")
-                }
+            val command = line.substring(i + 1)
+            if (command.contains("grep java")) {
+                continue
             }
+            val pid = line.substring(0, i)
+
+            result.add(LocalJVM(pid, command, JvmContext(template, providerConfig)))
         }
         return result
     }
