@@ -1,23 +1,18 @@
 # arthas-ui
 <!-- Plugin description -->
 
-An IntelliJ IDEA Plugin that manage [Arthas](https://arthas.aliyun.com/) connections for you.
-
-> [!CAUTION]
-> It's currently in the **alpha version**, which may contain critical bugs, especially under poor network conditions,
-> that could affect your IDEA(E.g. freeze your IDE). Please use it with caution!
->
-> And we still have a lot of features that have not been done; please stay tuned.
+An IntelliJ IDEA Plugin that manage [Arthas](https://github.com/alibaba/arthas) connections for you.
 
 
 ## Features
 
-- [x] Attach to the local JVM
-- [x] Attach to the JVM in docker 
-- [ ] Attach to the JVM in kubernetes (coming soon)
-- [x] Basic command completion
-- [ ] Arthas command grammar check (unstable)
-- 
+- Download the toolchain automatically ([Arthas](https://github.com/alibaba/arthas), [Jattach](https://github.com/jattach/jattach)).
+- Support OGNL expression to filter the JVM.
+- Arthas Grammar check.
+- Command Execution History.
+
+Check our [documentation](https://arthas-ui.pages.dev/) for more information.
+
 <!-- Plugin description end -->
 
 ## Quick Start

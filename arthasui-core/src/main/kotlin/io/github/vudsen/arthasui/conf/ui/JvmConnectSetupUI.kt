@@ -41,11 +41,11 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
                 row {
                     textField().label("Name").validationOnApply(TextComponentValidators()).bindText(state::name).align(Align.FILL)
                 }
-                row {
-                    checkBox("Transfer local package first")
-                        .bindSelected(state::useLocalPkg)
-                        .comment("Transfer local package to remote host instead of download it in remote host")
-                }
+//                row {
+//                    checkBox("Transfer local package first")
+//                        .bindSelected(state::useLocalPkg)
+//                        .comment("Transfer local package to remote host instead of download it in remote host")
+//                }
                 row {
                     val box =
                         comboBox(connectProviders.map { pv -> pv.getName() }).bindItem(this@JvmConnectSetupUI::connectType)

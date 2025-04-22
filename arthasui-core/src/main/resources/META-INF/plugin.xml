@@ -8,7 +8,7 @@
     <name>Arthas-UI</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="xu2237803016@outlook.com" url="https://vudsen.github.io/">vudsen</vendor>
+    <vendor email="xu2237803016@outlook.com" url="https://github.com/vudsen/arthas-ui">vudsen</vendor>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
