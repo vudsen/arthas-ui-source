@@ -39,8 +39,6 @@ class ToolWindowTree(val project: Project) : Disposable {
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
 
-    private var lastState: List<HostMachineConfig>? = null
-
     /**
      * Structure:
      * - `Invisible Root`
@@ -85,12 +83,6 @@ class ToolWindowTree(val project: Project) : Disposable {
      */
     fun refreshRootNode() {
         val persistent = service<ArthasUISettingsPersistent>()
-        lastState ?.let {
-            if (it == persistent.state.hostMachines) {
-                return
-            }
-        }
-        lastState = persistent.state.hostMachines
 
         for (child in rootModel.children()) {
             val treeNode = child as DefaultMutableTreeNode
@@ -110,6 +102,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
             rootModel.add(node.refreshRootNode())
         }
+        tree.model = DefaultTreeModel(rootModel)
         tree.updateUI()
     }
 
