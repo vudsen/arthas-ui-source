@@ -2,6 +2,8 @@ package io.github.vudsen.arthasui.conf
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
@@ -9,7 +11,6 @@ import com.intellij.ui.EditorTextField
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.util.preferredHeight
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.conf.ui.ScriptTestsDialog
@@ -37,9 +38,13 @@ class JvmSearchGroupConfigurable(
     }
 
     override fun createComponent(): JComponent {
-        val ognlTextArea = EditorTextField(project, OgnlFileType)
+        val ognlTextArea = EditorTextField(project, OgnlFileType).apply {
+            font = EditorColorsManager.getInstance()
+                .globalScheme
+                .getFont(EditorFontType.PLAIN)
+        }
         ognlTextArea.setOneLineMode(false)
-        ognlTextArea.preferredHeight = 150
+        ognlTextArea.preferredSize = Dimension(400,  150)
 
         val root = panel {
             row {

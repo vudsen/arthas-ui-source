@@ -2,6 +2,8 @@ package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.components.JBList
@@ -9,14 +11,12 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.util.minimumHeight
-import com.intellij.ui.util.preferredHeight
-import com.intellij.ui.util.preferredWidth
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.util.collectStackTrace
 import io.github.vudsen.arthasui.script.MyOgnlContext
 import io.github.vudsen.arthasui.script.OgnlJvmSearcher
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
 import java.util.concurrent.Future
 import javax.swing.*
@@ -61,7 +61,7 @@ class ScriptTestsDialog(
         val root = JPanel(BorderLayout())
         root.add(JLabel(AnimatedIcon.Default.INSTANCE))
         this.myRootPanel = root
-        root.preferredWidth = 500
+        root.preferredSize = Dimension(600, 500)
         return root
     }
 
@@ -94,7 +94,10 @@ class ScriptTestsDialog(
                 row {
                     cell(JBTextArea(debugMessage).apply {
                         lineWrap = true
-                        minimumHeight = 200
+                        minimumSize = Dimension(600, 200)
+                        font = EditorColorsManager.getInstance()
+                            .globalScheme
+                            .getFont(EditorFontType.PLAIN)
                     }).align(Align.FILL)
                 }
             }
@@ -106,10 +109,12 @@ class ScriptTestsDialog(
 
     private fun setFailed(stackTrace: String) {
         myRootPanel.removeAll()
-        myRootPanel.preferredHeight = 500
         myRootPanel.add(JBScrollPane(JBTextArea(stackTrace).apply {
             lineWrap = true
-        }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER)
+            font = EditorColorsManager.getInstance()
+                .globalScheme
+                .getFont(EditorFontType.PLAIN)
+        }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER))
         myRootPanel.updateUI()
     }
 

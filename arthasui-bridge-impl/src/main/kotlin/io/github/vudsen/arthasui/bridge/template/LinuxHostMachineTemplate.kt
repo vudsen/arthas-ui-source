@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import java.io.BufferedReader
@@ -97,8 +98,21 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    override fun grep(search: String, vararg commands: String): String {
-        return hostMachine.execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'").ok()
+    override fun grep(search: String, vararg commands: String): CommandExecuteResult {
+        return hostMachine.execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'")
+    }
+
+    override fun grep(searchChain: Array<String>, vararg commands: String): CommandExecuteResult {
+        val command = StringBuilder(searchChain.size * 5)
+        command.append('\'')
+        for (part in commands) {
+            command.append(part).append(' ')
+        }
+        for (search in searchChain) {
+            command.append("| grep ").append(search).append(' ')
+        }
+        command.append('\'')
+        return hostMachine.execute("sh", "-c", command.toString().trim())
     }
 
     override fun env(name: String): String {

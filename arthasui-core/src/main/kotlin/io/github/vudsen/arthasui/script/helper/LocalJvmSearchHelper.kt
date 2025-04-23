@@ -6,6 +6,7 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.providers.LocalJvmProvider
 
 /**
  * A helper for local jvm search
@@ -65,19 +66,21 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val jvms: List<String> = template.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").split('\n')
-        val result = mutableListOf<JVM>()
-        for (jvm in jvms) {
-            if (!jvm.contains(search)) {
-                continue
+        val output: String = template.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").let {
+            if (it.exitCode == 0) {
+                return@let it.stdout
+            } else {
+                return@let template.grep(arrayOf("java", search), "ps", "-eo", "pid,command").ok()
             }
-            val i = jvm.indexOf(' ')
-            val j = jvm.indexOf(' ', i + 1)
-
-            val actualName = name ?: if (j < 0) jvm.substring(i + 1) else jvm.substring(i + 1, j)
-            result.add(LocalJVM(jvm.substring(0, i), actualName, ctx));
         }
-        return result
+
+        val parseOutput = LocalJvmProvider.parseOutput(output, JvmContext(template, providerConfig))
+        name ?.let {
+            for (jvm in parseOutput) {
+                jvm.name = it
+            }
+        }
+        return parseOutput
     }
 
 }

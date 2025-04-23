@@ -42,6 +42,27 @@ class LocalJvmProvider : JvmProvider {
                 return 0
             }
         }
+
+        @JvmStatic
+        fun parseOutput(output: String, ctx: JvmContext): List<JVM> {
+            val lines = output.split("\n")
+            val result = ArrayList<JVM>(lines.size)
+
+            for (line in lines) {
+                val i = line.indexOf(' ')
+                if (i < 0) {
+                    continue
+                }
+                val command = line.substring(i + 1)
+                if (command.contains("grep java")) {
+                    continue
+                }
+                val pid = line.substring(0, i)
+
+                result.add(LocalJVM(pid, command, ctx))
+            }
+            return result
+        }
     }
 
     override fun getName(): String {
@@ -54,29 +75,13 @@ class LocalJvmProvider : JvmProvider {
         val config = providerConfig as LocalJvmProviderConfig
         val out: String = hostMachine.execute("${config.javaHome}/bin/jps", "-l").let {
             if (it.exitCode == 0) {
-                it.stdout
+                return@let it.stdout
             } else {
-                template.grep("ps -eo pid,command", "java")
+                return@let template.grep("ps -eo pid,command", "java").ok()
             }
         }
 
-        val lines = out.split("\n")
-        val result = ArrayList<JVM>(lines.size)
-
-        for (line in lines) {
-            val i = line.indexOf(' ')
-            if (i < 0) {
-                continue
-            }
-            val command = line.substring(i + 1)
-            if (command.contains("grep java")) {
-                continue
-            }
-            val pid = line.substring(0, i)
-
-            result.add(LocalJVM(pid, command, JvmContext(template, providerConfig)))
-        }
-        return result
+        return parseOutput(out, JvmContext(template, providerConfig))
     }
 
 
