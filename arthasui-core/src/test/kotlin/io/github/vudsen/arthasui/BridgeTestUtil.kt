@@ -53,10 +53,6 @@ object BridgeTestUtil {
 
     private val instance = WeakHashMap<Disposable, GenericContainer<*>>()
 
-    const val SSH_USERNAME = "root"
-
-    const val SSH_PASSWORD = "abc123"
-
     /**
      * 创建 SSH 服务器
      */
