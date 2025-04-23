@@ -8,8 +8,30 @@ import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.host.RemoteSshHostMachineImpl
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.ui.SshConfigurationForm
+import org.apache.sshd.common.Factory
+import org.apache.sshd.common.util.threads.CloseableExecutorService
+import org.apache.sshd.common.util.threads.SshThreadPoolExecutor
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.TimeUnit
 
-class SshHostMachineConnectProvider : HostMachineConnectProvider {
+class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
+
+    private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16), object : ThreadFactory {
+        override fun newThread(r: Runnable): Thread? {
+            return Thread(r).apply {
+                name = "eeeeeeece"
+            }
+        }
+
+    })
+
+    inner class MyCloseableExecutorService : Factory<CloseableExecutorService> {
+        override fun create(): CloseableExecutorService? {
+            return executor
+        }
+    }
+
     override fun getName(): String {
         return "SSH"
     }
@@ -19,7 +41,7 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider {
     }
 
     override fun connect(config: HostMachineConnectConfig): CloseableHostMachine {
-        return RemoteSshHostMachineImpl(config as SshHostMachineConnectConfig)
+        return RemoteSshHostMachineImpl(config as SshHostMachineConnectConfig, MyCloseableExecutorService())
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {
@@ -28,6 +50,10 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider {
 
     override fun isCloseableHostMachine(): Boolean {
         return true
+    }
+
+    override fun dispose() {
+        executor.shutdown()
     }
 
 }

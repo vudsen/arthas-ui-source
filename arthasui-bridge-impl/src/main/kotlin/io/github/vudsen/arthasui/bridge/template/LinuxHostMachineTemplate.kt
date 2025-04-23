@@ -97,8 +97,8 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    override fun grep(source: String, search: String): String {
-        return hostMachine.execute("sh", "-c", "\"$source | grep ${search}\"").ok()
+    override fun grep(search: String, vararg commands: String): String {
+        return hostMachine.execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'").ok()
     }
 
     override fun env(name: String): String {

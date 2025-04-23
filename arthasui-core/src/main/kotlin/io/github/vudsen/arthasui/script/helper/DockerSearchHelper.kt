@@ -16,7 +16,7 @@ import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDockerProviderConfig) {
 
     companion object {
-        private const val SEARCH_IMAGE_AND_NAME = "docker ps --format '{\\\"Names\\\": \\\"{{ .Names }}, \\\"Image\\\": \\\"{{ .Image }}\\\"}'"
+        private val SEARCH_IMAGE_AND_NAME = arrayOf("docker", "ps", "--format", "'{\\\"Names\\\": \\\"{{ .Names }}, \\\"Image\\\": \\\"{{ .Image }}\\\"}'")
     }
 
     private val ctx = JvmContext(template, providerConfig)
@@ -29,8 +29,8 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
     @Suppress("unused")
     fun findByImage(image: String, name: String?): List<JVM> {
         val output = "[" + ctx.template.grep(
-            SEARCH_IMAGE_AND_NAME,
-            "\"Image\": \"${image}\""
+            "\"Image\": \"${image}\"",
+            *SEARCH_IMAGE_AND_NAME,
         ) + "]"
         return parseOutput(output, name)
     }

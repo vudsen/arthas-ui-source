@@ -1,11 +1,11 @@
 package io.github.vudsen.arthasui.api.extension
 
-import io.github.vudsen.arthasui.api.HostMachine
+import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 
-interface HostMachineConnectManager {
+interface HostMachineConnectManager : Disposable {
 
     /**
      * 注册一个 provider.

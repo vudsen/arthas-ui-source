@@ -65,7 +65,7 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val jvms: List<String> = template.grep("\"${providerConfig.javaHome}/bin/jps\" -lvm", search).split('\n')
+        val jvms: List<String> = template.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").split('\n')
         val result = mutableListOf<JVM>()
         for (jvm in jvms) {
             if (!jvm.contains(search)) {

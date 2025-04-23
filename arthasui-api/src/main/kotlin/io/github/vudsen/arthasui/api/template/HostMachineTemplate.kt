@@ -47,10 +47,10 @@ interface HostMachineTemplate : UserDataHolder {
 
     /**
      * 过滤输出
-     * @param source 要执行的命令
      * @param search 要搜索的内容
+     * @param commands 要执行的命令
      */
-    fun grep(source: String, search: String): String
+    fun grep(search: String, vararg commands: String): String
 
     /**
      * 获取环境变量

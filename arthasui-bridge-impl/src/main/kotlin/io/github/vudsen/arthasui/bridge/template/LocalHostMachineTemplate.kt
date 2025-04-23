@@ -122,9 +122,9 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    override fun grep(source: String, search: String): String {
+    override fun grep(search: String, vararg commands: String): String {
         // 本地就不考虑网络占用了
-        val ok = hostMachine.execute(source).ok()
+        val ok = hostMachine.execute(*commands).ok()
         return ok.split('\n').filter { it.contains(search) }.joinToString("\n")
     }
 

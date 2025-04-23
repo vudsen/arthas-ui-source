@@ -1,6 +1,8 @@
 package io.github.vudsen.arthasui.bridge
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.util.Disposer
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
@@ -37,6 +39,9 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
      */
     override fun register(provider: HostMachineConnectProvider) {
         providers.putIfAbsent(provider.getConfigClass(), provider)
+        if (provider is Disposable) {
+            Disposer.register(this, provider)
+        }
     }
 
     /**
@@ -78,6 +83,12 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
             logger.info("Created a new instance for connect config ${config}.")
             cache[config] = instance
             return instance
+        }
+    }
+
+    override fun dispose() {
+        for (entry in cache) {
+            entry.value.close()
         }
     }
 
