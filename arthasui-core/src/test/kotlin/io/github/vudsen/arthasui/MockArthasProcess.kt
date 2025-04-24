@@ -8,7 +8,6 @@ import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.nio.charset.StandardCharsets
-import kotlin.text.toByteArray
 
 class MockArthasProcess : ArthasProcess {
 

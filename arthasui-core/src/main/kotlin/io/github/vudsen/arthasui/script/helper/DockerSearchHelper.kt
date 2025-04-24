@@ -1,14 +1,10 @@
 package io.github.vudsen.arthasui.script.helper
 
-import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.JVM
-import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
-import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.common.util.MapTypeToken
-import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
+import io.github.vudsen.arthasui.bridge.providers.DockerJvmProvider
 
 /**
  * A helper for docker container search
@@ -16,7 +12,7 @@ import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDockerProviderConfig) {
 
     companion object {
-        private const val SEARCH_IMAGE_AND_NAME = "docker ps --format '{\\\"Names\\\": \\\"{{ .Names }}, \\\"Image\\\": \\\"{{ .Image }}\\\"}'"
+        private val SEARCH_IMAGE_AND_NAME = arrayOf("docker", "ps", "--format", "\"{\\\"Names\\\": \\\"{{ .Names }}\\\", \\\"ID\\\": \\\"{{ .ID }}\\\", \\\"Image\\\": \\\"{{ .Image }}\\\"}\"")
     }
 
     private val ctx = JvmContext(template, providerConfig)
@@ -28,11 +24,18 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
      */
     @Suppress("unused")
     fun findByImage(image: String, name: String?): List<JVM> {
-        val output = "[" + ctx.template.grep(
-            SEARCH_IMAGE_AND_NAME,
-            "\"Image\": \"${image}\""
-        ) + "]"
-        return parseOutput(output, name)
+        val output = ctx.template.grep(
+            "\"Image\": \"${image}\"",
+            *SEARCH_IMAGE_AND_NAME,
+        ).ok()
+
+        val parseOutput = DockerJvmProvider.parseOutput(output, ctx)
+        name ?.let {
+            for (jvm in parseOutput) {
+                jvm.name = it
+            }
+        }
+        return parseOutput
     }
 
 
@@ -44,31 +47,16 @@ class DockerSearchHelper(template: HostMachineTemplate, providerConfig: JvmInDoc
      */
     @Suppress("unused")
     fun findByImageAndNamePrefix(image: String, prefix: String, name: String?): List<JVM> {
-        val hostMachine = ctx.template.getHostMachine()
-        val output = when (hostMachine.getOS()) {
-            OS.WINDOWS -> {
-                hostMachine.execute("cmd", "/c", "\"$SEARCH_IMAGE_AND_NAME | grep $image | grep ${prefix}\"")
+        val output = ctx.template.grep(arrayOf(image, prefix), *SEARCH_IMAGE_AND_NAME).ok()
+
+        val parseOutput = DockerJvmProvider.parseOutput(output, ctx)
+        name ?.let {
+            for (jvm in parseOutput) {
+                jvm.name = it
             }
-            OS.LINUX -> {
-                hostMachine.execute("sh", "-c", "\"$SEARCH_IMAGE_AND_NAME | findstr $image | findstr ${prefix}\"")
-            }
-            OS.MAC -> {
-                TODO("Support MacOS")
-            }
-        }.ok()
-        return parseOutput(output, name)
+        }
+        return parseOutput
     }
 
-    private fun parseOutput(
-        output: String,
-        name: String?
-    ): List<DockerJvm> {
-        val gson = service<SingletonInstanceHolderService>().gson
-        val mapTypeToken = MapTypeToken()
-        return output.split('\n').map {
-            val ele = gson.fromJson(it, mapTypeToken)
-            return@map DockerJvm(ele["Names"]!!, name ?: ele["Names"]!!, ctx)
-        }
-    }
 
 }

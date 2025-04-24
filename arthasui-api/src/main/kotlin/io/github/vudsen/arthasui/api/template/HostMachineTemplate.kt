@@ -4,6 +4,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolder
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import java.lang.ref.WeakReference
 
@@ -47,10 +48,17 @@ interface HostMachineTemplate : UserDataHolder {
 
     /**
      * 过滤输出
-     * @param source 要执行的命令
      * @param search 要搜索的内容
+     * @param commands 要执行的命令
      */
-    fun grep(source: String, search: String): String
+    fun grep(search: String, vararg commands: String): CommandExecuteResult
+
+    /**
+     * 多次过滤
+     * @param searchChain 要搜索的内容
+     * @param commands 要执行的命令
+     */
+    fun grep(searchChain: Array<String>, vararg commands: String): CommandExecuteResult
 
     /**
      * 获取环境变量

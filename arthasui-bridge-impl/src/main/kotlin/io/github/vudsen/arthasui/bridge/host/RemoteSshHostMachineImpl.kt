@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.generator.nova.util.joinToOptString
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
@@ -12,13 +13,16 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.util.executeCancelable
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.session.ClientSession
+import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory
 import org.apache.sshd.sftp.client.SftpClientFactory
+import org.apache.sshd.common.Factory;
+import org.apache.sshd.common.util.threads.CloseableExecutorService
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.text.toByteArray
 
-class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) : CloseableHostMachine {
+class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, executorServiceFactory: Factory<CloseableExecutorService>) : CloseableHostMachine {
 
     companion object {
         val logger = Logger.getInstance(RemoteSshHostMachineImpl::class.java)
@@ -30,6 +34,7 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig) 
         val client = SshClient
             .setUpDefaultClient()
 
+        client.ioServiceFactoryFactory = Nio2ServiceFactoryFactory(executorServiceFactory)
         client.start()
         val session = client.connect(config.ssh.username, config.ssh.host, config.ssh.port)
             .verify(5, TimeUnit.SECONDS)

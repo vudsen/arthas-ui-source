@@ -21,30 +21,45 @@ import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
 class DockerJvmProvider : JvmProvider {
+
+    companion object {
+
+        @JvmStatic
+        fun parseOutput(
+            execResult: String,
+            ctx: JvmContext
+        ): MutableList<JVM> {
+            val gson = service<SingletonInstanceHolderService>().gson
+            val containers = execResult.split('\n')
+            val result = mutableListOf<JVM>()
+            for (container in containers) {
+                if (container.isEmpty()) {
+                    continue
+                }
+                val tree = gson.fromJson(container, MapTypeToken())
+                result.add(
+                    DockerJvm(
+                        tree["ID"]!!,
+                        "${tree["Names"]!!}(${tree["Image"]!!})",
+                        ctx
+                    )
+                )
+            }
+            return result
+        }
+
+    }
+
     override fun getName(): String {
         return "Docker"
     }
 
     override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
         val hostMachine = template.getHostMachine()
-        val gson = service<SingletonInstanceHolderService>().gson
         val config = providerConfig as JvmInDockerProviderConfig
         val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json").ok()
 
-        val containers = execResult.split('\n')
-        val result = mutableListOf<JVM>()
-        for (container in containers) {
-            if (container.isEmpty()) {
-                continue
-            }
-            val tree = gson.fromJson(container, MapTypeToken())
-            result.add(DockerJvm(
-                tree["ID"]!!,
-                "${tree["Names"]!!}(${tree["Image"]!!})",
-                JvmContext(template, providerConfig))
-            )
-        }
-        return result
+        return parseOutput(execResult, JvmContext(template, providerConfig))
     }
 
     private fun isDirectoryNotExistInContainer(hostMachine: HostMachine, id: String, path: String): Boolean {

@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.template
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -122,10 +123,45 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    override fun grep(source: String, search: String): String {
+    override fun grep(search: String, vararg commands: String): CommandExecuteResult {
         // 本地就不考虑网络占用了
-        val ok = hostMachine.execute(source).ok()
-        return ok.split('\n').filter { it.contains(search) }.joinToString("\n")
+        val result = hostMachine.execute(*commands)
+        if (result.exitCode != 0) {
+            return result
+        }
+        return CommandExecuteResult(result.stdout.split('\n').filter { it.contains(search) }.joinToString("\n").trim(), 0)
+    }
+
+    override fun grep(searchChain: Array<String>, vararg commands: String): CommandExecuteResult {
+        val result = hostMachine.execute(*commands)
+        if (result.exitCode != 0) {
+            return result
+        }
+        val strings = result.stdout.split('\n')
+        val notAvailable = arrayOfNulls<Boolean>(strings.size)
+
+        for (s in searchChain) {
+            for ((index, row) in strings.withIndex()) {
+                if (notAvailable[index] == true) {
+                    continue
+                }
+                if (!row.contains(s)) {
+                    notAvailable[index] = true
+                }
+            }
+        }
+        val actualResult = StringBuilder()
+        for (i in strings.indices) {
+            if (notAvailable[i] == true) {
+                continue
+            }
+            actualResult.append(strings[i].trim()).append('\n')
+        }
+
+        if (actualResult.isNotEmpty()) {
+            actualResult.deleteCharAt(actualResult.length - 1)
+        }
+        return CommandExecuteResult(actualResult.toString(), 0)
     }
 
     override fun env(name: String): String? {

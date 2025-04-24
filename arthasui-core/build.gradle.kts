@@ -23,6 +23,7 @@ plugins {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation("org.testcontainers", "testcontainers", "1.20.6")
     implementation("ognl:ognl:3.4.6")
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
