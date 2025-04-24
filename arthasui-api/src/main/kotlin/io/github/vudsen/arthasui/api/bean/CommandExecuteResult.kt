@@ -18,4 +18,16 @@ data class CommandExecuteResult(
         }
         return stdout
     }
+
+    /**
+     * 尝试获取结果
+     * @return 如果成功，返回输出，否则返回 null
+     */
+    fun tryUnwrap(): String? {
+        return if (exitCode == 0) {
+            return stdout
+        } else {
+            null
+        }
+    }
 }

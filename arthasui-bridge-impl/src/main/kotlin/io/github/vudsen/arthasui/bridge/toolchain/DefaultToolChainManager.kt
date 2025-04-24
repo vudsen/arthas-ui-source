@@ -21,10 +21,24 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
     }
 
+    private fun searchPkg(search: String): String? {
+        val files = template.listFiles(hostMachineConfig.dataDirectory)
+        for (file in files) {
+            if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
+                return file
+            }
+        }
+        return null
+    }
+
     /**
      * @return the file name.
      */
     private fun downloadJattach(): String {
+        searchPkg("jattach") ?.let {
+            return it
+        }
+
         val data = fetchLatestData("jattach/jattach")
         val versions = data.get("assets").asJsonArray
         val asset = when (hostMachineConfig.connect.getOS()) {
@@ -79,6 +93,9 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
     }
 
     private fun downloadArthas(): String {
+        searchPkg("arthas") ?.let {
+            return it
+        }
         val data = fetchLatestData("alibaba/arthas")
         val versions = data.get("assets").asJsonArray
         val asset = versions.find { v -> v.asJsonObject.get("name").asString == "arthas-bin.zip" }

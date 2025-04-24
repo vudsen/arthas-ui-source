@@ -27,12 +27,20 @@ interface HostMachineTemplate : UserDataHolder {
      */
     fun isFileNotExist(path: String): Boolean
 
+    /**
+     * 文件夹是否存在
+     */
     fun isDirectoryExist(path: String): Boolean
 
     /**
      * 递归创建文件夹
      */
     fun mkdirs(path: String)
+
+    /**
+     * 列出所有文件
+     */
+    fun listFiles(directory: String): List<String>
 
     /**
      * 将指定文件下载到文件夹中

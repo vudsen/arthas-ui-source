@@ -36,6 +36,29 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         hostMachine.execute("mkdir", "-p", path).ok()
     }
 
+    override fun listFiles(directory: String): List<String> {
+        hostMachine.execute("ls", directory).tryUnwrap() ?.let {
+            val result = mutableListOf<String>()
+            val buf = StringBuilder()
+            for (ch in it) {
+                if (ch == ' ' || ch == '\n') {
+                    if (buf.isEmpty()) {
+                        continue
+                    }
+                    result.add(buf.toString())
+                    buf.clear()
+                } else {
+                    buf.append(ch)
+                }
+            }
+            if (buf.isNotEmpty()) {
+                result.add(buf.toString())
+            }
+            return result
+        }
+        return emptyList()
+    }
+
 
     private fun handleDownloadOutput(progressIndicator: ProgressIndicator, inputStream: InputStream) {
         BufferedReader(inputStream.reader()).use { br ->
@@ -92,8 +115,12 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     override fun unzip(target: String, destDir: String) {
         if (target.endsWith(".zip")) {
             hostMachine.execute("unzip", target, "-d", destDir).ok()
-        } else if (target.endsWith(".tgz")) {
+        } else if (target.endsWith(".tgz") || target.endsWith(".tar.gz")) {
             hostMachine.execute("tar", "-zxvf", target, "-C", destDir).ok()
+        } else if (target.endsWith(".tar")) {
+            hostMachine.execute("tar", "-xvf", target, "-C", destDir).ok()
+        } else {
+            throw UnsupportedOperationException("Unsupported file to unzip: $target")
         }
     }
 
