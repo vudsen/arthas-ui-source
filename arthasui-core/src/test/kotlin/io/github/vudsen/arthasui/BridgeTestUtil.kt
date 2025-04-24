@@ -33,8 +33,8 @@ object BridgeTestUtil {
         return template
     }
 
-    fun createSshHostMachine(parentDisposable: Disposable): HostMachineTemplate {
-        val server = setupSshServer(parentDisposable)
+    fun createSshHostMachine(parentDisposable: Disposable, customise: ((GenericContainer<*>) -> Unit)?): HostMachineTemplate {
+        val server = setupSshServer(parentDisposable, customise)
         val config = HostMachineConfig(
             -1,
             "Test Local",
@@ -51,12 +51,16 @@ object BridgeTestUtil {
         return template
     }
 
+    fun createSshHostMachine(parentDisposable: Disposable): HostMachineTemplate {
+        return createSshHostMachine(parentDisposable, null)
+    }
+
     private val instance = WeakHashMap<Disposable, GenericContainer<*>>()
 
     /**
      * 创建 SSH 服务器
      */
-    private fun setupSshServer(rootDisposable: Disposable): GenericContainer<*> {
+    private fun setupSshServer(rootDisposable: Disposable, customise: ((GenericContainer<*>) -> Unit)?): GenericContainer<*> {
         instance[rootDisposable] ?.let {
             return it
         }
@@ -65,6 +69,8 @@ object BridgeTestUtil {
         }
         val sshContainer = GenericContainer(DockerImageName.parse("rastasheep/ubuntu-sshd:18.04"))
             .withExposedPorts(22)
+
+        customise ?.let { it(sshContainer)  }
 
         Disposer.register(rootDisposable) {
             sshContainer.stop()

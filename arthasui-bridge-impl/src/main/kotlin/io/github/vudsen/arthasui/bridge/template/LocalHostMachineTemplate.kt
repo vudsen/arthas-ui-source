@@ -41,6 +41,10 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         File(path).mkdirs()
     }
 
+    override fun listFiles(directory: String): List<String> {
+        return File(directory).listFiles().map { v -> v.name }
+    }
+
     override fun download(url: String, destPath: String) {
         val destFile = File(destPath)
         if (destFile.exists() && destFile.isFile) {
