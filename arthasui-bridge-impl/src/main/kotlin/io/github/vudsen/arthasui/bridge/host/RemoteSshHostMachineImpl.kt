@@ -1,26 +1,29 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.rd.generator.nova.util.joinToOptString
-import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
+import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
-import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.util.executeCancelable
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.session.ClientSession
+import org.apache.sshd.common.Factory
 import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory
-import org.apache.sshd.sftp.client.SftpClientFactory
-import org.apache.sshd.common.Factory;
 import org.apache.sshd.common.util.threads.CloseableExecutorService
+import org.apache.sshd.sftp.client.SftpClient
+import org.apache.sshd.sftp.client.SftpClientFactory
 import java.io.File
+import java.io.FileInputStream
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
-import kotlin.text.toByteArray
+
 
 class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, executorServiceFactory: Factory<CloseableExecutorService>) : CloseableHostMachine {
 
@@ -90,18 +93,26 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
         return config.os
     }
 
-    override fun transferFile(src: String, dest: String) {
+    override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
+        val file = File(src)
+        indicator?.text = "Uploading ${file.name} to $dest"
+        val total = file.length().toDouble()
+        val totalMb = String.format("%.2f", total / 1024 / 1024)
+        var written = 0L
         SftpClientFactory.instance().createSftpClient(session).use { client ->
-            val filename = File(src).name
-            val baseDir = if (dest.endsWith(filename)) {
-                dest.substring(0, dest.length - filename.length - 1)
-            } else {
-                dest
+            client.open(dest, listOf(SftpClient.OpenMode.Write, SftpClient.OpenMode.Create)).use { handle ->
+                file.inputStream().use { input ->
+                    val buf = ByteArray((1024 * 1024L).coerceAtMost(file.length()).toInt())
+                    var len: Int
+                    while (input.read(buf).also { len = it } != -1) {
+                        ProgressManager.checkCanceled()
+                        client.write(handle, written, buf, 0, len)
+                        indicator?.fraction = written / total
+                        indicator?.text = "Uploading ${file.name} to $dest (${String.format("%.2f", written.toDouble() / 1024 / 1024)}MB / ${totalMb}MB)"
+                        written += len
+                    }
+                }
             }
-            if (!client.stat(baseDir).isDirectory) {
-                client.mkdir(baseDir)
-            }
-            client.put(Path(src), dest)
         }
     }
 

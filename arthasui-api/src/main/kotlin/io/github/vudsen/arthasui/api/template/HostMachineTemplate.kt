@@ -12,9 +12,9 @@ interface HostMachineTemplate : UserDataHolder {
 
     companion object {
         /**
-         * 下载进度指示器. 在调用 [HostMachineTemplate.download] 之前设置该属性，实现类就可以通过该对象反馈进度.
+         * 进度指示器. 在调用 [HostMachineTemplate.download] 或其它方法之前设置该属性，实现类就可以通过该对象反馈进度.
          */
-        val DOWNLOAD_PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
+        val PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
     }
 
     /**

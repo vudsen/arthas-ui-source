@@ -13,6 +13,7 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
+import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
@@ -49,6 +50,17 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         } ?: return null
     }
 
+    private fun findProxy(id: Long?): HostMachineTemplate? {
+        if (id == null) {
+            return null
+        }
+        val localHostMachineConfig = service<ArthasUISettingsPersistent>().state.hostMachines.find { v -> v.id == id }
+        if (localHostMachineConfig == null) {
+            throw IllegalStateException("No such id '${id}', please consider update your configuration.")
+        }
+        val local = service<HostMachineConnectManager>().connect(localHostMachineConfig)
+        return local
+    }
 
     private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig, progressIndicator: ProgressIndicator?): ArthasBridgeHolder {
         var holder = getHolderAndEnsureAlive(jvm)
@@ -60,9 +72,9 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         val factory = service<HostMachineConnectManager>()
         val template = factory.connect(hostMachineConfig)
 
-        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, template.getHostMachineConfig())
+        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, findProxy(template.getHostMachineConfig().localPkgSourceId))
         progressIndicator ?.let {
-            template.putUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR, WeakReference(it))
+            template.putUserData(HostMachineTemplate.PROGRESS_INDICATOR, WeakReference(it))
         }
 
         val arthasBridgeFactory =

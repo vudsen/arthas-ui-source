@@ -82,7 +82,7 @@ class LocalHostMachineTemplateTest :  BasePlatformTestCase() {
         val files = template.listFiles("/opt/arthas-ui-test")
         Assert.assertEquals(listOf("arthas-xx.tar.gz", "test.txt"), files)
 
-        val toolchainManager = DefaultToolChainManager(template, template.getHostMachineConfig())
+        val toolchainManager = DefaultToolChainManager(template, null)
         val path = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
         Assert.assertEquals("/opt/arthas-ui-test/pkg/arthas", path)

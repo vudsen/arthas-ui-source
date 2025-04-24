@@ -54,7 +54,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
             logger.warn("Failed to create directory for file: $destPath")
         }
 
-        val progressIndicator = getUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR)?.get()
+        val progressIndicator = getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get()
         progressIndicator?.text = "Downloading $url..."
 
         destFile.outputStream().use { output ->

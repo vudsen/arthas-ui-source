@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.util
 
 import com.intellij.openapi.components.service
+import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
@@ -72,8 +73,8 @@ class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineC
         return config.getOS()
     }
 
-    override fun transferFile(src: String, dest: String) {
-        return getHostMachine().transferFile(src, dest)
+    override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
+        return getHostMachine().transferFile(src, dest, indicator)
     }
 
 

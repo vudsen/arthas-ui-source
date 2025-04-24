@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.toolchain
 
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -13,7 +14,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-class DefaultToolChainManager(private val template: HostMachineTemplate, private val hostMachineConfig: HostMachineConfig) :
+class DefaultToolChainManager(private val template: HostMachineTemplate, private val localDownloadProxy: HostMachineTemplate?) :
     ToolchainManager {
 
 
@@ -22,7 +23,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
     }
 
     private fun searchPkg(search: String): String? {
-        val files = template.listFiles(hostMachineConfig.dataDirectory)
+        val files = template.listFiles(template.getHostMachineConfig().dataDirectory)
         for (file in files) {
             if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
                 return file
@@ -40,6 +41,9 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         }
 
         val data = fetchLatestData("jattach/jattach")
+
+        val hostMachineConfig = template.getHostMachineConfig()
+
         val versions = data.get("assets").asJsonArray
         val asset = when (hostMachineConfig.connect.getOS()) {
             OS.LINUX -> {
@@ -64,13 +68,12 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             }
             throw IllegalStateException("No suitable jattach asset found for ${hostMachineConfig.connect.getOS()}")
         }
-        val asobj = asset.asJsonObject
-        val filename = asobj.get("name").asString
-        template.download(asobj.get("browser_download_url").asString, hostMachineConfig.dataDirectory + "/" + filename)
-        return filename
+        val asObject = asset.asJsonObject
+        return finalDownload(asObject, hostMachineConfig)
     }
 
     private fun prepareJattach(): String {
+        val hostMachineConfig = template.getHostMachineConfig()
         val home = "${hostMachineConfig.dataDirectory}/pkg/jattach"
         if (template.isDirectoryExist(home)) {
             return home
@@ -82,6 +85,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
     }
 
     private fun prepareArthas(): String {
+        val hostMachineConfig = template.getHostMachineConfig()
         val home = "${hostMachineConfig.dataDirectory}/pkg/arthas"
         if (template.isDirectoryExist(home)) {
             return home
@@ -99,15 +103,36 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         val data = fetchLatestData("alibaba/arthas")
         val versions = data.get("assets").asJsonArray
         val asset = versions.find { v -> v.asJsonObject.get("name").asString == "arthas-bin.zip" }
+        val hostMachineConfig = template.getHostMachineConfig()
         if (asset == null) {
             if (logger.isDebugEnabled) {
                 logger.debug(data.toString())
             }
             throw IllegalStateException("No suitable arthas asset found for ${hostMachineConfig.connect.getOS()}")
         }
+        return finalDownload(asset, hostMachineConfig)
+    }
+
+    private fun finalDownload(
+        asset: JsonElement,
+        hostMachineConfig: HostMachineConfig,
+    ): String {
         val asJsonObject = asset.asJsonObject
         val filename = asJsonObject.get("name").asString
-        template.download(asJsonObject.get("browser_download_url").asString, hostMachineConfig.dataDirectory + "/" + filename)
+
+        localDownloadProxy?.let {
+            val dest = hostMachineConfig.dataDirectory + "/" + filename
+            val local = it.getHostMachineConfig().dataDirectory + "/" + filename
+            localDownloadProxy.download(asJsonObject.get("browser_download_url").asString, local)
+            template.mkdirs(hostMachineConfig.dataDirectory)
+            template.getHostMachine()
+                .transferFile(local, dest, template.getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get())
+        } ?: let {
+            template.download(
+                asJsonObject.get("browser_download_url").asString,
+                hostMachineConfig.dataDirectory + "/" + filename
+            )
+        }
         return filename
     }
 

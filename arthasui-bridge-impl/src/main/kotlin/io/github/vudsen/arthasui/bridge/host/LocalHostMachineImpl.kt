@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -73,7 +74,7 @@ class LocalHostMachineImpl(private val connectConfig: LocalConnectConfig) : Host
         return os
     }
 
-    override fun transferFile(src: String, dest: String) {
+    override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val actualDest = if (File(dest).isDirectory) {
             val name = File(src).name
             "$dest/$name"
