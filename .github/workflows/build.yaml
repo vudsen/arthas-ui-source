@@ -51,6 +51,9 @@ jobs:
         run: |
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
+      - name: Run Tests
+        run: ./gradlew test
+
       # Build plugin
       - name: Build plugin
         run: ./gradlew buildPlugin
