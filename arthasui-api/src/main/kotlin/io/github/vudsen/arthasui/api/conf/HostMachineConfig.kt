@@ -16,9 +16,11 @@ data class HostMachineConfig(
      */
     var name: String = "",
     /**
-     * 优先使用本地的包进行传输，而不是让宿主机自己下载
+     * 当该值非空时，表示优先使用本地的包进行传输，而不是让宿主机自己下载.
+     *
+     * 该值对应一个存在的 [HostMachineConfig.id]，并且 [HostMachineConfig.connect] 一定是 [io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig]
      */
-    var useLocalPkg: Boolean = false,
+    var localPkgSourceId: Long? = null,
     /**
      * 连接配置
      */
@@ -44,7 +46,7 @@ data class HostMachineConfig(
         return HostMachineConfig(
             id,
             name,
-            useLocalPkg,
+            localPkgSourceId,
             connect.deepCopy(),
             providers.mapMutable { v -> v.deepCopy() },
             searchGroups.mapMutable { v -> v.deepCopy() },

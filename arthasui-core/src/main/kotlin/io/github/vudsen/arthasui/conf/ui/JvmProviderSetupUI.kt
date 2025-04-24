@@ -103,7 +103,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         state.providers = newState.providers
         state.id = newState.id
         state.name = newState.name
-        state.useLocalPkg = newState.useLocalPkg
+        state.localPkgSourceId = newState.localPkgSourceId
         state.searchGroups = newState.searchGroups
     }
 

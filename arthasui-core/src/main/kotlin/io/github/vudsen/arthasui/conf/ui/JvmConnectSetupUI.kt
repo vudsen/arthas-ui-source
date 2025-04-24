@@ -13,6 +13,8 @@ import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
+import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
 
 class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<HostMachineConfig>(parentDisposable) {
 
@@ -23,6 +25,8 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
     private var connectType: String? = null
 
     private val connectProviders: List<HostMachineConnectProvider>
+
+    private val localPkgSourceUI = LocalPkgSourceUI(null, parentDisposable)
 
     init {
         val manager = service<HostMachineConnectManager>()
@@ -41,11 +45,9 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
                 row {
                     textField().label("Name").validationOnApply(TextComponentValidators()).bindText(state::name).align(Align.FILL)
                 }
-//                row {
-//                    checkBox("Transfer local package first")
-//                        .bindSelected(state::useLocalPkg)
-//                        .comment("Transfer local package to remote host instead of download it in remote host")
-//                }
+                row {
+                    cell(localPkgSourceUI.getComponent())
+                }
                 row {
                     val box =
                         comboBox(connectProviders.map { pv -> pv.getName() }).bindItem(this@JvmConnectSetupUI::connectType)
@@ -73,6 +75,13 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
             return null
         }
         state.connect = formMap[connectType]!!.apply() ?: return null
+        if (state.connect !is LocalConnectConfig) {
+            localPkgSourceUI.apply() ?.let {
+                if (it != LocalPkgSourceUI.DISABLED_VALUE) {
+                    state.localPkgSourceId = it
+                }
+            }
+        }
         return state
     }
 

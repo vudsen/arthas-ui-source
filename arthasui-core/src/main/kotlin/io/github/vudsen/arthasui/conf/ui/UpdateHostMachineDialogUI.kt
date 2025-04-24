@@ -14,6 +14,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import java.awt.Dimension
 import javax.swing.*
 
@@ -34,6 +35,8 @@ class UpdateHostMachineDialogUI(
     private val formMap = mutableMapOf<String, FormComponent<HostMachineConnectConfig>>()
 
     private var connectType: String? = null
+
+    private val lockPkgSourceUI = LocalPkgSourceUI(state.localPkgSourceId, parentDisposable)
 
     init {
         title = "Create Or Update Host Machine"
@@ -64,6 +67,9 @@ class UpdateHostMachineDialogUI(
                         .bindText(state::dataDirectory)
                         .align(Align.FILL)
                         .validationOnApply(TextComponentValidators())
+                }
+                row {
+                    cell(lockPkgSourceUI.getComponent())
                 }
             }
             lateinit var connectComboBox: ComboBox<String>
@@ -104,12 +110,20 @@ class UpdateHostMachineDialogUI(
 
     override fun doOKAction() {
         root.apply()
-        if (root.validateAll().isEmpty()) {
-            state.connect = formMap[connectType!!]!!.apply() ?: return
-            state.providers = jvmProviderConfigUI.apply() ?: return
-            super.doOKAction()
-            onOk(state)
+        if (root.validateAll().isNotEmpty()) {
+            return
         }
+        state.connect = formMap[connectType!!]!!.apply() ?: return
+        state.providers = jvmProviderConfigUI.apply() ?: return
+        if (state.connect !is LocalConnectConfig) {
+            lockPkgSourceUI.apply() ?.let {
+                if (it != LocalPkgSourceUI.DISABLED_VALUE) {
+                    state.localPkgSourceId = it
+                }
+            }
+        }
+        super.doOKAction()
+        onOk(state)
     }
 
 }
