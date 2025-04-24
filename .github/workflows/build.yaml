@@ -52,7 +52,15 @@ jobs:
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
       - name: Run Tests
-        run: ./gradlew test
+        id: test
+        run: ./gradlew arthasui-core:test
+
+      - name: Upload Test Output
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: ./arthasui-core/build/reports/tests/test/*/*
 
       # Build plugin
       - name: Build plugin
