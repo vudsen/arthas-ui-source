@@ -74,8 +74,6 @@ object BridgeTestUtil {
 
         Disposer.register(rootDisposable) {
             sshContainer.stop()
-            // avoid thread leak.
-            Disposer.dispose(service<HostMachineConnectManager>())
         }
 
         sshContainer.start();
