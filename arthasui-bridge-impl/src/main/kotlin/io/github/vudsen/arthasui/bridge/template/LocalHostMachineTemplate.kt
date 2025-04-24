@@ -3,8 +3,10 @@ package io.github.vudsen.arthasui.bridge.template
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.File
@@ -179,7 +181,15 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun generateDefaultDataDirectory(): String {
-        return (File(System.getProperty("user.home") + "/arthas-ui")).absolutePath
+        val home = System.getProperty("user.home")
+        val dest = if (currentOS() == OS.MAC) {
+            "$home/Library/Application Support/arthas-ui"
+        } else if (currentOS() == OS.WINDOWS) {
+            "$home\\AppData\\Local\\arthas-ui"
+        } else {
+            "/opt/arthas-ui"
+        }
+        return (File(dest)).absolutePath
     }
 
     private val myData = HashMap<Key<*>, Any?>()
