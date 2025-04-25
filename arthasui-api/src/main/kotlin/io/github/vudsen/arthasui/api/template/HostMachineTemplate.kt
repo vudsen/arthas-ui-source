@@ -91,6 +91,6 @@ interface HostMachineTemplate : UserDataHolder {
     /**
      * 生成默认的数据文件夹
      */
-    fun generateDefaultDataDirectory(): String
+    fun resolveDefaultDataDirectory(): String
 
 }

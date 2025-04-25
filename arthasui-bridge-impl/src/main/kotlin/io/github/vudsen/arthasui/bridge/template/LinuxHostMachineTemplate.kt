@@ -158,7 +158,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         return hostMachineConfig
     }
 
-    override fun generateDefaultDataDirectory(): String {
+    override fun resolveDefaultDataDirectory(): String {
         return "/opt/arthas-ui"
     }
 

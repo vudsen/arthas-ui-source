@@ -184,7 +184,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         return hostMachineConfig
     }
 
-    override fun generateDefaultDataDirectory(): String {
+    override fun resolveDefaultDataDirectory(): String {
         val home = System.getProperty("user.home")
         val dest = if (currentOS() == OS.MAC) {
             "$home/Library/Application Support/arthas-ui"

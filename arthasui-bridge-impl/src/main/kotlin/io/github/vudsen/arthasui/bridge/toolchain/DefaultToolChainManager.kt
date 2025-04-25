@@ -68,8 +68,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
             }
             throw IllegalStateException("No suitable jattach asset found for ${hostMachineConfig.connect.getOS()}")
         }
-        val asObject = asset.asJsonObject
-        return finalDownload(asObject, hostMachineConfig)
+        return finalDownload(asset, hostMachineConfig)
     }
 
     private fun prepareJattach(): String {

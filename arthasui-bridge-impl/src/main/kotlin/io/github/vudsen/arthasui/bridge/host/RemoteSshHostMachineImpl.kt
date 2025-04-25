@@ -95,6 +95,9 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
 
     override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val file = File(src)
+        if (file.length() == 0L) {
+            return
+        }
         indicator?.text = "Uploading ${file.name} to $dest"
         val total = file.length().toDouble()
         val totalMb = String.format("%.2f", total / 1024 / 1024)

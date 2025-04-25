@@ -117,7 +117,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     transState(hostMachine.getHostMachineConfig())
-                    state.dataDirectory = hostMachine.generateDefaultDataDirectory()
+                    state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
                     recreateContainer(hostMachine)
                     loadingDecorator.stopLoading()
                 } catch (e: Exception) {
