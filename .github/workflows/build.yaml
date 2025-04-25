@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: ./arthasui-core/build/reports/tests/test/*/*
+          path: ./arthasui-core/build/reports/tests/test/**/*
 
       # Build plugin
       - name: Build plugin
