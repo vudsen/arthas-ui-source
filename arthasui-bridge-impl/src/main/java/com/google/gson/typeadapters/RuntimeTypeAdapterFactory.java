@@ -12,6 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ *
+ * Modifications made by DeSen Xu on 2025-04-21:
+ * - Remove annotation `@CanIgnoreReturnValue`.
  */
 
 package com.google.gson.typeadapters;
