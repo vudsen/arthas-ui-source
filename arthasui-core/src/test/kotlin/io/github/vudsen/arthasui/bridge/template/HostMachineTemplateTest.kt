@@ -7,10 +7,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
-import io.github.vudsen.arthasui.bridge.util.mkdirs
 import org.junit.Assert
 
-class LocalHostMachineTemplateTest :  BasePlatformTestCase() {
+class HostMachineTemplateTest :  BasePlatformTestCase() {
 
 
     fun testGrep_windows() {
@@ -55,7 +54,7 @@ class LocalHostMachineTemplateTest :  BasePlatformTestCase() {
     fun testListFiles() {
         val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
         val hostMachine = template.getHostMachine()
-        hostMachine.mkdirs("/opt/arthas-ui-test/pkg")
+        template.mkdirs("/opt/arthas-ui-test/pkg")
         hostMachine.execute("touch", "/opt/arthas-ui-test/hello.txt").ok()
         hostMachine.execute("touch", "/opt/arthas-ui-test/world.txt").ok()
         hostMachine.execute("touch", "/opt/arthas-ui-test/abc123.txt").ok()
@@ -69,7 +68,6 @@ class LocalHostMachineTemplateTest :  BasePlatformTestCase() {
      */
     fun testToolChainManualDownload() {
         val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) { ctr ->
-            // forbidden download.
             ctr.withExtraHost("api.github.com", "127.0.0.1")
                 .withExtraHost("github.com", "127.0.0.1")
         }
@@ -82,7 +80,7 @@ class LocalHostMachineTemplateTest :  BasePlatformTestCase() {
         val files = template.listFiles("/opt/arthas-ui-test")
         Assert.assertEquals(listOf("arthas-xx.tar.gz", "test.txt"), files)
 
-        val toolchainManager = DefaultToolChainManager(template, template.getHostMachineConfig())
+        val toolchainManager = DefaultToolChainManager(template, null)
         val path = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
         Assert.assertEquals("/opt/arthas-ui-test/pkg/arthas", path)

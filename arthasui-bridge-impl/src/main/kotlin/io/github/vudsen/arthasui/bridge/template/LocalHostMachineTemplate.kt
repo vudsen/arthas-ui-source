@@ -54,7 +54,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
             logger.warn("Failed to create directory for file: $destPath")
         }
 
-        val progressIndicator = getUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR)?.get()
+        val progressIndicator = getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get()
         progressIndicator?.text = "Downloading $url..."
 
         destFile.outputStream().use { output ->
@@ -184,7 +184,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         return hostMachineConfig
     }
 
-    override fun generateDefaultDataDirectory(): String {
+    override fun resolveDefaultDataDirectory(): String {
         val home = System.getProperty("user.home")
         val dest = if (currentOS() == OS.MAC) {
             "$home/Library/Application Support/arthas-ui"

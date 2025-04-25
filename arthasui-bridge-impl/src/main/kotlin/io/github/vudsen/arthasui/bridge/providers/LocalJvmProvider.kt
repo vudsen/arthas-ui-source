@@ -48,7 +48,8 @@ class LocalJvmProvider : JvmProvider {
             val lines = output.split("\n")
             val result = ArrayList<JVM>(lines.size)
 
-            for (line in lines) {
+            for (l in lines) {
+                val line = l.trim()
                 val i = line.indexOf(' ')
                 if (i < 0) {
                     continue
@@ -77,7 +78,7 @@ class LocalJvmProvider : JvmProvider {
             if (it.exitCode == 0) {
                 return@let it.stdout
             } else {
-                return@let template.grep("ps -eo pid,command", "java").ok()
+                return@let template.grep("java", "ps", "-eo", "pid,command").ok()
             }
         }
 
@@ -143,8 +144,7 @@ class LocalJvmProvider : JvmProvider {
     }
 
     override fun isJvmInactive(jvm: JVM): Boolean {
-        val ctx = jvm.context
-        return isPidNotExist(ctx.template.getHostMachine(), jvm.id)
+        return searchJvm(jvm.context.template, jvm.context.providerConfig).find { v -> v.id == jvm.id } == null
     }
 
     override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
@@ -159,31 +159,6 @@ class LocalJvmProvider : JvmProvider {
         return LocalJvmProviderConfig(false)
     }
 
-    private fun isPidNotExist(hostMachine: HostMachine, pid: String): Boolean {
-        when (hostMachine.getOS()) {
-            OS.LINUX -> {
-                val result = hostMachine.execute("ps", "-p", pid)
-                if (result.exitCode != 0) {
-                    return true
-                }
-                return !result.stdout.contains(pid)
-            }
-
-            OS.WINDOWS -> {
-                val result = hostMachine.execute("tasklist", "/FI", "PID eq $pid")
-                if (result.exitCode != 0) {
-                    return true
-                }
-                return !result.stdout.contains(pid)
-            }
-
-            OS.MAC -> {
-                // TODO
-                return false
-            }
-        }
-
-    }
 
 
 }

@@ -33,7 +33,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
     override fun mkdirs(path: String) {
-        hostMachine.execute("mkdir", "-p", path).ok()
+        hostMachine.execute("mkdir", "-p", path)
     }
 
     override fun listFiles(directory: String): List<String> {
@@ -86,7 +86,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         if (!isFileNotExist(destPath)) {
             return
         }
-        val progressIndicator = getUserData(HostMachineTemplate.DOWNLOAD_PROGRESS_INDICATOR)?.get()
+        val progressIndicator = getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get()
         if (hostMachine.execute("curl", "--version").exitCode == 0) {
             if (progressIndicator == null) {
                 hostMachine.execute("curl", "-L", "-o", destPath, url).ok()
@@ -158,7 +158,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         return hostMachineConfig
     }
 
-    override fun generateDefaultDataDirectory(): String {
+    override fun resolveDefaultDataDirectory(): String {
         return "/opt/arthas-ui"
     }
 

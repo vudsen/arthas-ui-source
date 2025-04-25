@@ -103,7 +103,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         state.providers = newState.providers
         state.id = newState.id
         state.name = newState.name
-        state.useLocalPkg = newState.useLocalPkg
+        state.localPkgSourceId = newState.localPkgSourceId
         state.searchGroups = newState.searchGroups
     }
 
@@ -117,7 +117,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     transState(hostMachine.getHostMachineConfig())
-                    state.dataDirectory = hostMachine.generateDefaultDataDirectory()
+                    state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
                     recreateContainer(hostMachine)
                     loadingDecorator.stopLoading()
                 } catch (e: Exception) {
