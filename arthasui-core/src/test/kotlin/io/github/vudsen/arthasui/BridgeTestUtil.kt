@@ -96,9 +96,9 @@ object BridgeTestUtil {
      * @return 压缩包中的文件
      */
     fun createTestTarGzFile(file: File): List<String> {
+        file.parentFile.mkdirs()
         FileOutputStream(file).use { fos ->
             fos.write(TGZ_BASE64)
-            fos.flush()
         }
         return listOf("test.txt")
     }
