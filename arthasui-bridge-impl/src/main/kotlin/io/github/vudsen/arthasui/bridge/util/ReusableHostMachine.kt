@@ -65,10 +65,6 @@ class ReusableHostMachine(private val closeableHostMachineDelegate: HostMachineC
         return getHostMachine().execute(*command)
     }
 
-    override fun executeManually(vararg command: String): InteractiveShell {
-        return getHostMachine().executeManually(*command)
-    }
-
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         return getHostMachine().createInteractiveShell(*command)
     }

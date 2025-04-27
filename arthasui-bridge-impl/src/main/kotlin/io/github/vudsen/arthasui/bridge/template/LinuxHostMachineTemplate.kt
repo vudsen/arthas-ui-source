@@ -123,7 +123,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
             if (progressIndicator == null) {
                 hostMachine.execute("curl", "-L", "-o", destPath, url).ok()
             } else {
-                hostMachine.executeManually(
+                hostMachine.createInteractiveShell(
                     "curl",
                     "--progress-bar",
                     "-L",
@@ -142,7 +142,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
             if (progressIndicator == null) {
                 hostMachine.execute("wget", "-O", destPath, url).ok()
             } else {
-                hostMachine.executeManually("wget", "-O", destPath, "--timeout=10", url).use { shell ->
+                hostMachine.createInteractiveShell("wget", "-O", destPath, "--timeout=10", url).use { shell ->
                     handleDownloadOutput(url, progressIndicator, shell)
                 }
             }

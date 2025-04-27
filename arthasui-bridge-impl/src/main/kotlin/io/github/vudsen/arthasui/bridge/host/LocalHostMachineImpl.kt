@@ -58,10 +58,6 @@ class LocalHostMachineImpl(private val connectConfig: LocalConnectConfig) : Host
         return CommandExecuteResult(baos.toString(), process.exitValue())
     }
 
-    override fun executeManually(vararg command: String): InteractiveShell {
-        return createInteractiveShell(*command)
-    }
-
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
         return LocalInteractiveShell(process)

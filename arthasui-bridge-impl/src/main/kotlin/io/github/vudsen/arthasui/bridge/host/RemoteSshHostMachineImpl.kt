@@ -9,7 +9,6 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
-import io.github.vudsen.arthasui.bridge.bean.SshInteractiveShell
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.channel.ChannelExec
@@ -37,34 +36,35 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
     companion object {
         val logger = Logger.getInstance(RemoteSshHostMachineImpl::class.java)
 
-        private class SshManuallyExecShell(private val exec: ChannelExec, private val inputStream: InputStream) : InteractiveShell {
+        private class SshInteractiveShell(
+            private val channel: ChannelExec,
+            private val actualIn: InputStream,
+            private val actualOut: OutputStream
+        ) : InteractiveShell {
+
             override fun getInputStream(): InputStream {
-                return inputStream
+                return actualIn
             }
 
             override fun getOutputStream(): OutputStream {
-                return exec.out
+                return actualOut
             }
 
             override fun isAlive(): Boolean {
-                return !exec.isClosed
+                return !channel.isClosed
             }
 
             override fun exitCode(): Int? {
-                return exec.exitStatus
+                return channel.exitStatus
             }
 
             override fun close() {
-                try {
-                    while (true) {
-                        val events = exec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), Duration.ofSeconds(1))
-                        if (!events.contains(ClientChannelEvent.TIMEOUT)) {
-                            break
-                        }
-                        ProgressManager.checkCanceled()
-                    }
-                } finally {
-                    exec.close()
+                if (channel.isClosed) {
+                    return
+                }
+                val closeFuture = channel.close(true)
+                while (!closeFuture.await(1, TimeUnit.SECONDS)) {
+                    ProgressManager.checkCanceled()
                 }
             }
 
@@ -119,30 +119,20 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
         }
     }
 
-    override fun executeManually(vararg command: String): InteractiveShell {
+
+    override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val channel = session.createExecChannel(command.joinToOptString(" "))
         val inputStream = PipedInputStream()
         val outputStream = PipedOutputStream(inputStream)
-        channel.isRedirectErrorStream = true
         channel.out = outputStream
-        val future = channel.open()
-        while (!future.await(2, TimeUnit.SECONDS)) {
-            ProgressManager.checkCanceled()
-        }
-        return SshManuallyExecShell(channel, inputStream)
-    }
 
-    override fun createInteractiveShell(vararg command: String): InteractiveShell {
-        val channel = session.createShellChannel()
         channel.isRedirectErrorStream = true
         val future = channel.open()
         while (!future.await(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
         }
-        channel.invertedIn.write((command.joinToOptString(" ") + "\nexit $?\n").toByteArray())
-        channel.invertedIn.flush()
 
-        return SshInteractiveShell(channel)
+        return SshInteractiveShell(channel, inputStream, channel.invertedIn)
     }
 
     override fun getOS(): OS {

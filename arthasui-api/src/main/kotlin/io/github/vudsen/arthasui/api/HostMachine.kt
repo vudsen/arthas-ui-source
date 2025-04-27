@@ -17,11 +17,6 @@ interface HostMachine {
     fun execute(vararg command: String): CommandExecuteResult
 
     /**
-     * "手动"执行命令，手动处理结果.
-     */
-    fun executeManually(vararg command: String): InteractiveShell
-
-    /**
      * 创建一个交互式的连接.
      *
      * 交互式进程**可能在命令执行失败时也不会抛出异常**，需要手动通过 [InteractiveShell.exitCode] 来判断命令是否正常退出，然后进行错误处理。

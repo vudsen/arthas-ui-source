@@ -17,14 +17,7 @@ import java.util.concurrent.TimeUnit
 
 class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
 
-    private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16), object : ThreadFactory {
-        override fun newThread(r: Runnable): Thread? {
-            return Thread(r).apply {
-                name = "eeeeeeece"
-            }
-        }
-
-    })
+    private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16))
 
     inner class MyCloseableExecutorService : Factory<CloseableExecutorService> {
         override fun create(): CloseableExecutorService? {
