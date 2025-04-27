@@ -17,7 +17,9 @@ interface HostMachine {
     fun execute(vararg command: String): CommandExecuteResult
 
     /**
-     * 创建一个交互式的连接
+     * 创建一个交互式的连接.
+     *
+     * 交互式进程**可能在命令执行失败时也不会抛出异常**，需要手动通过 [InteractiveShell.exitCode] 来判断命令是否正常退出，然后进行错误处理。
      */
     fun createInteractiveShell(vararg command: String): InteractiveShell
 

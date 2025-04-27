@@ -1,6 +1,6 @@
 package io.github.vudsen.arthasui
 
-import io.github.vudsen.arthasui.api.ArthasProcess
+import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import java.io.InputStream
@@ -9,7 +9,7 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.nio.charset.StandardCharsets
 
-class MockArthasProcess : ArthasProcess {
+class MockArthasProcess : InteractiveShell {
 
     companion object {
         const val PS1 = "[arthas@123567]$ "
@@ -85,8 +85,11 @@ class MockArthasProcess : ArthasProcess {
         return true
     }
 
-    override fun stop(): Int {
+    override fun exitCode(): Int? {
         return 0
     }
+
+    override fun close() {}
+
 
 }

@@ -45,7 +45,7 @@ interface HostMachineTemplate : UserDataHolder {
     /**
      * 将指定文件下载到文件夹中
      * @param url 下载地址
-     * @param destPath 存放路径，需要指定文件名
+     * @param destPath 存放路径，需要指定文件名并且还需要保证文件夹存在
      */
     fun download(url: String, destPath: String)
 

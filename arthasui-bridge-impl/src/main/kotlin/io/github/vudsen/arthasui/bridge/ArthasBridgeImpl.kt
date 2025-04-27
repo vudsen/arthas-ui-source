@@ -4,12 +4,12 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
-import io.github.vudsen.arthasui.api.ArthasProcess
 import io.github.vudsen.arthasui.common.parser.ArthasFrameDecoder
 import io.github.vudsen.arthasui.common.parser.DefaultFrameDecoder
 import io.github.vudsen.arthasui.common.parser.OgnlFrameDecoder
 import io.github.vudsen.arthasui.common.bean.StringResult
 import io.github.vudsen.arthasui.api.ArthasResultItem
+import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
 import kotlinx.coroutines.*
@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.text.toByteArray
 
 class ArthasBridgeImpl(
-    private val arthasProcess: ArthasProcess
+    private val arthasProcess: InteractiveShell
 ) : ArthasBridge {
 
     private val executionLock = Mutex()
@@ -329,7 +329,8 @@ class ArthasBridgeImpl(
             }
         }
         try {
-            return arthasProcess.stop()
+            arthasProcess.close()
+            return arthasProcess.exitCode()!!
         } finally {
             ApplicationManager.getApplication().executeOnPooledThread {
                 for (listener in listeners) {

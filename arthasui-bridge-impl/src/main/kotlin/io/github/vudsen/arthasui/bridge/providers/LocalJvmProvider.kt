@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.providers
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.*
+import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
@@ -14,7 +15,6 @@ import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
-import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
 import java.io.OutputStream
@@ -24,7 +24,7 @@ class LocalJvmProvider : JvmProvider {
     companion object {
         private val logger = Logger.getInstance(LocalJvmProvider::class.java)
 
-        private class TelnetArthasProcess(private val client: TelnetClient) : ArthasProcess {
+        private class TelnetArthasProcess(private val client: TelnetClient) : InteractiveShell {
             override fun getInputStream(): InputStream {
                 return client.inputStream
             }
@@ -37,10 +37,14 @@ class LocalJvmProvider : JvmProvider {
                 return client.isAvailable
             }
 
-            override fun stop(): Int {
-                client.disconnect()
+            override fun exitCode(): Int? {
                 return 0
             }
+
+            override fun close() {
+                client.disconnect()
+            }
+
         }
 
         @JvmStatic
@@ -103,12 +107,10 @@ class LocalJvmProvider : JvmProvider {
             return ArthasBridgeFactory {
                 hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
                 ArthasBridgeImpl(
-                    InteractiveShell2ArthasProcessAdapter(
-                        hostMachine.createInteractiveShell(
-                            "${localJvmProviderConfig.javaHome}/bin/java",
-                            "-jar",
-                            "$arthasHome/arthas-client.jar"
-                        )
+                    hostMachine.createInteractiveShell(
+                        "${localJvmProviderConfig.javaHome}/bin/java",
+                        "-jar",
+                        "$arthasHome/arthas-client.jar"
                     )
                 )
             }
@@ -123,7 +125,7 @@ class LocalJvmProvider : JvmProvider {
             logger.info("Trying to connect by telnet...")
             client.connect("127.0.0.1", 3658)
             logger.info("Telnet connect successfully!")
-            return@ArthasBridgeFactory ArthasBridgeImpl(TelnetArthasProcess(client) as ArthasProcess)
+            return@ArthasBridgeFactory ArthasBridgeImpl(TelnetArthasProcess(client))
         }
     }
 

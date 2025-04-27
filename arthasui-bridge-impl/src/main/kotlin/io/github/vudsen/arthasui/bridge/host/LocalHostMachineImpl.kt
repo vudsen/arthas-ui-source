@@ -9,6 +9,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.currentOS
+import io.github.vudsen.arthasui.bridge.bean.LocalInteractiveShell
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -59,15 +60,7 @@ class LocalHostMachineImpl(private val connectConfig: LocalConnectConfig) : Host
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
-        return InteractiveShell(process.inputStream, process.outputStream, { process.isAlive }) {
-            if (process.isAlive) {
-                return@InteractiveShell process.exitValue()
-            }
-            try {
-                process.destroy()
-            } catch (_: Exception) { }
-            return@InteractiveShell process.exitValue()
-        }
+        return LocalInteractiveShell(process)
     }
 
     override fun getOS(): OS {

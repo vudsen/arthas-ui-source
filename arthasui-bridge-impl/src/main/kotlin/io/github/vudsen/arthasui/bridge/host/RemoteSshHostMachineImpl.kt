@@ -10,25 +10,65 @@ import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
-import io.github.vudsen.arthasui.bridge.util.executeCancelable
 import org.apache.sshd.client.SshClient
+import org.apache.sshd.client.channel.ChannelExec
+import org.apache.sshd.client.channel.ClientChannelEvent
 import org.apache.sshd.client.session.ClientSession
 import org.apache.sshd.common.Factory
 import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory
 import org.apache.sshd.common.util.threads.CloseableExecutorService
 import org.apache.sshd.sftp.client.SftpClient
 import org.apache.sshd.sftp.client.SftpClientFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.util.*
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.util.EnumSet
 import java.util.concurrent.TimeUnit
-import kotlin.io.path.Path
 
 
 class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, executorServiceFactory: Factory<CloseableExecutorService>) : CloseableHostMachine {
 
     companion object {
         val logger = Logger.getInstance(RemoteSshHostMachineImpl::class.java)
+
+        private class SshInteractiveShell(
+            private val channel: ChannelExec,
+            private val actualIn: InputStream,
+            private val actualOut: OutputStream
+        ) : InteractiveShell {
+
+            override fun getInputStream(): InputStream {
+                return actualIn
+            }
+
+            override fun getOutputStream(): OutputStream {
+                return actualOut
+            }
+
+            override fun isAlive(): Boolean {
+                return !channel.isClosed
+            }
+
+            override fun exitCode(): Int? {
+                return channel.exitStatus
+            }
+
+            override fun close() {
+                if (channel.isClosed) {
+                    return
+                }
+                val closeFuture = channel.close(true)
+                while (!closeFuture.await(1, TimeUnit.SECONDS)) {
+                    ProgressManager.checkCanceled()
+                }
+            }
+
+        }
     }
 
     private val session: ClientSession
@@ -60,62 +100,86 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
     }
 
     override fun execute(vararg command: String): CommandExecuteResult {
-        return session.executeCancelable(command.joinToOptString(" "))
-    }
-
-    override fun createInteractiveShell(vararg command: String): InteractiveShell {
-        val channel = session.createShellChannel()
-        channel.isRedirectErrorStream = true
-        val future = channel.open()
-        for (spin in 0 until 20) {
-            if (future.await(1, TimeUnit.SECONDS)) {
-                break
-            }
-        }
-        if (!future.isDone) {
-            TODO("Tip user connect failed.")
-        }
-        channel.invertedIn.write((command.joinToOptString(" ") + '\n').toByteArray())
-        channel.invertedIn.flush()
-        return InteractiveShell(channel.invertedOut, channel.invertedIn, { !channel.isClosed && !channel.isClosing }) {
-            if (channel.isClosed) {
-                return@InteractiveShell 0
-            }
-            val closeFuture = channel.close(true)
-            while (!closeFuture.await(1, TimeUnit.SECONDS)) {
+        session.createExecChannel(command.joinToOptString(" ")).use { exec ->
+            val outputStream = ByteArrayOutputStream(1024)
+            exec.isRedirectErrorStream = true
+            exec.out = outputStream
+            val future = exec.open()
+            while (!future.await(2, TimeUnit.SECONDS)) {
                 ProgressManager.checkCanceled()
             }
-            return@InteractiveShell 0
+            while (true) {
+                val events = exec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), Duration.ofSeconds(1))
+                if (!events.contains(ClientChannelEvent.TIMEOUT)) {
+                    break
+                }
+                ProgressManager.checkCanceled()
+            }
+            return CommandExecuteResult(outputStream.toString(StandardCharsets.UTF_8), exec.exitStatus)
         }
+    }
+
+
+    override fun createInteractiveShell(vararg command: String): InteractiveShell {
+        val channel = session.createExecChannel(command.joinToOptString(" "))
+        val inputStream = PipedInputStream()
+        val outputStream = PipedOutputStream(inputStream)
+        channel.out = outputStream
+
+        channel.isRedirectErrorStream = true
+        val future = channel.open()
+        while (!future.await(1, TimeUnit.SECONDS)) {
+            ProgressManager.checkCanceled()
+        }
+
+        return SshInteractiveShell(channel, inputStream, channel.invertedIn)
     }
 
     override fun getOS(): OS {
         return config.os
     }
 
+
     override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val file = File(src)
         if (file.length() == 0L) {
             return
         }
-        indicator?.text = "Uploading ${file.name} to $dest"
+        logger.info("Uploading $src to $dest")
         val total = file.length().toDouble()
         val totalMb = String.format("%.2f", total / 1024 / 1024)
         var written = 0L
-        SftpClientFactory.instance().createSftpClient(session).use { client ->
-            client.open(dest, listOf(SftpClient.OpenMode.Write, SftpClient.OpenMode.Create)).use { handle ->
-                file.inputStream().use { input ->
-                    val buf = ByteArray((1024 * 1024L).coerceAtMost(file.length()).toInt())
-                    var len: Int
-                    while (input.read(buf).also { len = it } != -1) {
-                        ProgressManager.checkCanceled()
-                        client.write(handle, written, buf, 0, len)
-                        indicator?.fraction = written / total
-                        indicator?.text = "Uploading ${file.name} to $dest (${String.format("%.2f", written.toDouble() / 1024 / 1024)}MB / ${totalMb}MB)"
-                        written += len
+
+        indicator?.let {
+            it.pushState()
+            it.text = "Uploading ${file.name} to $dest"
+        }
+
+        try {
+            SftpClientFactory.instance().createSftpClient(session).use { client ->
+                client.open(dest, listOf(SftpClient.OpenMode.Write, SftpClient.OpenMode.Create)).use { handle ->
+                    file.inputStream().use { input ->
+                        val buf = ByteArray((file.length() / 2).coerceAtMost(5 * 1024 * 1024).toInt())
+                        var len: Int
+                        while (input.read(buf).also { len = it } != -1) {
+                            ProgressManager.checkCanceled()
+                            client.write(handle, written, buf, 0, len)
+                            indicator ?.let {
+                                it.fraction = written / total
+                                it.text = "Uploading ${file.name} to $dest (${
+                                    String.format(
+                                        "%.2f",
+                                        written.toDouble() / 1024 / 1024
+                                    )
+                                }MB / ${totalMb}MB)"
+                            }
+                            written += len
+                        }
                     }
                 }
             }
+        } finally {
+            indicator?.popState()
         }
     }
 
