@@ -6,10 +6,10 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
+import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import java.io.BufferedReader
-import java.io.InputStream
 
 class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val hostMachineConfig: HostMachineConfig) : HostMachineTemplate {
 
@@ -60,23 +60,52 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    private fun handleDownloadOutput(progressIndicator: ProgressIndicator, inputStream: InputStream) {
-        BufferedReader(inputStream.reader()).use { br ->
-            var line = ""
-            while (br.readLine().also { line = it } != null) {
-                ProgressManager.checkCanceled()
-                if (line.contains("%")) {
-                    val percentStr = line.substringBefore("%").trim()
-                    if (percentStr.isEmpty()) {
-                        progressIndicator.fraction = 0.0
+    private fun handleDownloadOutput(url: String, progressIndicator: ProgressIndicator, shell: InteractiveShell) {
+        progressIndicator.pushState()
+        var lastLine: String? = null
+        try {
+            progressIndicator.text = "Downloading $url"
+            BufferedReader(shell.getInputStream().reader()).use { br ->
+                var line: String? = ""
+                while (br.readLine().also { line = it } != null) {
+                    ProgressManager.checkCanceled()
+                    val currentLine = line!!
+                    lastLine = currentLine
+                    val i = currentLine.indexOf('%')
+                    if (i < 0) {
                         continue
                     }
-                    try {
-                        progressIndicator.fraction = percentStr.toDouble()
-                    } catch (e: NumberFormatException) {
-                        logger.error("Failed to parse progress: $percentStr", e)
+                    var len = 0
+                    var sum = 0.0
+                    var base = 1
+                    for (pos in i - 1 downTo 0) {
+                        val ch = currentLine[pos]
+                        if (ch == '.') {
+                            (0 until len).forEach {
+                                sum *= 0.1
+                                base = 1
+                            }
+                        } else if (ch < '0' || ch > '9') {
+                            break
+                        }
+                        len++
+                        sum += (ch - '0') * base
+                        base *= 10
+                    }
+
+                    if (sum > 0.0) {
+                        progressIndicator.fraction = sum
                     }
                 }
+            }
+        } finally {
+            progressIndicator.popState()
+            try {
+                shell.close()
+            } catch (_: Exception) { }
+
+            if (shell.exitCode() != 0) {
+                throw IllegalStateException(lastLine)
             }
         }
     }
@@ -87,29 +116,39 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
             return
         }
         val progressIndicator = getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get()
+
+        logger.info("Downloading $url to $destPath.")
         if (hostMachine.execute("curl", "--version").exitCode == 0) {
+            logger.info("Using curl")
             if (progressIndicator == null) {
                 hostMachine.execute("curl", "-L", "-o", destPath, url).ok()
             } else {
-                progressIndicator.text = "Downloading $url"
-                val shell =
-                    hostMachine.createInteractiveShell("curl", "--progress-bar", "-L", "-o", destPath, "--connect-timeout", "10", url)
-                handleDownloadOutput(progressIndicator, shell.inputStream)
+                hostMachine.executeManually(
+                    "curl",
+                    "--progress-bar",
+                    "-L",
+                    "-o",
+                    destPath,
+                    "--connect-timeout",
+                    "10",
+                    url
+                ).use { shell ->
+                    handleDownloadOutput(url, progressIndicator, shell)
+                }
+
             }
-            return
-        }
-        if (hostMachine.execute("wget", "--version").exitCode == 0) {
+        } else if (hostMachine.execute("wget", "--version").exitCode == 0) {
+            logger.info("Using wget")
             if (progressIndicator == null) {
                 hostMachine.execute("wget", "-O", destPath, url).ok()
             } else {
-                progressIndicator.text = "Downloading $url"
-                val shell =
-                    hostMachine.createInteractiveShell("wget", "-O", destPath, "--timeout=10", url)
-                handleDownloadOutput(progressIndicator, shell.inputStream)
+                hostMachine.executeManually("wget", "-O", destPath, "--timeout=10", url).use { shell ->
+                    handleDownloadOutput(url, progressIndicator, shell)
+                }
             }
-            return
+        } else {
+            throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
         }
-        throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
     }
 
     override fun unzip(target: String, destDir: String) {

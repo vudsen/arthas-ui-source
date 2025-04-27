@@ -16,7 +16,6 @@ import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
-import io.github.vudsen.arthasui.bridge.util.InteractiveShell2ArthasProcessAdapter
 import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 
@@ -94,10 +93,8 @@ class DockerJvmProvider : JvmProvider {
             hostMachine.execute("docker", "exec", "-i",
                 jvm.id, "$jattach/jattach", "1", "load", "instrument", "false", "\"${arthasHome}/arthas-agent.jar\"").ok()
             return@ArthasBridgeFactory ArthasBridgeImpl(
-                InteractiveShell2ArthasProcessAdapter(
-                    hostMachine.createInteractiveShell("docker", "exec", "-i",
-                        jvm.id, javaExecutable, "-jar", "${arthasHome}/arthas-client.jar"),
-                )
+                hostMachine.createInteractiveShell("docker", "exec", "-i",
+                    jvm.id, javaExecutable, "-jar", "${arthasHome}/arthas-client.jar"),
             )
         }
     }

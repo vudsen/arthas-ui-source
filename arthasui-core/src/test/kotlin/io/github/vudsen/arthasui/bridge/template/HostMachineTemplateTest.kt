@@ -2,12 +2,15 @@ package io.github.vudsen.arthasui.bridge.template
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.arthasui.BridgeTestUtil
+import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.currentOS
+import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import org.junit.Assert
+import java.lang.ref.WeakReference
 
 class HostMachineTemplateTest :  BasePlatformTestCase() {
 
@@ -85,6 +88,20 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
 
         Assert.assertEquals("/opt/arthas-ui-test/pkg/arthas", path)
         Assert.assertFalse(template.isFileNotExist("/opt/arthas-ui-test/pkg/arthas/test.txt"))
+    }
+
+
+    fun testDownloadWithIndicator() {
+        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
+        val progressIndicator = TestProgressIndicator()
+        template.putUserData(HostMachineTemplate.PROGRESS_INDICATOR, WeakReference(progressIndicator))
+        val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
+        template.mkdirs(template.getHostMachineConfig().dataDirectory)
+        template.download(
+            "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.49.1.0/sqlite-jdbc-3.49.1.0.jar",
+            dest
+        )
+        Assert.assertFalse(template.isFileNotExist(dest))
     }
 
 }
