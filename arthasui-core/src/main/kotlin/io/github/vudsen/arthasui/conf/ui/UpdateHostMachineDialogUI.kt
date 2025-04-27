@@ -39,7 +39,7 @@ class UpdateHostMachineDialogUI(
     private val lockPkgSourceUI = LocalPkgSourceUI(state.localPkgSourceId, parentDisposable)
 
     init {
-        title = "Create Or Update Host Machine"
+        title = "Update Host Machine"
         val manager = service<HostMachineConnectManager>()
         providers = manager.getProviders()
         oldState ?.let {
@@ -117,7 +117,9 @@ class UpdateHostMachineDialogUI(
         state.providers = jvmProviderConfigUI.apply() ?: return
         if (state.connect !is LocalConnectConfig) {
             lockPkgSourceUI.apply() ?.let {
-                if (it != LocalPkgSourceUI.DISABLED_VALUE) {
+                if (it == LocalPkgSourceUI.DISABLED_VALUE) {
+                    state.localPkgSourceId = null
+                } else {
                     state.localPkgSourceId = it
                 }
             }
