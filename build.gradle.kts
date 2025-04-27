@@ -10,7 +10,12 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "java")
 
-    version = providers.gradleProperty("pluginVersion").get()
+    val sha = providers.environmentVariable("HEAD_SHA").orNull
+    if (sha == null || sha.isEmpty()) {
+        version = providers.gradleProperty("pluginVersion").get()
+    } else {
+        version = providers.gradleProperty("pluginVersion").get() + "-$sha"
+    }
 
     repositories {
         maven{ url=uri("https://maven.aliyun.com/repository/public") }

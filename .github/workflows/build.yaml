@@ -64,6 +64,8 @@ jobs:
 
       # Build plugin
       - name: Build plugin
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
         run: ./gradlew buildPlugin
 
       # Prepare plugin archive content for creating artifact
