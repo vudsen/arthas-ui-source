@@ -25,7 +25,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
     private fun searchPkg(search: String): String? {
         val files = template.listFiles(template.getHostMachineConfig().dataDirectory)
         for (file in files) {
-            if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
+            if (file.startsWith(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
                 return file
             }
         }

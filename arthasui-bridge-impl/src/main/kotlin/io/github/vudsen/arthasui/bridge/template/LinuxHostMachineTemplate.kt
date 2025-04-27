@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.template
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
@@ -62,7 +63,9 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
 
     private fun handleDownloadOutput(url: String, progressIndicator: ProgressIndicator, shell: InteractiveShell) {
         progressIndicator.pushState()
-        var lastLine: String? = null
+        val lineTrace = arrayOfNulls<String>(5)
+        var tp = 0
+        var isCancelled = false
         try {
             progressIndicator.text = "Downloading $url"
             BufferedReader(shell.getInputStream().reader()).use { br ->
@@ -70,21 +73,24 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
                 while (br.readLine().also { line = it } != null) {
                     ProgressManager.checkCanceled()
                     val currentLine = line!!
-                    lastLine = currentLine
+                    lineTrace[tp] = currentLine
+                    tp = (tp + 1) % lineTrace.size
                     val i = currentLine.indexOf('%')
                     if (i < 0) {
                         continue
                     }
+                    progressIndicator.text2 = currentLine
                     var len = 0
                     var sum = 0.0
                     var base = 1
                     for (pos in i - 1 downTo 0) {
                         val ch = currentLine[pos]
                         if (ch == '.') {
-                            (0 until len).forEach {
+                            (0 until len).forEach { _ ->
                                 sum *= 0.1
                                 base = 1
                             }
+                            continue
                         } else if (ch < '0' || ch > '9') {
                             break
                         }
@@ -94,18 +100,21 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
                     }
 
                     if (sum > 0.0) {
-                        progressIndicator.fraction = sum
+                        progressIndicator.fraction = sum * 0.01
                     }
                 }
             }
         } finally {
             progressIndicator.popState()
-            try {
-                shell.close()
-            } catch (_: Exception) { }
-
-            if (shell.exitCode() != 0) {
-                throw IllegalStateException(lastLine)
+            shell.exitCode() ?.let {
+                if (it != 0){
+                    val stringBuilder = StringBuilder()
+                    for (i in lineTrace.indices) {
+                        val fp = (i - tp + lineTrace.size) % lineTrace.size
+                        stringBuilder.append(lineTrace[fp]).append('\n')
+                    }
+                    throw IllegalStateException(stringBuilder.toString())
+                }
             }
         }
     }
@@ -115,20 +124,26 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         if (!isFileNotExist(destPath)) {
             return
         }
+        val i = destPath.lastIndexOf('/')
+        if (i < 0) {
+            throw IllegalStateException("Please provide a absolute valid path")
+        }
+        val brokenFlagPath = destPath.substring(0, i + 1) + "DOWNLOADING_" + destPath.substring(i + 1)
         val progressIndicator = getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get()
 
-        logger.info("Downloading $url to $destPath.")
+
+        logger.info("Downloading $url to $brokenFlagPath.")
         if (hostMachine.execute("curl", "--version").exitCode == 0) {
             logger.info("Using curl")
             if (progressIndicator == null) {
-                hostMachine.execute("curl", "-L", "-o", destPath, url).ok()
+                hostMachine.execute("curl", "-L", "-o", brokenFlagPath, url).ok()
             } else {
                 hostMachine.createInteractiveShell(
                     "curl",
                     "--progress-bar",
                     "-L",
                     "-o",
-                    destPath,
+                    brokenFlagPath,
                     "--connect-timeout",
                     "10",
                     url
@@ -140,16 +155,18 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         } else if (hostMachine.execute("wget", "--version").exitCode == 0) {
             logger.info("Using wget")
             if (progressIndicator == null) {
-                hostMachine.execute("wget", "-O", destPath, url).ok()
+                hostMachine.execute("wget", "-O", brokenFlagPath, url).ok()
             } else {
-                hostMachine.createInteractiveShell("wget", "-O", destPath, "--timeout=10", url).use { shell ->
+                hostMachine.createInteractiveShell("wget", "-O", brokenFlagPath, "--timeout=10", url).use { shell ->
                     handleDownloadOutput(url, progressIndicator, shell)
                 }
             }
         } else {
             throw IllegalStateException("No download toolchain available! Please consider install 'curl' or 'wget', or you can enable the 'Transfer From Local'")
         }
+        hostMachine.execute("mv", brokenFlagPath, destPath).ok()
     }
+
 
     override fun unzip(target: String, destDir: String) {
         if (target.endsWith(".zip")) {
