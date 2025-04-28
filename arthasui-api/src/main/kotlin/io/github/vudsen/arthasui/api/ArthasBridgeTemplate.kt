@@ -53,7 +53,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     }
 
     override fun isAlive(): Boolean {
-        return delegate?.isAlive() ?: true
+        return delegate?.isAlive() ?: false
     }
 
     /**
