@@ -1,30 +1,16 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-
-sourceSets {
-    main {
-        java {
-            srcDirs("src/main/gen")
-        }
-    }
-}
-
-repositories {
-    intellijPlatform {
-        defaultRepositories()
-    }
-}
-
-plugins {
-    id("org.jetbrains.intellij.platform") version "2.3.0"
-    alias(libs.plugins.changelog)
-}
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 dependencies {
+    implementation("ognl:ognl:3.4.6")
     testImplementation(kotlin("test"))
     testImplementation("org.testcontainers", "testcontainers", "1.20.6")
-    implementation("ognl:ognl:3.4.6")
+
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
         bundledPlugins("com.intellij.java")
@@ -35,7 +21,72 @@ dependencies {
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Starter)
     }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/gen")
+        }
+    }
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+repositories {
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+plugins {
+    alias(libs.plugins.intelliJPlatform)
+    alias(libs.plugins.changelog)
+}
+
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+dependencies {
+    integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    integrationTestImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
+    integrationTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
+    integrationTestImplementation("com.jetbrains.intellij.java", "java-rt", providers.gradleProperty("platformInternalVersion").get())
+}
+
+
+val integrationTest = task<Test>("integrationTest") {
+    // avoid download twice
+    val file = File(
+        rootProject.projectDir.absolutePath + "/out/ide-tests/installers/IC/ideaIC-${
+            providers.gradleProperty("platformInternalVersion").get()
+        }.tar.gz"
+    )
+    if (!file.exists()) {
+        val deps = dependencies.create("idea", "ideaIC", providers.gradleProperty("platformVersion").get(), ext = "tar.gz")
+        val files = configurations.detachedConfiguration(deps).files
+        file.parentFile.mkdirs()
+        val source = files.first()
+        logger.info("Copying ${source.absolutePath} to ${file.absolutePath}")
+        FileInputStream(source).channel.use { from ->
+            FileOutputStream(file).channel.use { to ->
+                from.transferTo(0, from.size(), to);
+            }
+        }
+    }
+
+    systemProperty("platformVersion", providers.gradleProperty("platformVersion").get())
+    val integrationTestSourceSet = sourceSets.getByName("integrationTest")
+    testClassesDirs = integrationTestSourceSet.output.classesDirs
+    classpath = integrationTestSourceSet.runtimeClasspath
+    systemProperty("path.to.build.plugin", tasks.prepareSandbox.get().pluginDirectory.get().asFile)
+    useJUnitPlatform()
+    dependsOn(tasks.prepareSandbox)
 }
 
 group = "io.github.vudsen.arthasui"
@@ -107,15 +158,17 @@ changelog {
     repositoryUrl = providers.gradleProperty("pluginRepositoryUrl")
 }
 
+tasks.withType<KotlinJvmCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
 
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
         sourceCompatibility = "17"
         targetCompatibility = "17"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
     }
 
     publishPlugin {
