@@ -35,11 +35,11 @@ object BridgeTestUtil {
         return template
     }
 
-    fun createSshHostMachine(parentDisposable: Disposable, customise: ((GenericContainer<*>) -> Unit)?): HostMachineTemplate {
-        val server = setupSshServer(parentDisposable, customise)
+    fun createSshHostMachine(parentDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): HostMachineTemplate {
+        val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable, customise)
         val config = HostMachineConfig(
             -1,
-            "Test Local",
+            "Remote",
             null,
             SshHostMachineConnectConfig(
                 "Test server",
@@ -57,19 +57,38 @@ object BridgeTestUtil {
         return createSshHostMachine(parentDisposable, null)
     }
 
-    private val instance = WeakHashMap<Disposable, GenericContainer<*>>()
+    fun createMathGameSshMachine(parentDisposable: Disposable): HostMachineTemplate {
+        val server = setupContainer("xu2237803016/ssh-server-with-math-game:0.0.2", parentDisposable, null)
+        val config = HostMachineConfig(
+            -1,
+            "Remote",
+            null,
+            SshHostMachineConnectConfig(
+                "Test server",
+                SshConfiguration(server.host, server.firstMappedPort, "root", "root")
+            ),
+            mutableListOf(LocalJvmProviderConfig(true, "/opt/java")),
+            mutableListOf(),
+        )
+        val template = service<HostMachineConnectManager>().connect(config)
+        config.dataDirectory = template.resolveDefaultDataDirectory() + "/test"
+        return template
+    }
+
+    private val instance = WeakHashMap<String, GenericContainer<*>>()
 
     /**
-     * 创建 SSH 服务器
+     * 创建容器
      */
-    private fun setupSshServer(rootDisposable: Disposable, customise: ((GenericContainer<*>) -> Unit)?): GenericContainer<*> {
-        instance[rootDisposable] ?.let {
+    private fun setupContainer(image: String, rootDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): GenericContainer<*> {
+        val key = image + rootDisposable.toString()
+        instance[key] ?.let {
             return it
         }
         if (currentOS() != OS.LINUX) {
             throw UnsupportedOperationException("Only linux is allowed")
         }
-        val sshContainer = GenericContainer(DockerImageName.parse("rastasheep/ubuntu-sshd:18.04"))
+        val sshContainer = GenericContainer(DockerImageName.parse(image))
             .withExposedPorts(22)
 
         customise ?.let { it(sshContainer)  }
@@ -79,7 +98,7 @@ object BridgeTestUtil {
         }
 
         sshContainer.start();
-        instance[rootDisposable] = sshContainer
+        instance[key] = sshContainer
         return sshContainer
     }
 

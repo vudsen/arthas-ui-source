@@ -70,9 +70,9 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
      * 测试手动安装
      */
     fun testToolChainManualDownload() {
-        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) { ctr ->
-            ctr.withExtraHost("api.github.com", "127.0.0.1")
-                .withExtraHost("github.com", "127.0.0.1")
+        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) {
+            withExtraHost("api.github.com", "127.0.0.1")
+            .withExtraHost("github.com", "127.0.0.1")
         }
         template.getHostMachineConfig().dataDirectory = "/opt/arthas-ui-test"
 

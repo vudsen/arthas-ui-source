@@ -136,7 +136,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         if (hostMachine.execute("curl", "--version").exitCode == 0) {
             logger.info("Using curl")
             if (progressIndicator == null) {
-                hostMachine.execute("curl", "-L", "-o", brokenFlagPath, url).ok()
+                hostMachine.execute("curl", "-L", "-o", brokenFlagPath, "--connect-timeout", "10", url).ok()
             } else {
                 hostMachine.createInteractiveShell(
                     "curl",
@@ -155,7 +155,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
         } else if (hostMachine.execute("wget", "--version").exitCode == 0) {
             logger.info("Using wget")
             if (progressIndicator == null) {
-                hostMachine.execute("wget", "-O", brokenFlagPath, url).ok()
+                hostMachine.execute("wget", "-O", brokenFlagPath, "--timeout=10", url).ok()
             } else {
                 hostMachine.createInteractiveShell("wget", "-O", brokenFlagPath, "--timeout=10", url).use { shell ->
                     handleDownloadOutput(url, progressIndicator, shell)

@@ -14,9 +14,14 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-class DefaultToolChainManager(private val template: HostMachineTemplate, private val localDownloadProxy: HostMachineTemplate?) :
+class DefaultToolChainManager(
+    private val template: HostMachineTemplate,
+    private val localDownloadProxy: HostMachineTemplate?,
+    mirror: String? = null
+) :
     ToolchainManager {
 
+    var mirror = mirror ?: "https://api.github.com"
 
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
@@ -77,8 +82,8 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         if (template.isDirectoryExist(home)) {
             return home
         }
-        val filename = downloadJattach()
         template.mkdirs(home)
+        val filename = downloadJattach()
         template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
         return home
     }
@@ -89,8 +94,8 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
         if (template.isDirectoryExist(home)) {
             return home
         }
-        val filename = downloadArthas()
         template.mkdirs(home)
+        val filename = downloadArthas()
         template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
         return home
     }
@@ -145,7 +150,7 @@ class DefaultToolChainManager(private val template: HostMachineTemplate, private
 
 
     private fun fetchLatestData(pkg: String): JsonObject {
-        val url = URL("https://api.github.com/repos/$pkg/releases/latest")
+        val url = URL("${mirror}/repos/$pkg/releases/latest")
 
         val connection = url.openConnection() as HttpURLConnection
         try {
