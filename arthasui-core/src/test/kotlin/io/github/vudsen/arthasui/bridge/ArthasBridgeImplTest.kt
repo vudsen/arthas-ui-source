@@ -86,7 +86,7 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
 
         val executionManager = project.getService(ArthasExecutionManager::class.java) as ArthasExecutionManagerImpl
         // A china's mirror, you can uncomment it and use it on local but please do not commit.
-        executionManager.githubApiMirror = "https://5j9g3t.site/github-mirror"
+//        executionManager.githubApiMirror = "https://5j9g3t.site/github-mirror"
         val builder = StringBuilder()
         val executedCommand = mutableListOf<String>()
         val executeResult = mutableListOf<String>()
