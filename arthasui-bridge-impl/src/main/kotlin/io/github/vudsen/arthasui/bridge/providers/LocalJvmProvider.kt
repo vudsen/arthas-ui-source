@@ -153,9 +153,10 @@ class LocalJvmProvider : JvmProvider {
         template.env("JAVA_HOME") ?.let {
             return LocalJvmProviderConfig(true, it)
         }
-        template.getHostMachine().execute("java", "-version") .let {
-            if (it.exitCode == 0) {
-                return LocalJvmProviderConfig(true, "java")
+        template.grep("java.home", "java", "-XshowSettings:properties", "--version", "2>&1").tryUnwrap() ?.let {
+            val i = it.indexOf('=')
+            if (i >= 0) {
+                return LocalJvmProviderConfig(true, it.substring(i + 1).trim())
             }
         }
         return LocalJvmProviderConfig(false)
