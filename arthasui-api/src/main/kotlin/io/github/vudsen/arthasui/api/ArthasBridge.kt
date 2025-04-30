@@ -16,7 +16,7 @@ interface ArthasBridge {
     suspend fun execute(command: String): ArthasResultItem
 
     /**
-     * 连接是否仍然存活
+     * 连接是否仍然存活. 如果连接意外终止，应该立即输出所有的输出
      */
     fun isAlive(): Boolean
 

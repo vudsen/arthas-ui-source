@@ -168,7 +168,7 @@ class ArthasBridgeImpl(
         }
         ApplicationManager.getApplication().executeOnPooledThread {
             for (listener in listeners) {
-                listener.onFinish(lastExecuted, result, rawContent)
+                listener.onFinish(lastExecuted.trim(), result, rawContent)
             }
         }
     }
@@ -307,7 +307,14 @@ class ArthasBridgeImpl(
     }
 
     override fun isAlive(): Boolean {
-        return arthasProcess.isAlive()
+        if (arthasProcess.isAlive()) {
+            return true
+        }
+        var len = 0
+        while (reader.read(readBuffer).also { len = it } != -1) {
+            onText(len)
+        }
+        return false
     }
 
     override fun addListener(arthasBridgeListener: ArthasBridgeListener) {
@@ -330,7 +337,7 @@ class ArthasBridgeImpl(
         }
         try {
             arthasProcess.close()
-            return arthasProcess.exitCode()!!
+            return arthasProcess.exitCode() ?: 0
         } finally {
             ApplicationManager.getApplication().executeOnPooledThread {
                 for (listener in listeners) {

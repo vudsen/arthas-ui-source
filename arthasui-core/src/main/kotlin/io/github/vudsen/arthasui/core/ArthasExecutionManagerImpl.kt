@@ -39,6 +39,7 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
      */
     private val bridges = ConcurrentHashMap<JVM, ArthasBridgeHolder>()
 
+    var githubApiMirror: String? = null
 
     private fun getHolderAndEnsureAlive(jvm: JVM): ArthasBridgeHolder? {
         bridges[jvm] ?.let {
@@ -72,7 +73,7 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         val factory = service<HostMachineConnectManager>()
         val template = factory.connect(hostMachineConfig)
 
-        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, findProxy(template.getHostMachineConfig().localPkgSourceId))
+        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, findProxy(template.getHostMachineConfig().localPkgSourceId), githubApiMirror)
         progressIndicator ?.let {
             template.putUserData(HostMachineTemplate.PROGRESS_INDICATOR, WeakReference(it))
         }

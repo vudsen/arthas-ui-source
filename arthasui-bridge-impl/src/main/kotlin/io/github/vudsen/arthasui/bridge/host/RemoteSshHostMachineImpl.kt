@@ -110,7 +110,7 @@ class RemoteSshHostMachineImpl(private val config: SshHostMachineConnectConfig, 
             }
             while (true) {
                 val events = exec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), Duration.ofSeconds(1))
-                if (!events.contains(ClientChannelEvent.TIMEOUT)) {
+                if (events.contains(ClientChannelEvent.CLOSED)) {
                     break
                 }
                 ProgressManager.checkCanceled()

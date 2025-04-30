@@ -9,9 +9,9 @@ import java.io.File
 class DefaultToolChainManagerTest :  BasePlatformTestCase() {
 
     fun testTransferPackage() {
-        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) { ctr ->
-            ctr.withExtraHost("api.github.com", "127.0.0.1")
-                .withExtraHost("github.com", "127.0.0.1")
+        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) {
+            withExtraHost("api.github.com", "127.0.0.1")
+            withExtraHost("github.com", "127.0.0.1")
         }
 
         val local = BridgeTestUtil.createLocalHostMachine()

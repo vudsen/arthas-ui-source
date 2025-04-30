@@ -151,7 +151,9 @@ class LocalJvmProvider : JvmProvider {
 
     override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
         template.env("JAVA_HOME") ?.let {
-            return LocalJvmProviderConfig(true, it)
+            if (template.isDirectoryExist(it)) {
+                return LocalJvmProviderConfig(true, it)
+            }
         }
         template.grep("java.home", "java", "-XshowSettings:properties", "--version", "2>&1").tryUnwrap() ?.let {
             val i = it.indexOf('=')
