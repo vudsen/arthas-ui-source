@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.4.1 - 2025-05-06
+
+- feat: 优化下载和上传时的进度条 #29
+- fix: 传输本地本机的配置在更新时无法保存 #30
+- fix: 下载文件时如果先前下载失败，再次下载时会认为下载成功 #31
+- feat: 使用 `-XshowSettings:properties` 搜索 `JAVA_HOME` #33
+- test: attach arthas 进程的集成测试 #34
+- feat: UI 集成测试 #35
+- feat: 当没有 unzip 命令时，自动安装解压工具 #36
+
 ## 0.4.0 - 2025-04-25
 
 - chore: 使用合适的默认数据目录 #25
