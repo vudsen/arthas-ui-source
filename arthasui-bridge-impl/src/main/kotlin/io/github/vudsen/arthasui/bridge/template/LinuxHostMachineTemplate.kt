@@ -171,7 +171,7 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
             hostMachine.execute("unzip", target, "-d", destDir).let {
-                if (it.exitCode == 1) {
+                if (it.exitCode == 127) {
                     return false
                 } else if (it.exitCode == 0) {
                     return true
