@@ -50,9 +50,10 @@ interface HostMachineTemplate : UserDataHolder {
     fun download(url: String, destPath: String)
 
     /**
-     * 解压压缩包(zip, tar.gz, tgz...)
+     * 尝试使用系统本地工具库来解压压缩包(zip, tar.gz, tgz...)
+     * @return 是否解压成功
      */
-    fun unzip(target: String, destDir: String)
+    fun tryUnzip(target: String, destDir: String): Boolean
 
     /**
      * 过滤输出

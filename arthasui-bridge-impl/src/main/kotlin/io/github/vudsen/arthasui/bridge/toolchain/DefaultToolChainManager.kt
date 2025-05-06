@@ -1,12 +1,10 @@
 package io.github.vudsen.arthasui.bridge.toolchain
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.OS
-import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
@@ -25,10 +23,26 @@ class DefaultToolChainManager(
 
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
+        private const val DOWNLOAD_DIRECTORY = "downloads"
+
+        private class ApiData(
+            var assets: MutableList<Asset> = mutableListOf()
+        )
+
+        private class Asset(
+            var name: String = "",
+
+            @SerializedName("browser_download_url")
+            var browserDownloadUrl: String = ""
+        )
+    }
+
+    private fun getDownloadDirectory(): String {
+        return template.getHostMachineConfig().dataDirectory + "/" + DOWNLOAD_DIRECTORY
     }
 
     private fun searchPkg(search: String): String? {
-        val files = template.listFiles(template.getHostMachineConfig().dataDirectory)
+        val files = template.listFiles(getDownloadDirectory())
         for (file in files) {
             if (file.startsWith(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
                 return file
@@ -38,103 +52,82 @@ class DefaultToolChainManager(
     }
 
     /**
-     * @return the file name.
+     * 使用外部工具解压
      */
-    private fun downloadJattach(): String {
-        searchPkg("jattach") ?.let {
-            return it
+    private fun handleUnzipFailed(target: String, dest: String) {
+        logger.info("Can't unzip ${target} by local os tools, downloading unzip tool from remote.")
+        if (!target.endsWith(".zip")) {
+            throw IllegalStateException("Can't exact $target: no toolchain available.")
         }
+        val home = preparePackage("punzip", "ybirader/pzip") { assets ->
+            when (template.getHostMachine().getOS()) {
+                OS.LINUX -> {
+                    if (template.isArm()) {
+                        assets.find { a -> a.name == "punzip_Linux_arm64.tar.gz" }
+                    } else {
+                        assets.find { a -> a.name == "punzip_Linux_x86_64.tar.gz" }
+                    }
+                }
 
-        val data = fetchLatestData("jattach/jattach")
-
-        val hostMachineConfig = template.getHostMachineConfig()
-
-        val versions = data.get("assets").asJsonArray
-        val asset = when (hostMachineConfig.connect.getOS()) {
-            OS.LINUX -> {
-                if (template.isArm()) {
-                    versions.find { v -> v.asJsonObject.get("name").asString.endsWith("arm64.tgz") }
-                } else {
-                    versions.find { v -> v.asJsonObject.get("name").asString.endsWith("x64.tgz") }
+                else -> {
+                    // Linux 和 MacOS 只允许本地连接，可以直接依靠 java 自身功能解压.
+                    throw IllegalStateException("Unreachable code.")
                 }
             }
-
-            OS.WINDOWS -> {
-                versions.find { v -> v.asJsonObject.get("name").asString.endsWith("windows.zip") }
-            }
-
-            OS.MAC -> {
-                versions.find { v -> v.asJsonObject.get("name").asString.endsWith("macos.zip") }
-            }
         }
-        if (asset == null) {
-            if (logger.isDebugEnabled) {
-                logger.debug(data.toString())
-            }
-            throw IllegalStateException("No suitable jattach asset found for ${hostMachineConfig.connect.getOS()}")
-        }
-        return finalDownload(asset, hostMachineConfig)
+        val executable = "$home/punzip"
+        template.getHostMachine().execute(executable, "-d", dest, target).ok()
     }
 
-    private fun prepareJattach(): String {
+    /**
+     * 准备工具
+     * @return 工具的 home 目录
+     */
+    private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
         val hostMachineConfig = template.getHostMachineConfig()
-        val home = "${hostMachineConfig.dataDirectory}/pkg/jattach"
+        val home = "${hostMachineConfig.dataDirectory}/pkg/${pkgName}"
         if (template.isDirectoryExist(home)) {
             return home
         }
-        template.mkdirs(home)
-        val filename = downloadJattach()
-        template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
-        return home
-    }
-
-    private fun prepareArthas(): String {
-        val hostMachineConfig = template.getHostMachineConfig()
-        val home = "${hostMachineConfig.dataDirectory}/pkg/arthas"
-        if (template.isDirectoryExist(home)) {
+        searchPkg(pkgName) ?.let {
             return home
         }
+
+        template.mkdirs(getDownloadDirectory())
         template.mkdirs(home)
-        val filename = downloadArthas()
-        template.unzip("${hostMachineConfig.dataDirectory}/$filename", home)
+
+        val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${template.getHostMachine().getOS()}, arm: ${template.isArm()}")
+        val filename = finalDownload(asset)
+
+        val unzipTarget = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
+        if (template.tryUnzip(unzipTarget, home)) {
+            return home
+        }
+        handleUnzipFailed(unzipTarget, home)
         return home
     }
 
-    private fun downloadArthas(): String {
-        searchPkg("arthas") ?.let {
-            return it
-        }
-        val data = fetchLatestData("alibaba/arthas")
-        val versions = data.get("assets").asJsonArray
-        val asset = versions.find { v -> v.asJsonObject.get("name").asString == "arthas-bin.zip" }
-        val hostMachineConfig = template.getHostMachineConfig()
-        if (asset == null) {
-            if (logger.isDebugEnabled) {
-                logger.debug(data.toString())
-            }
-            throw IllegalStateException("No suitable arthas asset found for ${hostMachineConfig.connect.getOS()}")
-        }
-        return finalDownload(asset, hostMachineConfig)
-    }
-
+    /**
+     * 下载文件
+     * @return 文件名称
+     */
     private fun finalDownload(
-        asset: JsonElement,
-        hostMachineConfig: HostMachineConfig,
+        asset: Asset,
     ): String {
-        val asJsonObject = asset.asJsonObject
-        val filename = asJsonObject.get("name").asString
+        val hostMachineConfig = template.getHostMachineConfig()
+        val filename = asset.name
 
         localDownloadProxy?.let {
-            val dest = hostMachineConfig.dataDirectory + "/" + filename
-            val local = it.getHostMachineConfig().dataDirectory + "/" + filename
-            localDownloadProxy.download(asJsonObject.get("browser_download_url").asString, local)
+            val dest = hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+            localDownloadProxy.download(asset.browserDownloadUrl, local)
             template.mkdirs(hostMachineConfig.dataDirectory)
             template.getHostMachine()
                 .transferFile(local, dest, template.getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get())
         } ?: let {
             template.download(
-                asJsonObject.get("browser_download_url").asString,
-                hostMachineConfig.dataDirectory + "/" + filename
+                asset.browserDownloadUrl,
+                hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             )
         }
         return filename
@@ -143,13 +136,31 @@ class DefaultToolChainManager(
 
     override fun getToolChainHomePath(toolChain: ToolChain): String {
         return when (toolChain) {
-            ToolChain.JATTACH_BUNDLE -> prepareJattach()
-            ToolChain.ARTHAS_BUNDLE -> prepareArthas()
+            ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") { assets ->
+                when (template.getHostMachine().getOS()) {
+                    OS.LINUX -> {
+                        if (template.isArm()) {
+                            assets.find { v -> v.name.endsWith("arm64.tgz") }
+                        } else {
+                            assets.find { v -> v.name.endsWith("x64.tgz") }
+                        }
+                    }
+
+                    OS.WINDOWS -> {
+                        assets.find { v -> v.name.endsWith("windows.zip") }
+                    }
+
+                    OS.MAC -> {
+                        assets.find { v -> v.name.endsWith("macos.zip") }
+                    }
+                }
+            }
+            ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
         }
     }
 
 
-    private fun fetchLatestData(pkg: String): JsonObject {
+    private fun fetchLatestData(pkg: String): ApiData {
         val url = URL("${mirror}/repos/$pkg/releases/latest")
 
         val connection = url.openConnection() as HttpURLConnection
@@ -165,7 +176,7 @@ class DefaultToolChainManager(
                 String(
                     connection.inputStream.readAllBytes(),
                     StandardCharsets.UTF_8
-                ), JsonObject::class.java
+                ), ApiData::class.java
             )
             return tree
         } finally {

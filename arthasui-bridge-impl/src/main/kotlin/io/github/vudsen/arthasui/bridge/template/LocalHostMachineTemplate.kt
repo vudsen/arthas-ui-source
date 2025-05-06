@@ -88,7 +88,7 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
         }
     }
 
-    override fun unzip(target: String, destDir: String) {
+    override fun tryUnzip(target: String, destDir: String): Boolean {
         val file = File(target)
         if (!File(destDir).mkdirs()) {
             logger.warn("Failed to create directory $destDir")
@@ -108,10 +108,11 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
                     }
                 }
             }
-        } else if (file.extension == "tgz") {
+            return true
+        } else if (file.extension == "tgz" || file.extension == "tar.gz") {
             java.util.zip.GZIPInputStream(file.inputStream()).use { gzipInput ->
                 TarArchiveInputStream(gzipInput).use { tarInput ->
-                    var entry = tarInput.nextTarEntry
+                    var entry = tarInput.getNextEntry()
                     while (entry != null) {
                         val entryDest = File(destDir, entry.name)
                         if (entry.isDirectory) {
@@ -125,7 +126,9 @@ class LocalHostMachineTemplate(private val hostMachine: HostMachine, private val
                     }
                 }
             }
+            return true
         }
+        return false
     }
 
 

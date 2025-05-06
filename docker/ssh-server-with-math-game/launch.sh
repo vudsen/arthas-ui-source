@@ -3,7 +3,6 @@
 # Initialize the environment.
 tar -zxvf "$JAVA_VERSION.tar.gz"
 mv $JAVA_VERSION java
-dpkg -i unzip_6.0-20ubuntu1.1_amd64.deb
 
 # Launch the process.
 /usr/sbin/sshd -D &
