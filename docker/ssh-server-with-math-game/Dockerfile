@@ -8,6 +8,5 @@ WORKDIR /opt
 COPY "$JAVA_VERSION.tar.gz" /opt
 COPY launch.sh /opt/launch.sh
 COPY math-game.jar /opt/math-game.jar
-COPY unzip_6.0-20ubuntu1.1_amd64.deb /opt/unzip_6.0-20ubuntu1.1_amd64.deb
 
 CMD ["sh", "launch.sh"]

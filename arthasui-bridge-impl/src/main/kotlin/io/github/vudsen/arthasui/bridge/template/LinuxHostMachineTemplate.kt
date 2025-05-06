@@ -168,16 +168,26 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
     }
 
 
-    override fun unzip(target: String, destDir: String) {
+    override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
-            hostMachine.execute("unzip", target, "-d", destDir).ok()
+            hostMachine.execute("unzip", target, "-d", destDir).let {
+                if (it.exitCode == 127) {
+                    return false
+                } else if (it.exitCode == 0) {
+                    return true
+                }
+                // throw exp
+                it.ok()
+                return false
+            }
         } else if (target.endsWith(".tgz") || target.endsWith(".tar.gz")) {
             hostMachine.execute("tar", "-zxvf", target, "-C", destDir).ok()
+            return true
         } else if (target.endsWith(".tar")) {
             hostMachine.execute("tar", "-xvf", target, "-C", destDir).ok()
-        } else {
-            throw UnsupportedOperationException("Unsupported file to unzip: $target")
+            return true
         }
+        return false
     }
 
 

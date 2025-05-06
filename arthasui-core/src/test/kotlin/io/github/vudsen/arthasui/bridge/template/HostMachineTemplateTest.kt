@@ -76,11 +76,17 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
         }
         template.getHostMachineConfig().dataDirectory = "/opt/arthas-ui-test"
 
-        template.mkdirs("/opt/arthas-ui-test")
-        template.getHostMachine().execute("touch", "/opt/arthas-ui-test/test.txt").ok()
-        template.getHostMachine().execute("tar", "-czf", "/opt/arthas-ui-test/arthas-xx.tar.gz", "-C", "/opt/arthas-ui-test", "test.txt").ok()
+        template.mkdirs("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
+        template.getHostMachine().execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
+        template.getHostMachine().execute("tar",
+            "-czf",
+            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/arthas-xx.tar.gz",
+            "-C",
+            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}",
+            "test.txt"
+        ).ok()
 
-        val files = template.listFiles("/opt/arthas-ui-test")
+        val files = template.listFiles("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
         Assert.assertEquals(listOf("arthas-xx.tar.gz", "test.txt"), files)
 
         val toolchainManager = DefaultToolChainManager(template, null)

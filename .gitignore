@@ -44,3 +44,4 @@ bin/
 .intellijPlatform/
 allure-results/
 docker/ssh-server-with-math-game/*.tar.gz
+.kotlin/
