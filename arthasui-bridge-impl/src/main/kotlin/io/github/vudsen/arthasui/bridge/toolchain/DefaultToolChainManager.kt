@@ -23,7 +23,7 @@ class DefaultToolChainManager(
 
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
-        private const val DOWNLOAD_DIRECTORY = "downloads"
+        const val DOWNLOAD_DIRECTORY = "downloads"
 
         private class ApiData(
             var assets: MutableList<Asset> = mutableListOf()
@@ -89,15 +89,13 @@ class DefaultToolChainManager(
         if (template.isDirectoryExist(home)) {
             return home
         }
-        searchPkg(pkgName) ?.let {
-            return home
+        val filename: String = searchPkg(pkgName) ?:let {
+            template.mkdirs(getDownloadDirectory())
+
+            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${template.getHostMachine().getOS()}, arm: ${template.isArm()}")
+            finalDownload(asset)
         }
-
-        template.mkdirs(getDownloadDirectory())
         template.mkdirs(home)
-
-        val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${template.getHostMachine().getOS()}, arm: ${template.isArm()}")
-        val filename = finalDownload(asset)
 
         val unzipTarget = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
         if (template.tryUnzip(unzipTarget, home)) {

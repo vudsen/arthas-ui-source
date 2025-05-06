@@ -16,7 +16,7 @@ class DefaultToolChainManagerTest :  BasePlatformTestCase() {
 
         val local = BridgeTestUtil.createLocalHostMachine()
         local.mkdirs(template.resolveDefaultDataDirectory())
-        val file = File(local.getHostMachineConfig().dataDirectory + "/jattach-linux-x64.tgz")
+        val file = File("${local.getHostMachineConfig().dataDirectory}/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/jattach-linux-x64.tgz")
         try {
             val expectedFiles = BridgeTestUtil.createTestTarGzFile(file)
             val manager = DefaultToolChainManager(template, local)

@@ -169,20 +169,23 @@ class LinuxHostMachineTemplate(private val hostMachine: HostMachine, private val
 
 
     override fun tryUnzip(target: String, destDir: String): Boolean {
-        val result: CommandExecuteResult = if (target.endsWith(".zip")) {
-            hostMachine.execute("unzip", target, "-d", destDir)
+        if (target.endsWith(".zip")) {
+            hostMachine.execute("unzip", target, "-d", destDir).let {
+                if (it.exitCode == 1) {
+                    return false
+                } else if (it.exitCode == 0) {
+                    return true
+                }
+                // throw exp
+                it.ok()
+                return false
+            }
         } else if (target.endsWith(".tgz") || target.endsWith(".tar.gz")) {
-            hostMachine.execute("tar", "-zxvf", target, "-C", destDir)
-        } else if (target.endsWith(".tar")) {
-            hostMachine.execute("tar", "-xvf", target, "-C", destDir)
-        } else {
-            return false
-        }
-        if (result.exitCode == 0) {
+            hostMachine.execute("tar", "-zxvf", target, "-C", destDir).ok()
             return true
-        }
-        if (logger.isDebugEnabled) {
-            logger.debug("Failed to unzip ${target}, stdout: ${result.stdout}")
+        } else if (target.endsWith(".tar")) {
+            hostMachine.execute("tar", "-xvf", target, "-C", destDir).ok()
+            return true
         }
         return false
     }
