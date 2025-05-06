@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.runBlockingCancellable
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.common.parser.ArthasFrameDecoder
@@ -55,6 +56,12 @@ class ArthasBridgeImpl(
     private val listeners = CopyOnWriteArrayList<ArthasBridgeListener>()
 
     private var lastExecuted: String = ""
+
+    init {
+        runBlockingCancellable {
+            ensureAttachStatus()
+        }
+    }
 
     private suspend fun ensureAttachStatus() {
         if (isAttached) {
