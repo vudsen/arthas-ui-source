@@ -11,6 +11,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
+import io.github.vudsen.arthasui.api.ArthasBridgeTemplate
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.run.ui.ExecuteHistoryUI
 
@@ -25,8 +26,8 @@ class ArthasRunConfiguration(
         return object : CommandLineState(environment) {
             override fun startProcess(): ProcessHandler {
                 return ArthasProcessHandler(
-                    environment.project,
-                    jvm,
+                    project,
+                    jvm
                 )
             }
 

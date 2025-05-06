@@ -56,6 +56,10 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         return delegate?.isAlive() ?: false
     }
 
+    override fun isClosed(): Boolean {
+        return delegate?.isClosed() ?: false
+    }
+
     /**
      * 不执行任何命令，立即 attach
      */

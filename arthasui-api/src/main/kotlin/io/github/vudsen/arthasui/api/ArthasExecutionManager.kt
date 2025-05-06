@@ -29,7 +29,7 @@ interface ArthasExecutionManager {
     fun isAttached(jvm: JVM): Boolean
 
     /**
-     * 获取已经创建的 [ArthasBridgeTemplate]，需要先调用 [initTemplate] 来缓存
+     * 获取已经创建的 [ArthasBridgeTemplate]
      */
     fun getTemplate(jvm: JVM): ArthasBridgeTemplate?
 

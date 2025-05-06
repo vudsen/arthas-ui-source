@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.core
 
+import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
@@ -15,7 +16,6 @@ import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
 import java.lang.ref.WeakReference
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 协调命令的执行
@@ -37,17 +37,17 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
     /**
      * 保存所有链接
      */
-    private val bridges = ConcurrentHashMap<JVM, ArthasBridgeHolder>()
+    private val bridges = WeakHashMap<JVM, ArthasBridgeHolder>()
 
     var githubApiMirror: String? = null
 
     private fun getHolderAndEnsureAlive(jvm: JVM): ArthasBridgeHolder? {
         bridges[jvm] ?.let {
-            if (it.arthasBridge.isAlive()) {
-                return it
+            if (it.arthasBridge.isClosed()) {
+                bridges.delete(jvm)
+                return null
             }
-            bridges.remove(jvm)
-            return null
+            return it
         } ?: return null
     }
 
@@ -84,7 +84,7 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
             override fun onClose() {
-                bridges.remove(jvm)
+                bridges.delete(jvm)
             }
         })
         holder = ArthasBridgeHolder(arthasBridgeTemplate, hostMachineConfig)

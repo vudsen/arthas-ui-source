@@ -4,10 +4,7 @@ import com.intellij.execution.process.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import io.github.vudsen.arthasui.api.ArthasBridge
-import io.github.vudsen.arthasui.api.ArthasBridgeListener
-import io.github.vudsen.arthasui.api.ArthasExecutionManager
-import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.*
 import kotlinx.coroutines.runBlocking
 import java.io.OutputStream
 import java.io.PrintWriter
@@ -23,15 +20,15 @@ class ArthasProcessHandler(
 
     private val myAnsiEscapeDecoder = AnsiEscapeDecoder()
 
-    private var arthasBridge: ArthasBridge? = null
+    private var arthasBridgeTemplate: ArthasBridgeTemplate? = null
 
 
     override fun destroyProcessImpl() {
-        notifyProcessTerminated(arthasBridge?.stop() ?: 1)
+        notifyProcessTerminated(arthasBridgeTemplate?.stop() ?: 1)
     }
 
     override fun detachProcessImpl() {
-
+        arthasBridgeTemplate?.stop()
     }
 
     override fun detachIsDefault(): Boolean {
@@ -45,26 +42,29 @@ class ArthasProcessHandler(
     override fun startNotify() {
         addProcessListener(object : ProcessListener {
 
-            override fun processTerminated(event: ProcessEvent) {
-                // TODO
-                super.processTerminated(event)
-            }
-
             override fun startNotified(event: ProcessEvent) {
                 ProcessIOExecutorService.INSTANCE.execute {
                     runBlocking {
                         notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
-                        val coordinator = project.service<ArthasExecutionManager>()
-                        arthasBridge = try {
-                            val arthasBridgeTemplate = coordinator.getTemplate(jvm)!!
-                            arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
+                        try {
+                            val arthasExecutionManager = project.service<ArthasExecutionManager>()
+                            val bridgeTemplate = arthasExecutionManager.getTemplate(jvm)!!
+                            this@ArthasProcessHandler.arthasBridgeTemplate = bridgeTemplate
+                            bridgeTemplate.addListener(object : ArthasBridgeListener() {
                                 override fun onContent(result: String) {
                                     notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
                                 }
-                            })
-                            arthasBridgeTemplate.attachNow()
 
-                            arthasBridgeTemplate
+                                override fun onClose() {
+                                    notifyProcessTerminated(bridgeTemplate.stop())
+                                }
+                            })
+
+                            bridgeTemplate.attachNow()
+                            if (!bridgeTemplate.isAlive()) {
+                                notifyProcessTerminated(bridgeTemplate.stop())
+                                return@runBlocking
+                            }
                         } catch (e: Exception) {
                             StringWriter(1024).use { result ->
                                 PrintWriter(result).use { pw ->
@@ -76,7 +76,6 @@ class ArthasProcessHandler(
                                 }
                             }
                             notifyProcessTerminated(1)
-                            return@runBlocking
                         }
                     }
                 }
