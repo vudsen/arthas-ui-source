@@ -4,6 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.conf.ui.RootConfigUI
 import javax.swing.JComponent
 

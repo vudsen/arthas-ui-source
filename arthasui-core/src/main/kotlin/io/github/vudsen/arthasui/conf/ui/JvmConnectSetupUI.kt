@@ -14,7 +14,7 @@ import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
-import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 
 class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<HostMachineConfig>(parentDisposable) {
 

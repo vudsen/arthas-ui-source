@@ -10,8 +10,8 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
-import io.github.vudsen.arthasui.conf.ArthasUISettings
-import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.ArthasUISettings
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import javax.swing.JComponent
 import javax.swing.JList

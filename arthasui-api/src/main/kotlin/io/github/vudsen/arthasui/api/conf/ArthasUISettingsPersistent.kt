@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.conf
+package io.github.vudsen.arthasui.api.conf
 
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
@@ -7,7 +7,7 @@ import com.intellij.openapi.components.Storage
 import java.util.concurrent.CopyOnWriteArrayList
 
 @State(
-    name = "io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent",
+    name = "io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent",
     storages = [ Storage("ArthasUISettings.xml") ]
 )
 @Service(Service.Level.APP)

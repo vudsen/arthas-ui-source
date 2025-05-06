@@ -8,7 +8,7 @@ import com.intellij.ui.dsl.builder.panel
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
-import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 
 class LocalPkgSourceUI(state: Long?, parentDisposable: Disposable) : AbstractFormComponent<Long>(parentDisposable) {
 

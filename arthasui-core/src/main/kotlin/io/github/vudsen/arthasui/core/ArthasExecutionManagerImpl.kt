@@ -14,7 +14,7 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
-import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import java.lang.ref.WeakReference
 
 /**
