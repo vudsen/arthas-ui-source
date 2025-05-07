@@ -17,9 +17,11 @@ import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
 import java.io.OutputStream
+import javax.swing.Icon
 
 class LocalJvmProvider : JvmProvider {
 
@@ -149,7 +151,7 @@ class LocalJvmProvider : JvmProvider {
     }
 
     override fun isJvmInactive(jvm: JVM): Boolean {
-        return searchJvm(jvm.context.template, jvm.context.providerConfig).find { v -> v.id == jvm.id } == null
+        return searchJvm(jvm.context.template, jvm.context.providerConfig).result?.find { v -> v.id == jvm.id } == null
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
@@ -170,6 +172,9 @@ class LocalJvmProvider : JvmProvider {
         return LocalJvmProviderConfig(false)
     }
 
+    override fun getIcon(): Icon {
+        return ArthasUIIcons.Box
+    }
 
 
 }

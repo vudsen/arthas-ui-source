@@ -8,6 +8,7 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfigConfigConverter
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.conf.TunnelServerProviderConfig
 
 class JvmProviderConfigConfigConverterImpl : JvmProviderConfigConfigConverter {
 
@@ -16,6 +17,7 @@ class JvmProviderConfigConfigConverterImpl : JvmProviderConfigConfigConverter {
         val adapterFactory = RuntimeTypeAdapterFactory.of(JvmProviderConfig::class.java, "type")
             .registerSubtype(LocalJvmProviderConfig::class.java, LocalJvmProviderConfig.TYPE)
             .registerSubtype(JvmInDockerProviderConfig::class.java, JvmInDockerProviderConfig.TYPE)
+            .registerSubtype(TunnelServerProviderConfig::class.java, TunnelServerProviderConfig.TYPE)
         gson = GsonBuilder().registerTypeAdapterFactory(adapterFactory).create()
     }
 

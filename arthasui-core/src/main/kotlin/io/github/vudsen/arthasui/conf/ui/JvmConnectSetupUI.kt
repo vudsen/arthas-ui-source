@@ -61,7 +61,7 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
                 row {
                     val form = provider.createForm(state.connect, parentDisposable)
                     formMap[provider.getName()] = form
-                    cell(form.getComponent())
+                    cell(form.getComponent()).align(Align.FILL)
                 }.visibleIf(ComboBoxPredicate(connectComboBox) { v -> v == provider.getName() })
             }
         }

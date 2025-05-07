@@ -7,7 +7,6 @@ abstract class JvmProviderConfig(val type: String, var enabled: Boolean) : DeepC
 
     abstract fun getName(): String
 
-    abstract fun getIcon(): Icon
 
     @Deprecated("Use deepCopy instead", replaceWith = ReplaceWith("deepCopy"))
     abstract fun copy(): JvmProviderConfig

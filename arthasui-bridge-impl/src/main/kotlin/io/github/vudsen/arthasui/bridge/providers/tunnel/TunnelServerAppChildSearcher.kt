@@ -8,6 +8,9 @@ import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
 import javax.swing.Icon
 
+/**
+ * Tunnel Server App Name 的一层，可以根据 App Name 再列出下面的 Agent Id
+ */
 class TunnelServerAppChildSearcher(
     private val appName: String,
     private val hostMachine: TunnelServerHostMachine,
@@ -25,8 +28,19 @@ class TunnelServerAppChildSearcher(
     override fun load(): JvmSearchResult {
         val ctx = JvmContext(hostMachine, providerConfig)
         return JvmSearchResult(
-            hostMachine.listAgents(appName).map { agentId -> TunnelServerJvm(agentId, agentId, ctx) }
+            hostMachine.listAgents(appName).map { agentId -> TunnelServerJvm(agentId, agentId.substringBefore('_'), ctx) }
         )
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null || other !is TunnelServerAppChildSearcher) {
+            return false
+        }
+        return appName == other.appName
+    }
+
+    override fun hashCode(): Int {
+        return appName.hashCode()
     }
 
 }

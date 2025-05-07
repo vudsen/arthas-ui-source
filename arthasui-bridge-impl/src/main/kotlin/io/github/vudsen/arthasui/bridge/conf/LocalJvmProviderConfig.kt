@@ -17,10 +17,6 @@ class LocalJvmProviderConfig(
         return "Local JVM"
     }
 
-    override fun getIcon(): Icon {
-        return ArthasUIIcons.Box
-    }
-
     @Deprecated("Use deepCopy instead", replaceWith = ReplaceWith("deepCopy"))
     override fun copy(): JvmProviderConfig {
         return LocalJvmProviderConfig(enabled, javaHome)

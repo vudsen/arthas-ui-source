@@ -6,9 +6,9 @@ import com.intellij.util.xmlb.Converter
 
 interface HostMachineConnectConfigConverter {
 
-    fun toString(p0: HostMachineConnectConfig): String?
+    fun toString(value: HostMachineConnectConfig): String?
 
-    fun fromString(p0: String): HostMachineConnectConfig?
+    fun fromString(value: String): HostMachineConnectConfig?
 
     companion object {
         class MyConverter : Converter<HostMachineConnectConfig>() {

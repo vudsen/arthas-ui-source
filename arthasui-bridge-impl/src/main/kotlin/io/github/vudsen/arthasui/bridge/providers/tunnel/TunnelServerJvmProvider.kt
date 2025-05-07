@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers.tunnel
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
@@ -13,6 +14,7 @@ import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerProviderConfig
 import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
 import io.github.vudsen.arthasui.bridge.ui.TunnelServerProviderForm
+import javax.swing.Icon
 
 class TunnelServerJvmProvider : JvmProvider {
 
@@ -53,18 +55,22 @@ class TunnelServerJvmProvider : JvmProvider {
 
     override fun isJvmInactive(jvm: JVM): Boolean {
         if (jvm !is TunnelServerJvm) {
-            return false
+            return true
         }
         val hostMachine = jvm.context.template as TunnelServerHostMachine
         val appName = jvm.id.substringBefore('_')
         if (appName.isEmpty()) {
-            return false
+            return true
         }
-        return hostMachine.listAgents(appName).contains(jvm.id)
+        return !hostMachine.listAgents(appName).contains(jvm.id)
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
-        return TunnelServerProviderConfig(true)
+        return TunnelServerProviderConfig(false)
+    }
+
+    override fun getIcon(): Icon {
+        return AllIcons.Ide.Gift
     }
 
 }

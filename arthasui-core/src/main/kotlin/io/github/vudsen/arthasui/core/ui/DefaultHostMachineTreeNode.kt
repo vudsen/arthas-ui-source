@@ -5,7 +5,9 @@ import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import io.github.vudsen.arthasui.bridge.util.JvmProviderSearcher
 import java.awt.FlowLayout
 import javax.swing.*
 
@@ -31,9 +33,16 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
         val result = mutableListOf<AbstractRecursiveTreeNode>()
-        for (provider in config.providers) {
-            if (provider.enabled) {
-                result.add(TreeNodeJvmProviderFolder(ctx, provider))
+        val jvmProviderManager = service<JvmProviderManager>()
+        for (providerConfig in config.providers) {
+            if (providerConfig.enabled) {
+                result.add(
+                    TreeNodeSearcher(
+                        JvmProviderSearcher(jvmProviderManager.getProvider(providerConfig), providerConfig, ctx.template),
+                        ctx,
+                        providerConfig
+                    )
+                )
             }
         }
         for (searchGroup in config.searchGroups) {

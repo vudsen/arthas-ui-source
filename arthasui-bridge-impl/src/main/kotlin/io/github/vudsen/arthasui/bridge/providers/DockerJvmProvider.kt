@@ -18,8 +18,10 @@ import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
+import javax.swing.Icon
 
 class DockerJvmProvider : JvmProvider {
 
@@ -131,6 +133,10 @@ class DockerJvmProvider : JvmProvider {
             return JvmInDockerProviderConfig(result.exitCode == 0)
         }
         return JvmInDockerProviderConfig(false)
+    }
+
+    override fun getIcon(): Icon {
+        return ArthasUIIcons.Box
     }
 
 }

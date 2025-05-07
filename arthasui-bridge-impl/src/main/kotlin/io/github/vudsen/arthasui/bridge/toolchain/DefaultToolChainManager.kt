@@ -152,6 +152,9 @@ class DefaultToolChainManager(
                     OS.MAC -> {
                         assets.find { v -> v.name.endsWith("macos.zip") }
                     }
+                    else -> {
+                        throw IllegalStateException("Unsupported OS: ${hostMachine.getHostMachine().getOS()}")
+                    }
                 }
             }
             ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }

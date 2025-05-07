@@ -14,6 +14,7 @@ import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 import io.github.vudsen.arthasui.common.util.ListStringTokenType
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
+import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
@@ -37,8 +38,17 @@ class TunnelServerHostMachine(private val hostMachineConfig: HostMachineConfig) 
         return hostMachineConfig
     }
 
+    private fun createHttpGet(url: String): HttpGet {
+        val httpGet = HttpGet(url)
+        httpGet.config = RequestConfig.custom()
+            .setConnectTimeout(5000)
+            .setConnectionRequestTimeout(5000)
+            .setSocketTimeout(5000)
+            .build()
+        return httpGet
+    }
+
     private fun sendGet(url: String): CloseableHttpResponse {
-        val config = getConfiguration()
         HttpClients.createDefault().use { client ->
             val httpGet = HttpGet(url)
             httpGet.config = RequestConfig.custom()
@@ -63,28 +73,32 @@ class TunnelServerHostMachine(private val hostMachineConfig: HostMachineConfig) 
      */
     fun listApps(): List<String> {
         val config = getConfiguration()
-        sendGet(config.baseUrl + "/api/tunnelApps").use { response ->
-            ensureStatusCode(response)
-            return service<SingletonInstanceHolderService>().gson.fromJson(
-                EntityUtils.toString(response.entity, StandardCharsets.UTF_8),
-                ListStringTokenType()
-            )
+        HttpClients.createDefault().use { client ->
+            client.execute(createHttpGet(config.baseUrl + "/api/tunnelApps")).use { response ->
+                ensureStatusCode(response)
+                return service<SingletonInstanceHolderService>().gson.fromJson(
+                    EntityUtils.toString(response.entity, StandardCharsets.UTF_8),
+                    ListStringTokenType()
+                )
+            }
         }
     }
 
     fun listAgents(appName: String): List<String> {
         val config = getConfiguration()
-        sendGet(config.baseUrl + "/api/tunnelAgentInfo?app=" + appName).use { response ->
-            ensureStatusCode(response)
-            val jsonObject = service<SingletonInstanceHolderService>().gson.fromJson(
-                EntityUtils.toString(response.entity, StandardCharsets.UTF_8),
-                JsonObject::class.java
-            )
-            val result = ArrayList<String>(jsonObject.size())
-            for (k in jsonObject.keySet()) {
-                result.add(k)
+        HttpClients.createDefault().use { client ->
+            client.execute(createHttpGet(config.baseUrl + "/api/tunnelAgentInfo?app=" + appName)).use { response ->
+                ensureStatusCode(response)
+                val jsonObject = service<SingletonInstanceHolderService>().gson.fromJson(
+                    EntityUtils.toString(response.entity, StandardCharsets.UTF_8),
+                    JsonObject::class.java
+                )
+                val result = ArrayList<String>(jsonObject.size())
+                for (k in jsonObject.keySet()) {
+                    result.add(k)
+                }
+                return result
             }
-            return result
         }
     }
 

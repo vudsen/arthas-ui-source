@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.bean
 
+import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import javax.swing.Icon
@@ -11,6 +12,6 @@ class TunnelServerJvm(
 ) : JVM(id, name, context) {
 
     override fun getIcon(): Icon {
-        TODO("Not yet implemented")
+        return AllIcons.General.Web
     }
 }

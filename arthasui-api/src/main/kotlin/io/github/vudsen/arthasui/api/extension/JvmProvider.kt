@@ -7,6 +7,7 @@ import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import javax.swing.Icon
 
 interface JvmProvider {
 
@@ -51,5 +52,7 @@ interface JvmProvider {
      * @return 对应的 [JvmProviderConfig], 如果不支持, [JvmProviderConfig.enabled] 为 false
      */
     fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig
+
+    fun getIcon(): Icon
 
 }

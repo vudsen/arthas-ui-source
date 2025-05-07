@@ -14,9 +14,6 @@ class TunnelServerProviderConfig(enabled: Boolean = false) : JvmProviderConfig(T
         return "Tunnel Server"
     }
 
-    override fun getIcon(): Icon {
-        return AllIcons.Ide.Gift
-    }
 
     @Deprecated("Use deepCopy instead", replaceWith = ReplaceWith("deepCopy"))
     override fun copy(): JvmProviderConfig {

@@ -16,6 +16,10 @@ class JvmSearchResult(
 
             fun load(): JvmSearchResult
 
+            override fun equals(other: Any?): Boolean
+
+            override fun hashCode(): Int
+
         }
 
     }

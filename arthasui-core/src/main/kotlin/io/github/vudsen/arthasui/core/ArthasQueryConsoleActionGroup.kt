@@ -17,6 +17,7 @@ import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
 import io.github.vudsen.arthasui.run.ArthasConfigurationFactory
 import io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl
+import java.lang.Exception
 
 /**
  * Arthas Query Console header actions group.
@@ -118,6 +119,10 @@ class ArthasQueryConsoleActionGroup(
                     arthasBridgeTemplate.waitUntilAttached()
                     arthasBridgeTemplate.execute(selected)
                 }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                super.onThrowable(error)
             }
 
             override fun onFinished() {
