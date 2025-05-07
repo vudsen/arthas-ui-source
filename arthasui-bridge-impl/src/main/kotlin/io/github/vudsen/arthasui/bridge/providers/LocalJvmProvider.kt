@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.bean.JvmContext
+import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
@@ -76,9 +77,9 @@ class LocalJvmProvider : JvmProvider {
     }
 
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): JvmSearchResult {
         if (hostMachine !is ShellAvailableHostMachine) {
-            return emptyList()
+            return JvmSearchResult(emptyList())
         }
         val config = providerConfig as LocalJvmProviderConfig
         val out: String = hostMachine.execute("${config.javaHome}/bin/jps", "-l").let {
@@ -89,7 +90,7 @@ class LocalJvmProvider : JvmProvider {
             }
         }
 
-        return parseOutput(out, JvmContext(hostMachine, providerConfig))
+        return JvmSearchResult(parseOutput(out, JvmContext(hostMachine, providerConfig)))
     }
 
 

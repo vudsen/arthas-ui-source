@@ -4,8 +4,8 @@ import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
-import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 
 interface JvmProvider {
@@ -18,7 +18,7 @@ interface JvmProvider {
     /**
      * 搜索默认位置下的 jvm
      */
-    fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM>
+    fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): JvmSearchResult
 
     /**
      * 创建一个 [ArthasBridgeFactory]

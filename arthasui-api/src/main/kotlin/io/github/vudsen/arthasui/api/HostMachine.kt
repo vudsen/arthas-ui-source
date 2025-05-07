@@ -29,7 +29,6 @@ interface HostMachine : UserDataHolder{
     /**
      * 获取连接配置
      */
-    @Deprecated("use getHostMachineConfig() instead", replaceWith = ReplaceWith("getHostMachineConfig().connect"))
     fun getConfiguration(): HostMachineConnectConfig
 
     /**

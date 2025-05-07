@@ -6,6 +6,7 @@ import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmContext
+import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
@@ -54,14 +55,14 @@ class DockerJvmProvider : JvmProvider {
         return "Docker"
     }
 
-    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): JvmSearchResult {
         if (hostMachine !is ShellAvailableHostMachine) {
-            return emptyList()
+            return JvmSearchResult(emptyList())
         }
         val config = providerConfig as JvmInDockerProviderConfig
         val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json").ok()
 
-        return parseOutput(execResult, JvmContext(hostMachine, providerConfig))
+        return JvmSearchResult(parseOutput(execResult, JvmContext(hostMachine, providerConfig)))
     }
 
     private fun isDirectoryNotExistInContainer(hostMachine: ShellAvailableHostMachine, id: String, path: String): Boolean {

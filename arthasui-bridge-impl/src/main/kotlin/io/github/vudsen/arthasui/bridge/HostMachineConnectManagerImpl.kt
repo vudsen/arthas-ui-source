@@ -12,6 +12,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.bridge.host.CloseableHostMachineFallback
 import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
+import io.github.vudsen.arthasui.bridge.providers.tunnel.TunnelServerConnectProvider
 import io.github.vudsen.arthasui.bridge.util.PooledResource
 import java.lang.reflect.Proxy
 import java.util.*
@@ -32,6 +33,7 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
     init {
         register(LocalHostMachineConnectProvider())
         register(SshHostMachineConnectProvider())
+        register(TunnelServerConnectProvider())
     }
 
     /**
