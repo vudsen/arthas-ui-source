@@ -3,8 +3,8 @@ package io.github.vudsen.arthasui.bridge
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
-import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.common.util.LRUCache
+import java.io.Closeable
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -20,14 +20,14 @@ class HostMachineConnectionManager {
 
         const val TIMEOUT_MILLISECONDS = 1000 * 60 * 3L
 
-        class ManagedInstance(
-            var hostMachine: CloseableHostMachine,
+        class ManagedInstance<T : AutoCloseable>(
+            var resource: T,
             var lastUse: Long = System.currentTimeMillis(),
         )
 
     }
 
-    private val lru = LRUCache<ManagedInstance>()
+    private val lru = LRUCache<ManagedInstance<out AutoCloseable>>()
 
     private val lock = ReentrantLock()
 
@@ -82,9 +82,9 @@ class HostMachineConnectionManager {
             } finally {
                 lock.unlock()
             }
-            logger.info("Try to close ${node.hostMachine}")
+            logger.info("Try to close ${node.resource}")
             try {
-                node.hostMachine.close()
+                node.resource.close()
             } catch (e: Exception) {
                 logger.error("Faild to close host machine", e)
             } finally {
@@ -97,11 +97,11 @@ class HostMachineConnectionManager {
 
     /**
      * 注册一个宿主机，被注册的宿主机如果在一定时间内没有被使用，将会自动关闭连接
-     * @param hostMachine 宿主机，如果重复注册，则不会发生任何事
+     * @param resource 宿主机，如果重复注册，则不会发生任何事
      */
-    fun register(hostMachine: CloseableHostMachine): ManagedInstance {
-        logger.info("Registered $hostMachine")
-        val node = ManagedInstance(hostMachine)
+    fun <T : AutoCloseable> register(resource: T): ManagedInstance<T> {
+        logger.info("Registered $resource")
+        val node = ManagedInstance(resource)
         lock.lock()
         try {
             lru.add(node)
@@ -116,8 +116,8 @@ class HostMachineConnectionManager {
     /**
      * 重置宿主机的自动关闭时间.
      */
-    fun resetTimeout(node: ManagedInstance) {
-        logger.info("Timeout rested: ${node.hostMachine}, last use: ${node.lastUse}")
+    fun <T : AutoCloseable> resetTimeout(node: ManagedInstance<T>) {
+        logger.info("Timeout rested: ${node.resource}, last use: ${node.lastUse}")
         node.lastUse = System.currentTimeMillis()
         lock.lock()
         try {

@@ -4,11 +4,12 @@ import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Disposer
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.SshConfiguration
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
@@ -21,7 +22,7 @@ import java.io.FileOutputStream
 
 object BridgeTestUtil {
 
-    fun createLocalHostMachine(): HostMachineTemplate {
+    fun createLocalHostMachine(): ShellAvailableHostMachine {
         val config = HostMachineConfig(
             -1,
             "Test Local",
@@ -30,12 +31,12 @@ object BridgeTestUtil {
             mutableListOf(LocalJvmProviderConfig()),
             mutableListOf(),
         )
-        val template = service<HostMachineConnectManager>().connect(config)
+        val template = service<HostMachineConnectManager>().connect(config) as ShellAvailableHostMachine
         config.dataDirectory = template.resolveDefaultDataDirectory() + "/test"
         return template
     }
 
-    fun createSshHostMachine(parentDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): HostMachineTemplate {
+    fun createSshHostMachine(parentDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): ShellAvailableHostMachine {
         val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable, customise)
         val config = HostMachineConfig(
             -1,
@@ -48,16 +49,16 @@ object BridgeTestUtil {
             mutableListOf(LocalJvmProviderConfig()),
             mutableListOf(),
         )
-        val template = service<HostMachineConnectManager>().connect(config)
+        val template = service<HostMachineConnectManager>().connect(config) as ShellAvailableHostMachine
         config.dataDirectory = template.resolveDefaultDataDirectory() + "/test"
         return template
     }
 
-    fun createSshHostMachine(parentDisposable: Disposable): HostMachineTemplate {
+    fun createSshHostMachine(parentDisposable: Disposable): ShellAvailableHostMachine {
         return createSshHostMachine(parentDisposable, null)
     }
 
-    fun createMathGameSshMachine(parentDisposable: Disposable): HostMachineTemplate {
+    fun createMathGameSshMachine(parentDisposable: Disposable): ShellAvailableHostMachine {
         val server = setupContainer("xu2237803016/ssh-server-with-math-game:0.0.3", parentDisposable, null)
         val config = HostMachineConfig(
             -1,
@@ -70,7 +71,7 @@ object BridgeTestUtil {
             mutableListOf(LocalJvmProviderConfig(true, "/opt/java")),
             mutableListOf(),
         )
-        val template = service<HostMachineConnectManager>().connect(config)
+        val template = service<HostMachineConnectManager>().connect(config) as ShellAvailableHostMachine
         config.dataDirectory = template.resolveDefaultDataDirectory() + "/test"
         return template
     }

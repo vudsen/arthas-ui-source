@@ -3,8 +3,9 @@ package io.github.vudsen.arthasui.bridge.toolchain
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
@@ -13,8 +14,8 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 
 class DefaultToolChainManager(
-    private val template: HostMachineTemplate,
-    private val localDownloadProxy: HostMachineTemplate?,
+    private val hostMachine: ShellAvailableHostMachine,
+    private val localDownloadProxy: ShellAvailableHostMachine?,
     mirror: String? = null
 ) :
     ToolchainManager {
@@ -38,11 +39,11 @@ class DefaultToolChainManager(
     }
 
     private fun getDownloadDirectory(): String {
-        return template.getHostMachineConfig().dataDirectory + "/" + DOWNLOAD_DIRECTORY
+        return hostMachine.getHostMachineConfig().dataDirectory + "/" + DOWNLOAD_DIRECTORY
     }
 
     private fun searchPkg(search: String): String? {
-        val files = template.listFiles(getDownloadDirectory())
+        val files = hostMachine.listFiles(getDownloadDirectory())
         for (file in files) {
             if (file.startsWith(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
                 return file
@@ -60,9 +61,9 @@ class DefaultToolChainManager(
             throw IllegalStateException("Can't exact $target: no toolchain available.")
         }
         val home = preparePackage("punzip", "ybirader/pzip") { assets ->
-            when (template.getHostMachine().getOS()) {
+            when (hostMachine.getHostMachine().getOS()) {
                 OS.LINUX -> {
-                    if (template.isArm()) {
+                    if (hostMachine.isArm()) {
                         assets.find { a -> a.name == "punzip_Linux_arm64.tar.gz" }
                     } else {
                         assets.find { a -> a.name == "punzip_Linux_x86_64.tar.gz" }
@@ -76,7 +77,7 @@ class DefaultToolChainManager(
             }
         }
         val executable = "$home/punzip"
-        template.getHostMachine().execute(executable, "-d", dest, target).ok()
+        hostMachine.execute(executable, "-d", dest, target).ok()
     }
 
     /**
@@ -84,21 +85,21 @@ class DefaultToolChainManager(
      * @return 工具的 home 目录
      */
     private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
-        val hostMachineConfig = template.getHostMachineConfig()
+        val hostMachineConfig = hostMachine.getHostMachineConfig()
         val home = "${hostMachineConfig.dataDirectory}/pkg/${pkgName}"
-        if (template.isDirectoryExist(home)) {
+        if (hostMachine.isDirectoryExist(home)) {
             return home
         }
         val filename: String = searchPkg(pkgName) ?:let {
-            template.mkdirs(getDownloadDirectory())
+            hostMachine.mkdirs(getDownloadDirectory())
 
-            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${template.getHostMachine().getOS()}, arm: ${template.isArm()}")
+            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${hostMachine.getHostMachine().getOS()}, arm: ${hostMachine.isArm()}")
             finalDownload(asset)
         }
-        template.mkdirs(home)
+        hostMachine.mkdirs(home)
 
         val unzipTarget = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
-        if (template.tryUnzip(unzipTarget, home)) {
+        if (hostMachine.tryUnzip(unzipTarget, home)) {
             return home
         }
         handleUnzipFailed(unzipTarget, home)
@@ -112,18 +113,18 @@ class DefaultToolChainManager(
     private fun finalDownload(
         asset: Asset,
     ): String {
-        val hostMachineConfig = template.getHostMachineConfig()
+        val hostMachineConfig = hostMachine.getHostMachineConfig()
         val filename = asset.name
 
         localDownloadProxy?.let {
             val dest = hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             localDownloadProxy.download(asset.browserDownloadUrl, local)
-            template.mkdirs(hostMachineConfig.dataDirectory)
-            template.getHostMachine()
-                .transferFile(local, dest, template.getUserData(HostMachineTemplate.PROGRESS_INDICATOR)?.get())
+            hostMachine.mkdirs(hostMachineConfig.dataDirectory)
+            hostMachine
+                .transferFile(local, dest, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get())
         } ?: let {
-            template.download(
+            hostMachine.download(
                 asset.browserDownloadUrl,
                 hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             )
@@ -135,9 +136,9 @@ class DefaultToolChainManager(
     override fun getToolChainHomePath(toolChain: ToolChain): String {
         return when (toolChain) {
             ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") { assets ->
-                when (template.getHostMachine().getOS()) {
+                when (hostMachine.getHostMachine().getOS()) {
                     OS.LINUX -> {
-                        if (template.isArm()) {
+                        if (hostMachine.isArm()) {
                             assets.find { v -> v.name.endsWith("arm64.tgz") }
                         } else {
                             assets.find { v -> v.name.endsWith("x64.tgz") }

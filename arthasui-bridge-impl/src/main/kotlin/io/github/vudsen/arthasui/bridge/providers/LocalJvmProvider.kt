@@ -8,12 +8,13 @@ import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
@@ -75,29 +76,30 @@ class LocalJvmProvider : JvmProvider {
     }
 
 
-    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
-        val hostMachine = template.getHostMachine()
+    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+        if (hostMachine !is ShellAvailableHostMachine) {
+            return emptyList()
+        }
         val config = providerConfig as LocalJvmProviderConfig
         val out: String = hostMachine.execute("${config.javaHome}/bin/jps", "-l").let {
             if (it.exitCode == 0) {
                 return@let it.stdout
             } else {
-                return@let template.grep("java", "ps", "-eo", "pid,command").ok()
+                return@let hostMachine.grep("java", "ps", "-eo", "pid,command").ok()
             }
         }
 
-        return parseOutput(out, JvmContext(template, providerConfig))
+        return parseOutput(out, JvmContext(hostMachine, providerConfig))
     }
 
 
     override fun createArthasBridgeFactory(
         jvm: JVM,
-        jvmProviderConfig: JvmProviderConfig,
-        toolchainManager: ToolchainManager
+        jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
         val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
-        val template = jvm.context.template
-        val hostMachine = template.getHostMachine()
+        val hostMachine = jvm.context.getHostMachineAsShellAvailable()
+        val toolchainManager = ToolChainManagerFactory.createToolChainManager(hostMachine)
 
         val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
         val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
@@ -149,13 +151,16 @@ class LocalJvmProvider : JvmProvider {
         return searchJvm(jvm.context.template, jvm.context.providerConfig).find { v -> v.id == jvm.id } == null
     }
 
-    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
-        template.env("JAVA_HOME") ?.let {
-            if (template.isDirectoryExist(it)) {
+    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
+        if (hostMachine !is ShellAvailableHostMachine) {
+            return LocalJvmProviderConfig(false)
+        }
+        hostMachine.env("JAVA_HOME") ?.let {
+            if (hostMachine.isDirectoryExist(it)) {
                 return LocalJvmProviderConfig(true, it)
             }
         }
-        template.grep("java.home", "java", "-XshowSettings:properties", "--version", "2>&1").tryUnwrap() ?.let {
+        hostMachine.grep("java.home", "java", "-XshowSettings:properties", "--version", "2>&1").tryUnwrap() ?.let {
             val i = it.indexOf('=')
             if (i >= 0) {
                 return LocalJvmProviderConfig(true, it.substring(i + 1).trim())

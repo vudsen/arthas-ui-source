@@ -9,11 +9,11 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.bridge.host.CloseableHostMachineFallback
 import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
-import io.github.vudsen.arthasui.bridge.template.HostMachineTemplateFactory
-import io.github.vudsen.arthasui.bridge.util.ReusableHostMachine
+import io.github.vudsen.arthasui.bridge.util.PooledResource
+import java.lang.reflect.Proxy
 import java.util.*
 
 /**
@@ -61,27 +61,34 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
     /**
      * 工具方法，快速连接某个宿主机
      */
-    override fun connect(config: HostMachineConfig): HostMachineTemplate {
+    override fun connect(config: HostMachineConfig): HostMachine {
         logger.info("Connecting to $config")
         val provider = getProvider(config.connect)
-        val hostMachine: HostMachine = if (provider.isCloseableHostMachine()) {
-            wrapCloseableHostMachine(provider, config.connect)
-        } else {
-            provider.connect(config.connect)
+
+        val connect = provider.connect(config)
+        if (connect is CloseableHostMachine) {
+            return wrapCloseableHostMachine(connect, provider, config)
         }
-        return HostMachineTemplateFactory.getHostMachineTemplate(config, hostMachine)
+        return connect
     }
 
-    private fun wrapCloseableHostMachine(provider: HostMachineConnectProvider, config: HostMachineConnectConfig): CloseableHostMachine {
-        cache[config] ?.let {
+    private fun wrapCloseableHostMachine(hostMachine: CloseableHostMachine, provider: HostMachineConnectProvider, config: HostMachineConfig): CloseableHostMachine {
+        cache[config.connect] ?.let {
             logger.info("Return cached instance for connect config ${config}.")
             return it
         }
+
         synchronized(config) {
-            cache[config] ?.let { return it }
-            val instance = ReusableHostMachine(provider, config)
+            cache[config.connect] ?.let { return it }
+            val instance = Proxy.newProxyInstance(
+                HostMachineConnectManagerImpl::class.java.classLoader,
+                hostMachine::class.java.interfaces,
+                PooledResource<CloseableHostMachine>(hostMachine, CloseableHostMachineFallback(config), emptySet()) {
+                    return@PooledResource provider.connect(config) as CloseableHostMachine
+                }
+            ) as CloseableHostMachine
             logger.info("Created a new instance for connect config ${config}.")
-            cache[config] = instance
+            cache[config.connect] = instance
             return instance
         }
     }

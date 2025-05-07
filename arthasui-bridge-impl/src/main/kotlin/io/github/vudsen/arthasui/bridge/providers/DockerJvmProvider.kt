@@ -8,13 +8,14 @@ import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
+import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
 import io.github.vudsen.arthasui.common.util.MapTypeToken
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
@@ -53,26 +54,27 @@ class DockerJvmProvider : JvmProvider {
         return "Docker"
     }
 
-    override fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM> {
-        val hostMachine = template.getHostMachine()
+    override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): List<JVM> {
+        if (hostMachine !is ShellAvailableHostMachine) {
+            return emptyList()
+        }
         val config = providerConfig as JvmInDockerProviderConfig
         val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json").ok()
 
-        return parseOutput(execResult, JvmContext(template, providerConfig))
+        return parseOutput(execResult, JvmContext(hostMachine, providerConfig))
     }
 
-    private fun isDirectoryNotExistInContainer(hostMachine: HostMachine, id: String, path: String): Boolean {
+    private fun isDirectoryNotExistInContainer(hostMachine: ShellAvailableHostMachine, id: String, path: String): Boolean {
         return hostMachine.execute("docker", "exec", "-i", id, "test", "-d", path).exitCode != 0
     }
 
     override fun createArthasBridgeFactory(
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig,
-        toolchainManager: ToolchainManager
     ): ArthasBridgeFactory {
-        val template = jvm.context.template
+        val hostMachine = jvm.context.getHostMachineAsShellAvailable()
+        val toolchainManager = ToolChainManagerFactory.createToolChainManager(hostMachine)
         val config = jvmProviderConfig as JvmInDockerProviderConfig
-        val hostMachine = template.getHostMachine()
         val javaExecutable = if (config.javaHome.isEmpty()) {
             "java"
         }  else {
@@ -113,19 +115,21 @@ class DockerJvmProvider : JvmProvider {
     }
 
     override fun isJvmInactive(jvm: JVM): Boolean {
-        val ctx = jvm.context
-        val config = ctx.providerConfig as JvmInDockerProviderConfig
-        val execResult = ctx.template.getHostMachine().execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
+        val hostMachine = jvm.context.template
+        if (hostMachine !is ShellAvailableHostMachine) {
+            return false
+        }
+        val config = jvm.context.providerConfig as JvmInDockerProviderConfig
+        val execResult = hostMachine.execute(config.dockerPath, "ps", "--format=json", "--filter", "id=${jvm.id}").ok()
         return execResult.isEmpty()
     }
 
-    override fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig {
-        val result = template.getHostMachine().execute("docker", "version")
-        if (result.exitCode != 0) {
-            return JvmInDockerProviderConfig()
+    override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
+        if (hostMachine is ShellAvailableHostMachine) {
+            val result = hostMachine.execute("docker", "version")
+            return JvmInDockerProviderConfig(result.exitCode == 0)
         }
-        return JvmInDockerProviderConfig(true)
+        return JvmInDockerProviderConfig(false)
     }
-
 
 }

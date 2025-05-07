@@ -15,7 +15,6 @@ import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl
 import kotlinx.coroutines.*
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import org.junit.Assert
 import org.junit.BeforeClass
-import java.lang.ref.WeakReference
 
 class ArthasBridgeImplTest : BasePlatformTestCase() {
 
@@ -77,6 +75,12 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         }
     }
 
+    /**
+     * Test attach to linux machine.
+     *
+     * For chinese developer, you can add environment variable `TOOLCHAIN_MIRROR=https://5j9g3t.site/github-mirror`
+     * to avoid download failed from Github.
+     */
     fun testAttachLinuxLocal() {
         val template = BridgeTestUtil.createMathGameSshMachine(testRootDisposable)
         val localJvmProviderConfig = template.getHostMachineConfig().providers.find { config -> config is LocalJvmProviderConfig }!!
@@ -85,8 +89,6 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         val jvm = provider.searchJvm(template, localJvmProviderConfig).find { jvm -> jvm.name.contains("math-game.jar")}!!
 
         val executionManager = project.getService(ArthasExecutionManager::class.java) as ArthasExecutionManagerImpl
-        // A china's mirror, you can uncomment it and use it on local but please do not commit.
-        executionManager.githubApiMirror = "https://5j9g3t.site/github-mirror"
         val builder = StringBuilder()
         val executedCommand = mutableListOf<String>()
         val executeResult = mutableListOf<String>()

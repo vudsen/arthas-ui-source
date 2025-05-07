@@ -1,21 +1,34 @@
-package io.github.vudsen.arthasui.api.template
+package io.github.vudsen.arthasui.api.host
 
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.util.Key
-import com.intellij.openapi.util.UserDataHolder
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
-import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import java.lang.ref.WeakReference
+import io.github.vudsen.arthasui.api.bean.InteractiveShell
 
-interface HostMachineTemplate : UserDataHolder {
+/**
+ * 可以执行 shell 命令的宿主机
+ */
+interface ShellAvailableHostMachine : HostMachine {
 
-    companion object {
-        /**
-         * 进度指示器. 在调用 [HostMachineTemplate.download] 或其它方法之前设置该属性，实现类就可以通过该对象反馈进度.
-         */
-        val PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
-    }
+
+    /**
+     * 执行一条命令
+     */
+    fun execute(vararg command: String): CommandExecuteResult
+
+    /**
+     * 创建一个交互式的连接.
+     *
+     * 交互式进程**可能在命令执行失败时也不会抛出异常**，需要手动通过 [InteractiveShell.exitCode] 来判断命令是否正常退出，然后进行错误处理。
+     */
+    fun createInteractiveShell(vararg command: String): InteractiveShell
+
+    /**
+     * 将本地的文件发送到宿主机上面
+     * @param src 文件路径
+     * @param dest 目标路径，指定文件绝对路径
+     */
+    fun transferFile(src: String, dest: String, indicator: ProgressIndicator?)
 
     /**
      * 是否为 arm 架构
@@ -74,24 +87,17 @@ interface HostMachineTemplate : UserDataHolder {
      */
     fun env(name: String): String?
 
-    /**
-     * 测试连接
-     */
-    fun test()
 
     /**
      * 获取宿主机
      */
     fun getHostMachine(): HostMachine
 
-    /**
-     * 获取配置
-     */
-    fun getHostMachineConfig(): HostMachineConfig
 
     /**
      * 生成默认的数据文件夹
      */
     fun resolveDefaultDataDirectory(): String
+
 
 }

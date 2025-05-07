@@ -1,15 +1,15 @@
 package io.github.vudsen.arthasui.script
 
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 
 /**
  * Ognl context.
  */
 @Suppress("unused")
 class MyOgnlContext (
-    val template: HostMachineTemplate,
+    val template: HostMachine,
     val hostMachineConfig: HostMachineConfig,
 ) {
 

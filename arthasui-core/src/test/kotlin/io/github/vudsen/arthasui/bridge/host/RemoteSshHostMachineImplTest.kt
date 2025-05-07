@@ -16,14 +16,14 @@ class RemoteSshHostMachineImplTest : BasePlatformTestCase() {
 
         val shellPath = template.getHostMachineConfig().dataDirectory + "/echoServer.sh"
         template.mkdirs(template.getHostMachineConfig().dataDirectory)
-        template.getHostMachine().execute(
+        template.execute(
             "echo",
             "-e",
             echoServerShell,
             ">",
             shellPath
         ).ok()
-        template.getHostMachine().createInteractiveShell("sh", shellPath).use { shell ->
+        template.createInteractiveShell("sh", shellPath).use { shell ->
             val out = shell.getOutputStream()
             val reader = BufferedReader(InputStreamReader(shell.getInputStream()))
             out.write("hello world\n".toByteArray(StandardCharsets.UTF_8))

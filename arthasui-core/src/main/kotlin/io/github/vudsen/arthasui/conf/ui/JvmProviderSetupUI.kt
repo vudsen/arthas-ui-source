@@ -13,10 +13,11 @@ import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.api.util.collectStackTrace
@@ -47,12 +48,10 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
 
     private val state: HostMachineConfig = HostMachineConfig()
 
-    private var ready = false
-
     /**
      * 重新创建 [container] 中所有的组件
      */
-    private fun recreateContainer(template: HostMachineTemplate?) {
+    private fun recreateContainer(hostMachine: HostMachine?) {
         container.removeAll()
 
         container.add(createCommonConfigUI().apply {
@@ -61,7 +60,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         })
         container.add(JBTabbedPane().apply {
             tabbedPane = this@apply
-            template ?.let {
+            hostMachine ?.let {
                 formTabs.clear()
                 val providers = service<JvmProviderManager>().getProviders()
                 for (provider in providers) {
@@ -110,14 +109,16 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
     /**
      * 刷新组件状态
      */
-    fun refresh(hostMachine: HostMachineTemplate) {
+    fun refresh(hostMachine: HostMachine) {
         loadingDecorator.startLoading(false)
         ProgressManager.getInstance().run(object : Task.Modal(null, "Auto Detecting Jvm Provider", true)  {
 
             override fun run(indicator: ProgressIndicator) {
                 try {
                     transState(hostMachine.getHostMachineConfig())
-                    state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
+                    if (hostMachine is ShellAvailableHostMachine) {
+                        state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
+                    }
                     recreateContainer(hostMachine)
                     loadingDecorator.stopLoading()
                 } catch (e: Exception) {

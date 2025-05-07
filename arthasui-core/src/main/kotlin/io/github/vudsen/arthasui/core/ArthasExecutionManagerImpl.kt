@@ -11,16 +11,16 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import java.lang.ref.WeakReference
 
 /**
  * 协调命令的执行
  */
-class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecutionManager {
+class ArthasExecutionManagerImpl() : ArthasExecutionManager {
 
 
     companion object {
@@ -51,17 +51,6 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         } ?: return null
     }
 
-    private fun findProxy(id: Long?): HostMachineTemplate? {
-        if (id == null) {
-            return null
-        }
-        val localHostMachineConfig = service<ArthasUISettingsPersistent>().state.hostMachines.find { v -> v.id == id }
-        if (localHostMachineConfig == null) {
-            throw IllegalStateException("No such id '${id}', please consider update your configuration.")
-        }
-        val local = service<HostMachineConnectManager>().connect(localHostMachineConfig)
-        return local
-    }
 
     private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig, progressIndicator: ProgressIndicator?): ArthasBridgeHolder {
         var holder = getHolderAndEnsureAlive(jvm)
@@ -73,13 +62,12 @@ class ArthasExecutionManagerImpl(private val project: Project) : ArthasExecution
         val factory = service<HostMachineConnectManager>()
         val template = factory.connect(hostMachineConfig)
 
-        val toolchainManager: ToolchainManager = DefaultToolChainManager(template, findProxy(template.getHostMachineConfig().localPkgSourceId), githubApiMirror)
         progressIndicator ?.let {
-            template.putUserData(HostMachineTemplate.PROGRESS_INDICATOR, WeakReference(it))
+            template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(it))
         }
 
         val arthasBridgeFactory =
-            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig, toolchainManager)
+            service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig)
         val arthasBridgeTemplate = ArthasBridgeTemplate(arthasBridgeFactory)
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
