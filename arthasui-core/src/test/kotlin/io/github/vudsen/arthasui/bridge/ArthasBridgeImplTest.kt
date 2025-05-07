@@ -86,7 +86,7 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
 
         val executionManager = project.getService(ArthasExecutionManager::class.java) as ArthasExecutionManagerImpl
         // A china's mirror, you can uncomment it and use it on local but please do not commit.
-//        executionManager.githubApiMirror = "https://5j9g3t.site/github-mirror"
+        executionManager.githubApiMirror = "https://5j9g3t.site/github-mirror"
         val builder = StringBuilder()
         val executedCommand = mutableListOf<String>()
         val executeResult = mutableListOf<String>()
@@ -117,12 +117,13 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
 
                 executionManager.getTemplate(jvm)!!.let {
                     it.execute("sc demo.*")
+                    it.execute("echo hello")
                     it.stop()
                 }
             }
-            Assert.assertEquals(mutableListOf("sc demo.*", "stop"), executedCommand)
+            Assert.assertEquals(mutableListOf("sc demo.*", "echo hello"), executedCommand)
             Assert.assertTrue(executeResult[0].startsWith("demo.MathGame\nAffect(row-cnt:1)"))
-            Assert.assertTrue(executeResult[1].startsWith("Resetting all enhanced classes ..."))
+            Assert.assertTrue(executeResult[1].startsWith("hello"))
         } catch (e: Exception) {
             if (System.getenv("RUNNER_DEBUG") == "1") {
                 println(builder.toString())

@@ -21,6 +21,11 @@ interface ArthasBridge {
     fun isAlive(): Boolean
 
     /**
+     * 进程是否完全关闭.
+     */
+    fun isClosed(): Boolean
+
+    /**
      * 添加监听器
      */
     fun addListener(arthasBridgeListener: ArthasBridgeListener)
