@@ -1,20 +1,14 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.google.gson.JsonObject
-import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Key
-import com.intellij.platform.instanceContainer.internal.InstanceHolder
 import io.github.vudsen.arthasui.api.HostMachine
-import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
-import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 import io.github.vudsen.arthasui.common.util.ListStringTokenType
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
-import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
@@ -25,6 +19,12 @@ import java.nio.charset.StandardCharsets
 class TunnelServerHostMachine(private val hostMachineConfig: HostMachineConfig) : HostMachine {
 
 
+    companion object {
+        class Agent(
+            var agentId: String,
+            var clientConnectHost: String,
+        )
+    }
 
     override fun getOS(): OS {
         return OS.UNKNOWN
@@ -84,7 +84,7 @@ class TunnelServerHostMachine(private val hostMachineConfig: HostMachineConfig) 
         }
     }
 
-    fun listAgents(appName: String): List<String> {
+    fun listAgents(appName: String): List<Agent> {
         val config = getConfiguration()
         HttpClients.createDefault().use { client ->
             client.execute(createHttpGet(config.baseUrl + "/api/tunnelAgentInfo?app=" + appName)).use { response ->
@@ -93,9 +93,13 @@ class TunnelServerHostMachine(private val hostMachineConfig: HostMachineConfig) 
                     EntityUtils.toString(response.entity, StandardCharsets.UTF_8),
                     JsonObject::class.java
                 )
-                val result = ArrayList<String>(jsonObject.size())
+                val result = ArrayList<Agent>(jsonObject.size())
                 for (k in jsonObject.keySet()) {
-                    result.add(k)
+                    val element = jsonObject.getAsJsonObject(k)
+                    result.add(Agent(
+                        k,
+                        element.get("clientConnectHost").asString
+                    ))
                 }
                 return result
             }

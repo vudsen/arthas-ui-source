@@ -3,12 +3,10 @@ package io.github.vudsen.arthasui.bridge.providers.tunnel
 import com.intellij.util.io.toByteArray
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
-import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
+import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
-import okio.ByteString
-import okio.ByteString.Companion.toByteString
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
@@ -17,29 +15,28 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
 class TunnelServerArthasBridgeFactory(
     private val config: TunnelServerConnectConfig,
-    private val jvm: JVM
+    private val jvm: TunnelServerJvm
 ) : ArthasBridgeFactory {
 
     companion object {
         private class FakeInputStream(private val websocket: WebSocket) : OutputStream() {
 
             override fun write(b: Int) {
-                websocket.sendBinary(ByteBuffer.allocate(1).apply {
-                    put(b.toByte())
-                }, true).get()
+                websocket.sendText(b.toString(), true).get()
             }
 
             override fun write(b: ByteArray) {
-                websocket.sendBinary(ByteBuffer.wrap(b), true).get()
+                websocket.sendText(String(b, StandardCharsets.UTF_8), true).get()
             }
 
             override fun write(b: ByteArray, off: Int, len: Int) {
-                websocket.sendBinary(ByteBuffer.wrap(b, off, len), true).get()
+                websocket.sendText(String(b, off, len, StandardCharsets.UTF_8), true).get()
             }
 
         }
@@ -114,7 +111,6 @@ class TunnelServerArthasBridgeFactory(
 
 
     override fun createBridge(): ArthasBridge {
-        // ws://localhost:7777/ws?method=connectArthas&id=demoapp_HXJHL8BDDCJHW75JIXJQ
         val client = HttpClient.newHttpClient()
         val actualInput = PipedInputStream()
 
@@ -122,7 +118,7 @@ class TunnelServerArthasBridgeFactory(
 
         val webSocket = client.newWebSocketBuilder()
             .buildAsync(
-                URI.create(config.wsPath + "?method=connectArthas&id=${jvm.id}&targetServer=192.168.1.199"),
+                URI.create(config.wsPath + "?method=connectArthas&id=${jvm.id}&targetServer=${jvm.agent.clientConnectHost}"),
                 MyWebSocketListener(PipedOutputStream(actualInput), future)
             )
             .join()

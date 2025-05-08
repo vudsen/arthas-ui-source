@@ -35,7 +35,7 @@ class TunnelServerJvmProvider : JvmProvider {
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
-        return TunnelServerArthasBridgeFactory(jvm.context.template.getHostMachineConfig().connect as TunnelServerConnectConfig, jvm)
+        return TunnelServerArthasBridgeFactory(jvm.context.template.getHostMachineConfig().connect as TunnelServerConnectConfig, jvm as TunnelServerJvm)
     }
 
     override fun createForm(
@@ -62,7 +62,7 @@ class TunnelServerJvmProvider : JvmProvider {
         if (appName.isEmpty()) {
             return true
         }
-        return !hostMachine.listAgents(appName).contains(jvm.id)
+        return hostMachine.listAgents(appName).find { agent -> agent.agentId == jvm.id } == null
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {

@@ -29,7 +29,7 @@ class TunnelServerAppChildSearcher(
     override fun load(): JvmSearchResult {
         val ctx = JvmContext(hostMachine, providerConfig)
         return JvmSearchResult(
-            hostMachine.listAgents(appName).map { agentId -> TunnelServerJvm(agentId, agentId.substringBefore('_'), ctx) }
+            hostMachine.listAgents(appName).map { agent -> TunnelServerJvm(agent.agentId, agent.agentId.substringBefore('_'), ctx, agent) }
         )
     }
 
