@@ -1,9 +1,9 @@
 package io.github.vudsen.arthasui.bridge.bean
 
-import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class TunnelServerJvm(
@@ -14,6 +14,6 @@ class TunnelServerJvm(
 ) : JVM(id, name, context) {
 
     override fun getIcon(): Icon {
-        return AllIcons.General.Web
+        return ArthasUIIcons.Local
     }
 }

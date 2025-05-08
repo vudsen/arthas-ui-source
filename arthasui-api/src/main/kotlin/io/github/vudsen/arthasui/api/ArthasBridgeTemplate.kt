@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.api
 
+import com.intellij.openapi.application.ApplicationManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import java.lang.reflect.InvocationHandler
@@ -67,6 +68,14 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         getOrInitOriginalBridge()
     }
 
+    private fun notifyClose() {
+        ApplicationManager.getApplication().invokeLater {
+            for (listener in stashedListeners) {
+                listener.onClose()
+            }
+        }
+    }
+
     /**
      * 通知创建 Bridge 失败，并唤醒所有由于 [waitUntilAttached] 而挂起的协程
      */
@@ -74,6 +83,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         if (!attachDeferred.isCompleted) {
             attachDeferred.completeExceptionally(e)
         }
+        notifyClose()
     }
 
 
@@ -90,7 +100,16 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         if (!attachDeferred.isCompleted) {
             attachDeferred.completeExceptionally(CancellationException())
         }
-        return delegate?.stop() ?: 0
+        delegate ?.let {
+            return it.stop()
+        } ?: let {
+            notifyClose()
+            return 0
+        }
+    }
+
+    override fun isBusy(): Boolean {
+        return delegate?.isBusy() == true
     }
 
     /**

@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.bridge.providers.tunnel
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
@@ -14,6 +13,7 @@ import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerProviderConfig
 import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
 import io.github.vudsen.arthasui.bridge.ui.TunnelServerProviderForm
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class TunnelServerJvmProvider : JvmProvider {
@@ -70,11 +70,15 @@ class TunnelServerJvmProvider : JvmProvider {
     }
 
     override fun getIcon(): Icon {
-        return AllIcons.Ide.Gift
+        return ArthasUIIcons.App
     }
 
     override fun isHideCurrent(): Boolean {
         return true
+    }
+
+    override fun isSupport(hostMachine: HostMachine): Boolean {
+        return hostMachine is TunnelServerHostMachine
     }
 
 }

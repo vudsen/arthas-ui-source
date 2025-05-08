@@ -14,21 +14,24 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import java.awt.Dimension
 import javax.swing.*
 
 class UpdateHostMachineDialogUI(
-    oldState: HostMachineConfig?,
+    oldState: HostMachineConfig,
     private val parentDisposable: Disposable,
     private val onOk: (HostMachineConfig) -> Unit,
 ) : DialogWrapper(false) {
 
-    private val state = oldState ?: HostMachineConfig()
+    private val state = oldState
 
     private lateinit var root: DialogPanel
 
-    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(state.providers, parentDisposable)
+    private var jvmProviderConfigUI: JvmProviderConfigUI = JvmProviderConfigUI(
+        state.providers,
+        service<HostMachineConnectManager>().connect(state),
+        parentDisposable
+    )
 
     private val providers: List<HostMachineConnectProvider>
 
@@ -36,17 +39,11 @@ class UpdateHostMachineDialogUI(
 
     private var connectType: String? = null
 
-    private val lockPkgSourceUI = LocalPkgSourceUI(state.localPkgSourceId, parentDisposable)
-
     init {
         title = "Update Host Machine"
         val manager = service<HostMachineConnectManager>()
         providers = manager.getProviders()
-        oldState ?.let {
-            connectType = manager.getProvider(oldState.connect).getName()
-        } ?:let {
-            connectType = providers[0].getName()
-        }
+        connectType = manager.getProvider(state.connect).getName()
 
         init()
     }
@@ -67,9 +64,6 @@ class UpdateHostMachineDialogUI(
                         .bindText(state::dataDirectory)
                         .align(Align.FILL)
                         .validationOnApply(TextComponentValidators())
-                }
-                row {
-                    cell(lockPkgSourceUI.getComponent())
                 }
             }
             lateinit var connectComboBox: ComboBox<String>
@@ -115,15 +109,6 @@ class UpdateHostMachineDialogUI(
         }
         state.connect = formMap[connectType!!]!!.apply() ?: return
         state.providers = jvmProviderConfigUI.apply() ?: return
-        if (state.connect !is LocalConnectConfig) {
-            lockPkgSourceUI.apply() ?.let {
-                if (it == LocalPkgSourceUI.DISABLED_VALUE) {
-                    state.localPkgSourceId = null
-                } else {
-                    state.localPkgSourceId = it
-                }
-            }
-        }
         super.doOKAction()
         onOk(state)
     }

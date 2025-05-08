@@ -13,8 +13,6 @@ import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
-import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 
 class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<HostMachineConfig>(parentDisposable) {
 
@@ -25,8 +23,6 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
     private var connectType: String? = null
 
     private val connectProviders: List<HostMachineConnectProvider>
-
-    private val localPkgSourceUI = LocalPkgSourceUI(null, parentDisposable)
 
     init {
         val manager = service<HostMachineConnectManager>()
@@ -44,9 +40,6 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
             group("Basic Config") {
                 row {
                     textField().label("Name").validationOnApply(TextComponentValidators()).bindText(state::name).align(Align.FILL)
-                }
-                row {
-                    cell(localPkgSourceUI.getComponent())
                 }
                 row {
                     val box =
@@ -75,13 +68,6 @@ class JvmConnectSetupUI(parentDisposable: Disposable) : AbstractFormComponent<Ho
             return null
         }
         state.connect = formMap[connectType]!!.apply() ?: return null
-        if (state.connect !is LocalConnectConfig) {
-            localPkgSourceUI.apply() ?.let {
-                if (it != LocalPkgSourceUI.DISABLED_VALUE) {
-                    state.localPkgSourceId = it
-                }
-            }
-        }
         return state
     }
 

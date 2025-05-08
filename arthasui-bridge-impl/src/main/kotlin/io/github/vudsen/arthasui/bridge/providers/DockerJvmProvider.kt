@@ -143,4 +143,8 @@ class DockerJvmProvider : JvmProvider {
         return false
     }
 
+    override fun isSupport(hostMachine: HostMachine): Boolean {
+        return hostMachine is ShellAvailableHostMachine
+    }
+
 }

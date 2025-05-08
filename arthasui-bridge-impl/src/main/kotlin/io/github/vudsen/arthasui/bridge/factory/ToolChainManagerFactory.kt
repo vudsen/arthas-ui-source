@@ -5,6 +5,7 @@ import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
+import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 
 object ToolChainManagerFactory {
@@ -27,12 +28,11 @@ object ToolChainManagerFactory {
     }
 
     fun createToolChainManager(current: ShellAvailableHostMachine): ToolchainManager {
-        val toolchainManager: ToolchainManager = DefaultToolChainManager(
+        return DefaultToolChainManager(
             current,
-            findDelegate(current.getHostMachineConfig().localPkgSourceId),
+            if (current is SshLinuxHostMachineImpl) { findDelegate(current.getConfiguration().localPkgSourceId) } else { null },
             mirror
         )
-        return toolchainManager
     }
 
 }

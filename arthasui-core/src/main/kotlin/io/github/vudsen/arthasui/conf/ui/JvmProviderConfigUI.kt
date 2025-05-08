@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTabbedPane
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
@@ -11,6 +12,7 @@ import javax.swing.JComponent
 
 class JvmProviderConfigUI(
     private val oldStates: List<JvmProviderConfig>,
+    private val hostMachine: HostMachine,
     private val parentDisposable: Disposable
 ): FormComponent<MutableList<JvmProviderConfig>> {
 
@@ -27,10 +29,12 @@ class JvmProviderConfigUI(
     override fun getComponent(): JComponent {
         val pane = JBTabbedPane().apply {
             for (provider in providers) {
-                val old = oldStates.find { s -> s::class.java == provider.getConfigClass() }
-                val form = provider.createForm(old, parentDisposable)
-                addTab(provider.getName(), form.getComponent())
-                formTabs.add(form)
+                if (provider.isSupport(hostMachine)) {
+                    val old = oldStates.find { s -> s::class.java == provider.getConfigClass() }
+                    val form = provider.createForm(old, parentDisposable)
+                    addTab(provider.getName(), form.getComponent())
+                    formTabs.add(form)
+                }
             }
         }
         tab = pane

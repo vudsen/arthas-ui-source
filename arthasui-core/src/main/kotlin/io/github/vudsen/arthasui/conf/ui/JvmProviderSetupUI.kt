@@ -54,20 +54,24 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
     private fun recreateContainer(hostMachine: HostMachine?) {
         container.removeAll()
 
-        container.add(createCommonConfigUI().apply {
-            commonDialogPanel = this@apply
-            maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
-        })
+        if (hostMachine is ShellAvailableHostMachine) {
+            container.add(createCommonConfigUI().apply {
+                commonDialogPanel = this@apply
+                maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
+            })
+        }
         container.add(JBTabbedPane().apply {
             tabbedPane = this@apply
             hostMachine ?.let {
                 formTabs.clear()
                 val providers = service<JvmProviderManager>().getProviders()
                 for (provider in providers) {
-                    val configuration = provider.tryCreateDefaultConfiguration(it)
-                    val form = provider.createForm(configuration, parentDisposable)
-                    addTab(provider.getName(), form.getComponent())
-                    formTabs.add(form)
+                    if (provider.isSupport(it)) {
+                        val configuration = provider.tryCreateDefaultConfiguration(it)
+                        val form = provider.createForm(configuration, parentDisposable)
+                        addTab(provider.getName(), form.getComponent())
+                        formTabs.add(form)
+                    }
                 }
             }
             maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
@@ -102,7 +106,6 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         state.providers = newState.providers
         state.id = newState.id
         state.name = newState.name
-        state.localPkgSourceId = newState.localPkgSourceId
         state.searchGroups = newState.searchGroups
     }
 

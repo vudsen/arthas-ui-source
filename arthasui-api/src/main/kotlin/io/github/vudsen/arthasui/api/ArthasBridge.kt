@@ -35,5 +35,10 @@ interface ArthasBridge {
      */
     fun stop(): Int
 
+    /**
+     * 是否繁忙
+     * @return 若返回 true，表示下一次操作可能会被阻塞
+     */
+    fun isBusy(): Boolean
 
 }

@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.conf
 import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class TunnelServerConnectConfig(
@@ -11,7 +12,7 @@ class TunnelServerConnectConfig(
 ) : HostMachineConnectConfig(TYPE) {
 
     override fun getIcon(): Icon {
-        return AllIcons.General.Web
+        return ArthasUIIcons.Cloud
     }
 
     override fun getOS(): OS {

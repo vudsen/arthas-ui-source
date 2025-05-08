@@ -196,7 +196,7 @@ class SshLinuxHostMachineImpl(
     }
 
 
-    override fun getConfiguration(): HostMachineConnectConfig {
+    override fun getConfiguration(): SshHostMachineConnectConfig {
         return connectConfig
     }
 

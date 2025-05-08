@@ -24,4 +24,10 @@ object ArthasUIIcons {
 
     @JvmField
     val Box = IconLoader.getIcon("/icons/box.svg", javaClass)
+
+    @JvmField
+    val Cloud = IconLoader.getIcon("/icons/cloud.svg", javaClass)
+
+    @JvmField
+    val App = IconLoader.getIcon("/icons/app.svg", javaClass)
 }
