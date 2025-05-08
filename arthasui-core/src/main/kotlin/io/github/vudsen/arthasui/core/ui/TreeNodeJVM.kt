@@ -12,7 +12,8 @@ import javax.swing.*
 class TreeNodeJVM(
     private val rootNode: RecursiveTreeNode,
     val providerConfig: JvmProviderConfig,
-    val jvm: JVM
+    val jvm: JVM,
+    private val parent: RecursiveTreeNode
 ) : AbstractRecursiveTreeNode() {
 
     /**
@@ -21,6 +22,7 @@ class TreeNodeJVM(
     var loading: Boolean = false
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
+        parent.refreshRootNode()
         return emptyList()
     }
 

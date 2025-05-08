@@ -10,10 +10,10 @@ import javax.swing.tree.DefaultMutableTreeNode
 interface RecursiveTreeNode {
 
     /**
-     * 刷新当前根节点，需要更新所有子节点的值，每次返回的根节点必须是同一个实例.
+     * 刷新当前根节点.
      *
      * **该方法可能会阻塞线程**, 实现类应该在合适的地方检查 [com.intellij.openapi.progress.ProgressManager.checkCanceled] 的状态以停止任务
-     * @return 当前节点自己
+     * @return 当前节点自己, 需要更新所有子节点的值，每次返回的根节点必须是同一个实例.
      */
     fun refreshRootNode(): DefaultMutableTreeNode
 

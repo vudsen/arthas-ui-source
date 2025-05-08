@@ -75,6 +75,10 @@ class ToolWindowTree(val project: Project) : Disposable {
                     tree.updateUI()
                 }
             }
+
+            override fun onThrowable(error: Throwable) {
+                Messages.showErrorDialog(project, error.message, "Load Failed")
+            }
         })
     }
 

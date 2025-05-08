@@ -39,26 +39,6 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
                 continue
             }
             val provider = jvmProviderManager.getProvider(providerConfig)
-            if (provider.isHideCurrent()) {
-                val searchJvm = provider.searchJvm(ctx.template, providerConfig)
-                searchJvm.childs?.let {
-                    for (delegate in it) {
-                        result.add(
-                            TreeNodeSearcher(
-                                delegate,
-                                ctx,
-                                providerConfig
-                            )
-                        )
-                    }
-                }
-                searchJvm.result ?.let {
-                    for (jvm in it) {
-                        result.add(TreeNodeJVM(ctx.root, providerConfig, jvm))
-                    }
-                }
-                continue
-            }
             result.add(
                 TreeNodeSearcher(
                     JvmProviderSearcher(provider, providerConfig, ctx.template),

@@ -58,10 +58,6 @@ interface JvmProvider {
      */
     fun getIcon(): Icon
 
-    /**
-     * 给工具栏使用，如果返回 true，则工具链不会渲染该节点.
-     */
-    fun isHideCurrent(): Boolean
 
     /**
      * 是否支持该宿主机

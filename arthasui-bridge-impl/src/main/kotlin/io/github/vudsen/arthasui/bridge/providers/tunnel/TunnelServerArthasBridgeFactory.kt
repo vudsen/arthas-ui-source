@@ -1,5 +1,7 @@
 package io.github.vudsen.arthasui.bridge.providers.tunnel
 
+import com.google.gson.JsonObject
+import com.intellij.openapi.components.service
 import com.intellij.util.io.toByteArray
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
@@ -7,6 +9,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
+import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
@@ -27,16 +30,25 @@ class TunnelServerArthasBridgeFactory(
     companion object {
         private class FakeInputStream(private val websocket: WebSocket) : OutputStream() {
 
+            private val gson = service<SingletonInstanceHolderService>().gson
+
+            private fun buildMessage(data: String): String {
+                val jsonObject = JsonObject()
+                jsonObject.addProperty("action", "read")
+                jsonObject.addProperty("data", data)
+                return gson.toJson(jsonObject)
+            }
+
             override fun write(b: Int) {
-                websocket.sendText(b.toString(), true).get()
+                websocket.sendText(buildMessage(b.toString()), true).get()
             }
 
             override fun write(b: ByteArray) {
-                websocket.sendText(String(b, StandardCharsets.UTF_8), true).get()
+                websocket.sendText(buildMessage(String(b, StandardCharsets.UTF_8)), true).get()
             }
 
             override fun write(b: ByteArray, off: Int, len: Int) {
-                websocket.sendText(String(b, off, len, StandardCharsets.UTF_8), true).get()
+                websocket.sendText(buildMessage(String(b, off, len, StandardCharsets.UTF_8)), true).get()
             }
 
         }

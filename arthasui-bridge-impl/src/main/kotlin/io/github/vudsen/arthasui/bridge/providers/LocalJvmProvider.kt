@@ -175,9 +175,6 @@ class LocalJvmProvider : JvmProvider {
         return ArthasUIIcons.Box
     }
 
-    override fun isHideCurrent(): Boolean {
-        return false
-    }
 
     override fun isSupport(hostMachine: HostMachine): Boolean {
         return hostMachine is ShellAvailableHostMachine

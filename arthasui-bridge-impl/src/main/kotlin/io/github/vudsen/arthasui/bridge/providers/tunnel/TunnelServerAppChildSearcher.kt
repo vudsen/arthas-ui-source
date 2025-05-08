@@ -23,7 +23,7 @@ class TunnelServerAppChildSearcher(
     }
 
     override fun getIcon(): Icon {
-        return ArthasUIIcons.Cloud
+        return ArthasUIIcons.Box
     }
 
     override fun load(): JvmSearchResult {

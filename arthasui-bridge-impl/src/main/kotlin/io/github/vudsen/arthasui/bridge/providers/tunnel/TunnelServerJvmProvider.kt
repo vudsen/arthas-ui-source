@@ -19,7 +19,7 @@ import javax.swing.Icon
 class TunnelServerJvmProvider : JvmProvider {
 
     override fun getName(): String {
-        return "Tunnel Server"
+        return "Apps"
     }
 
     override fun searchJvm(
@@ -73,9 +73,6 @@ class TunnelServerJvmProvider : JvmProvider {
         return ArthasUIIcons.App
     }
 
-    override fun isHideCurrent(): Boolean {
-        return true
-    }
 
     override fun isSupport(hostMachine: HostMachine): Boolean {
         return hostMachine is TunnelServerHostMachine
