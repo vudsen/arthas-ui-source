@@ -35,15 +35,37 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
         val result = mutableListOf<AbstractRecursiveTreeNode>()
         val jvmProviderManager = service<JvmProviderManager>()
         for (providerConfig in config.providers) {
-            if (providerConfig.enabled) {
-                result.add(
-                    TreeNodeSearcher(
-                        JvmProviderSearcher(jvmProviderManager.getProvider(providerConfig), providerConfig, ctx.template),
-                        ctx,
-                        providerConfig
-                    )
-                )
+            if (!providerConfig.enabled) {
+                continue
             }
+            val provider = jvmProviderManager.getProvider(providerConfig)
+            if (provider.isHideCurrent()) {
+                val searchJvm = provider.searchJvm(ctx.template, providerConfig)
+                searchJvm.childs?.let {
+                    for (delegate in it) {
+                        result.add(
+                            TreeNodeSearcher(
+                                delegate,
+                                ctx,
+                                providerConfig
+                            )
+                        )
+                    }
+                }
+                searchJvm.result ?.let {
+                    for (jvm in it) {
+                        result.add(TreeNodeJVM(ctx.root, providerConfig, jvm))
+                    }
+                }
+                continue
+            }
+            result.add(
+                TreeNodeSearcher(
+                    JvmProviderSearcher(provider, providerConfig, ctx.template),
+                    ctx,
+                    providerConfig
+                )
+            )
         }
         for (searchGroup in config.searchGroups) {
             result.add(CustomSearchGroupTreeNode(searchGroup, ctx))
@@ -53,7 +75,7 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
 
 
     override fun render(tree: JTree): JComponent {
-        root ?.let { return it }
+        root?.let { return it }
         val root = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
             add(JLabel(config.connect.getIcon()))
             add(JLabel(config.name).apply {

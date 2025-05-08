@@ -73,4 +73,8 @@ class TunnelServerJvmProvider : JvmProvider {
         return AllIcons.Ide.Gift
     }
 
+    override fun isHideCurrent(): Boolean {
+        return true
+    }
+
 }

@@ -1,26 +1,18 @@
 package io.github.vudsen.arthasui.api.bean
 
 import io.github.vudsen.arthasui.api.JVM
-import javax.swing.Icon
+import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 
+/**
+ * Jvm 的搜索结果. 所有字段最多有一个非空
+ */
 class JvmSearchResult(
+    /**
+     * 搜索的结果
+     */
     var result: List<JVM>? = null,
-    var child: List<ChildSearcher>? = null
-) {
-    companion object {
-        interface ChildSearcher {
-
-            fun getName(): String
-
-            fun getIcon(): Icon
-
-            fun load(): JvmSearchResult
-
-            override fun equals(other: Any?): Boolean
-
-            override fun hashCode(): Int
-
-        }
-
-    }
-}
+    /**
+     * 表示当前还需要继续搜索
+     */
+    var childs: List<JvmSearchDelegate>? = null
+)

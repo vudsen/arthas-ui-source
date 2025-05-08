@@ -1,31 +1,34 @@
 package io.github.vudsen.arthasui.core.ui
 
-import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import java.awt.FlowLayout
 import javax.swing.*
 
+/**
+ * 支持 [JvmSearchDelegate]，渲染树形结构
+ */
 class TreeNodeSearcher(
-    private val child: JvmSearchResult.Companion.ChildSearcher,
+    private val delegate: JvmSearchDelegate,
     private val ctx: TreeNodeContext,
     private val providerConfig: JvmProviderConfig,
 ) : AbstractRecursiveTreeNode() {
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
-        val jvmList = child.load()
+        val jvmList = delegate.load()
         jvmList.result ?.let {
             val result = ArrayList<AbstractRecursiveTreeNode>(it.size)
             for (jvm in it) {
-                result.add(TreeNodeJVM(ctx.root, providerConfig, jvm, ctx.project))
+                result.add(TreeNodeJVM(ctx.root, providerConfig, jvm))
             }
             return result
         }
-        jvmList.child ?.let {
+        jvmList.childs ?.let {
             val result = ArrayList<AbstractRecursiveTreeNode>(it.size)
-            for (childSearcher in it) {
-                result.add(TreeNodeSearcher(childSearcher, ctx, providerConfig))
+            for (child in it) {
+                result.add(TreeNodeSearcher(child, ctx, providerConfig))
             }
             return result
         }
@@ -33,17 +36,17 @@ class TreeNodeSearcher(
     }
 
     override fun equals(other: Any?): Boolean {
-        return child == other
+        return delegate == other
     }
 
     override fun hashCode(): Int {
-        return child.hashCode()
+        return delegate.hashCode()
     }
 
     override fun render(tree: JTree): JComponent {
         return JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
-            add(JLabel(child.getIcon()))
-            add(JLabel(child.getName()).apply {
+            add(JLabel(delegate.getIcon()))
+            add(JLabel(delegate.getName()).apply {
                 border = BorderFactory.createEmptyBorder(0, 8, 0, 0)
             })
         }

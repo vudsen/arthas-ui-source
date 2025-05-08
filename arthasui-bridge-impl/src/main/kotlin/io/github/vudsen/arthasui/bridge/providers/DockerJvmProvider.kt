@@ -139,4 +139,8 @@ class DockerJvmProvider : JvmProvider {
         return ArthasUIIcons.Box
     }
 
+    override fun isHideCurrent(): Boolean {
+        return false
+    }
+
 }

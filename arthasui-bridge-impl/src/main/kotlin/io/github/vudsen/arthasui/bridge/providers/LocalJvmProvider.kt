@@ -11,7 +11,6 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
-import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
@@ -174,6 +173,10 @@ class LocalJvmProvider : JvmProvider {
 
     override fun getIcon(): Icon {
         return ArthasUIIcons.Box
+    }
+
+    override fun isHideCurrent(): Boolean {
+        return false
     }
 
 

@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
 import javax.swing.Icon
@@ -15,7 +16,7 @@ class TunnelServerAppChildSearcher(
     private val appName: String,
     private val hostMachine: TunnelServerHostMachine,
     private val providerConfig: JvmProviderConfig
-) : JvmSearchResult.Companion.ChildSearcher {
+) : JvmSearchDelegate {
 
     override fun getName(): String {
         return appName
