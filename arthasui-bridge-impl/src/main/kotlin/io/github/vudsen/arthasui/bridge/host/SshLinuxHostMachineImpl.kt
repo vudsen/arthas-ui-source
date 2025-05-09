@@ -27,9 +27,13 @@ import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+import java.io.Reader
+import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.EnumSet
@@ -50,16 +54,20 @@ class SshLinuxHostMachineImpl(
 
         private class SshInteractiveShell(
             private val channel: ChannelExec,
-            private val actualIn: InputStream,
-            private val actualOut: OutputStream
+            actualIn: InputStream,
+            actualOut: OutputStream
         ) : InteractiveShell {
 
-            override fun getInputStream(): InputStream {
-                return actualIn
+            private val reader = InputStreamReader(actualIn)
+
+            private val writer = OutputStreamWriter(actualOut)
+
+            override fun getReader(): Reader {
+                return reader
             }
 
-            override fun getOutputStream(): OutputStream {
-                return actualOut
+            override fun getWriter(): Writer {
+                return writer
             }
 
             override fun isAlive(): Boolean {
@@ -75,8 +83,8 @@ class SshLinuxHostMachineImpl(
                     return
                 }
                 channel.close(true).await()
-                actualIn.close()
-                actualOut.close()
+                reader.close()
+                writer.close()
             }
 
         }
@@ -258,7 +266,7 @@ class SshLinuxHostMachineImpl(
         var tp = 0
         try {
             progressIndicator.text = "Downloading $url"
-            BufferedReader(shell.getInputStream().reader()).use { br ->
+            BufferedReader(shell.getReader()).use { br ->
                 var line: String? = ""
                 while (br.readLine().also { line = it } != null) {
                     ProgressManager.checkCanceled()

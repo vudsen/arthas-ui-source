@@ -3,7 +3,6 @@ package io.github.vudsen.arthasui.core
 import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
-import com.intellij.execution.configurations.ConfigurationTypeUtil
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.*
@@ -18,7 +17,6 @@ import io.github.vudsen.arthasui.api.ArthasBridgeTemplate
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
-import io.github.vudsen.arthasui.run.ArthasConfigurationFactory
 import io.github.vudsen.arthasui.run.ArthasConfigurationType
 import io.github.vudsen.arthasui.run.ArthasProcessOptions
 

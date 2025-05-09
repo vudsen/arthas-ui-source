@@ -19,7 +19,11 @@ import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import org.apache.commons.net.telnet.TelnetClient
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.Reader
+import java.io.Writer
 import javax.swing.Icon
 
 class LocalJvmProvider : JvmProvider {
@@ -28,12 +32,17 @@ class LocalJvmProvider : JvmProvider {
         private val logger = Logger.getInstance(LocalJvmProvider::class.java)
 
         private class TelnetArthasProcess(private val client: TelnetClient) : InteractiveShell {
-            override fun getInputStream(): InputStream {
-                return client.inputStream
+
+            private val reader = InputStreamReader(client.inputStream)
+
+            private val writer = OutputStreamWriter(client.outputStream)
+
+            override fun getReader(): Reader {
+                return reader
             }
 
-            override fun getOutputStream(): OutputStream {
-                return client.outputStream
+            override fun getWriter(): Writer {
+                return writer
             }
 
             override fun isAlive(): Boolean {
@@ -46,8 +55,8 @@ class LocalJvmProvider : JvmProvider {
 
             override fun close() {
                 client.disconnect()
-                client.outputStream.close()
-                client.inputStream.close()
+                reader.close()
+                writer.close()
             }
 
         }

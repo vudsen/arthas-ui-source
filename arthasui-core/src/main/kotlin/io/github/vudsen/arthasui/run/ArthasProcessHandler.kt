@@ -69,7 +69,7 @@ class ArthasProcessHandler(
                     })
 
                     bridgeTemplate.attachNow()
-                    if (!bridgeTemplate.isAlive()) {
+                    if (bridgeTemplate.isClosed()) {
                         notifyProcessTerminated(bridgeTemplate.stop())
                     }
                 } catch (e: Exception) {

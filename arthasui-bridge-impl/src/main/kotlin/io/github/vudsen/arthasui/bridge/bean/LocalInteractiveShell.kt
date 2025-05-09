@@ -1,26 +1,26 @@
 package io.github.vudsen.arthasui.bridge.bean
 
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.Reader
+import java.io.Writer
 
-class LocalInteractiveShell(private val process: Process) : InteractiveShell {
+class LocalInteractiveShell(private val pro: Process) : InteractiveShell {
 
-    override fun getInputStream(): InputStream {
-        return process.inputStream
+    override fun getReader(): Reader {
+        return pro.inputReader()
     }
 
-    override fun getOutputStream(): OutputStream {
-        return process.outputStream
+    override fun getWriter(): Writer {
+        return pro.outputWriter()
     }
 
     override fun isAlive(): Boolean {
-        return process.isAlive
+        return pro.isAlive
     }
 
     override fun exitCode(): Int? {
         try {
-            return process.exitValue()
+            return pro.exitValue()
         } catch (e: IllegalThreadStateException) {
             return null
         }
@@ -28,13 +28,13 @@ class LocalInteractiveShell(private val process: Process) : InteractiveShell {
 
 
     override fun close() {
-        if (!process.isAlive) {
+        if (!pro.isAlive) {
             return
         }
         try {
-            process.destroy()
-            process.outputStream.close()
-            process.inputStream.close()
+            pro.destroy()
+            pro.outputStream.close()
+            pro.inputStream.close()
         } catch (_: Exception) { }
     }
 }

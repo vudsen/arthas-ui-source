@@ -14,19 +14,22 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
 import kotlinx.coroutines.*
-import java.io.InputStreamReader
-import java.io.OutputStream
 import java.io.Reader
-import java.nio.charset.StandardCharsets
+import java.io.Writer
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.text.toByteArray
 
 class ArthasBridgeImpl(
     private val arthasProcess: InteractiveShell
 ) : ArthasBridge {
+
+    companion object {
+        private val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
+
+        // ctrl c
+        private val EOT = Char(3).toString()
+    }
 
     private val executionLock = ReentrantLock()
 
@@ -36,16 +39,10 @@ class ArthasBridgeImpl(
     @Volatile
     private var stopFlag = false
 
-    companion object {
-        private val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
 
-        // ctrl c
-        private val EOT = Char(3).toString()
-    }
+    private val reader: Reader = arthasProcess.getReader()
 
-    private val reader: Reader = InputStreamReader(arthasProcess.getInputStream())
-
-    private val outputStream: OutputStream = arthasProcess.getOutputStream()
+    private val writer: Writer = arthasProcess.getWriter()
 
     /**
      * 解析帧，在写入时应该调用 [onText] 来写入。
@@ -54,7 +51,7 @@ class ArthasBridgeImpl(
 
     private var isAttached = false
 
-    private val readBuffer = CharArray(512)
+    private val readBuffer = CharArray(2048)
 
     private val listeners = CopyOnWriteArrayList<ArthasBridgeListener>()
 
@@ -111,8 +108,8 @@ class ArthasBridgeImpl(
         if (updateLastExecuted) {
             lastExecuted = command
         }
-        outputStream.write(command.toByteArray())
-        outputStream.flush()
+        writer.write(command)
+        writer.flush()
     }
 
     private fun parse0(decoder: ArthasFrameDecoder): ArthasResultItem {
@@ -316,9 +313,6 @@ class ArthasBridgeImpl(
         return parse0(OgnlFrameDecoder())
     }
 
-    override fun isAlive(): Boolean {
-        return arthasProcess.isAlive()
-    }
 
     override fun isClosed(): Boolean {
         if (exitCode != null) {
@@ -327,6 +321,7 @@ class ArthasBridgeImpl(
         if (arthasProcess.isAlive()) {
             return false
         }
+        stop()
         return exitCode != null
     }
 
@@ -345,8 +340,8 @@ class ArthasBridgeImpl(
             }
             if (arthasProcess.isAlive()) {
                 try {
-                    outputStream.write("stop\n".toByteArray(StandardCharsets.UTF_8))
-                    outputStream.flush()
+                    writer.write("stop\n")
+                    writer.flush()
                 } catch (_: Exception) { }
             }
             var len: Int

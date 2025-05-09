@@ -15,6 +15,10 @@ class ArthasStreamBuffer {
 
     private var buffer = CharBuffer.allocate(1024)
 
+    fun getBuffer(): CharBuffer {
+        return buffer
+    }
+
     fun write(out: CharArray, len: Int) {
         if (buffer.limit() != buffer.capacity()) {
             // switch to write mode

@@ -16,11 +16,6 @@ interface ArthasBridge {
     fun execute(command: String): ArthasResultItem
 
     /**
-     * 连接是否仍然存活
-     */
-    fun isAlive(): Boolean
-
-    /**
      * 进程是否完全关闭.
      */
     fun isClosed(): Boolean

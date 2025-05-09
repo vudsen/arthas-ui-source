@@ -3,11 +3,10 @@ package io.github.vudsen.arthasui
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
-import java.nio.charset.StandardCharsets
+import java.io.PipedReader
+import java.io.PipedWriter
+import java.io.Reader
+import java.io.Writer
 
 class MockArthasProcess : InteractiveShell {
 
@@ -18,7 +17,7 @@ class MockArthasProcess : InteractiveShell {
 
     private val flow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    inner class PipedOutStreamWrapper(snk: PipedInputStream) : PipedOutputStream(snk) {
+    inner class PipedOutStreamWrapper(snk: PipedReader) : PipedWriter(snk) {
 
         override fun flush() {
             super.flush()
@@ -29,13 +28,13 @@ class MockArthasProcess : InteractiveShell {
 
     }
 
-    private val serverIn = PipedInputStream()
+    private val serverIn = PipedReader()
 
-    private val serverOut = PipedOutputStream()
+    private val serverOut = PipedWriter()
 
     private val clientOut = PipedOutStreamWrapper(serverIn)
 
-    private val clientIn = PipedInputStream(serverOut)
+    private val clientIn = PipedReader(serverOut)
 
 
     /**
@@ -45,7 +44,7 @@ class MockArthasProcess : InteractiveShell {
         serverOut.write("""
             Mock Arthas Process
             $PS1 
-        """.trimIndent().toByteArray(StandardCharsets.UTF_8))
+        """.trimIndent())
     }
 
     suspend fun waitClientRequest() {
@@ -57,27 +56,23 @@ class MockArthasProcess : InteractiveShell {
      * 写入响应
      */
     fun writeResponse(content: String) {
-        var len = serverIn.available()
-        if (len > 0) {
-            val buf = ByteArray(32)
-            while (len > 0) {
-                val actualLen = serverIn.read(buf)
-                serverOut.write(buf, 0, actualLen)
-                len = serverIn.available()
-            }
+        while (serverIn.ready()) {
+            val buf = CharArray(32)
+            val actualLen = serverIn.read(buf)
+            serverOut.write(buf, 0, actualLen)
         }
-        serverOut.write(content.toByteArray(StandardCharsets.UTF_8))
+        serverOut.write(content)
     }
 
     fun writeResponseEnd() {
-        serverOut.write("\n$PS1".toByteArray(StandardCharsets.UTF_8))
+        serverOut.write("\n$PS1")
     }
 
-    override fun getInputStream(): InputStream {
+    override fun getReader(): Reader {
         return clientIn
     }
 
-    override fun getOutputStream(): OutputStream {
+    override fun getWriter(): Writer {
         return clientOut
     }
 

@@ -53,9 +53,6 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         return proxy.execute(command)
     }
 
-    override fun isAlive(): Boolean {
-        return delegate?.isAlive() ?: false
-    }
 
     override fun isClosed(): Boolean {
         return delegate?.isClosed() ?: false
