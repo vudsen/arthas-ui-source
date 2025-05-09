@@ -26,7 +26,6 @@ object BridgeTestUtil {
         val config = HostMachineConfig(
             -1,
             "Test Local",
-            null,
             LocalConnectConfig(),
             mutableListOf(LocalJvmProviderConfig()),
             mutableListOf(),
@@ -41,7 +40,6 @@ object BridgeTestUtil {
         val config = HostMachineConfig(
             -1,
             "Remote",
-            null,
             SshHostMachineConnectConfig(
                 "Test server",
                 SshConfiguration(server.host, server.firstMappedPort, "root", "root")
@@ -63,7 +61,6 @@ object BridgeTestUtil {
         val config = HostMachineConfig(
             -1,
             "Remote",
-            null,
             SshHostMachineConnectConfig(
                 "Test server",
                 SshConfiguration(server.host, server.firstMappedPort, "root", "root")
