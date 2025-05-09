@@ -1,9 +1,10 @@
 package io.github.vudsen.arthasui.script.helper
 
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.JvmContext
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.LocalJVM
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.providers.LocalJvmProvider
@@ -11,7 +12,7 @@ import io.github.vudsen.arthasui.bridge.providers.LocalJvmProvider
 /**
  * A helper for local jvm search
  */
-class LocalJvmSearchHelper(private val template: HostMachineTemplate, private val providerConfig: LocalJvmProviderConfig) {
+class LocalJvmSearchHelper(private val template: HostMachine, private val providerConfig: LocalJvmProviderConfig) {
 
     private val whiteSpacePattern = Regex(" +")
 
@@ -24,7 +25,7 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
      */
     @Suppress("unused")
     fun findByPort(port: Int, name: String?): List<JVM> {
-        val hostMachine = template.getHostMachine()
+        val hostMachine = ctx.template as ShellAvailableHostMachine
         if (hostMachine.getOS() == OS.WINDOWS) {
             val result = hostMachine.execute("cmd", "/c", "\"netstat -ano | findstr :${port}\"").ok().split('\n')
             return result.map {
@@ -66,11 +67,12 @@ class LocalJvmSearchHelper(private val template: HostMachineTemplate, private va
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val output: String = template.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").let {
+        val hostMachine = ctx.template as ShellAvailableHostMachine
+        val output: String = hostMachine.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").let {
             if (it.exitCode == 0) {
                 return@let it.stdout
             } else {
-                return@let template.grep(arrayOf("java", search), "ps", "-eo", "pid,command").ok()
+                return@let hostMachine.grep(arrayOf("java", search), "ps", "-eo", "pid,command").ok()
             }
         }
 

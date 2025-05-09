@@ -12,6 +12,8 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.progress.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowId
+import io.github.vudsen.arthasui.api.ArthasBridgeListener
+import io.github.vudsen.arthasui.api.ArthasBridgeTemplate
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
@@ -28,6 +30,8 @@ class ArthasQueryConsoleActionGroup(
 ) : ActionGroup() {
 
     private var lastHighlighter: RangeHighlighter? = null
+
+    private var arthasBridge: ArthasBridgeTemplate? = null
 
     /**
      * 移除回车以及命令结尾的分号
@@ -71,6 +75,9 @@ class ArthasQueryConsoleActionGroup(
      * 获取对应的 [ArthasBridge] 实例，若对应的 Bridge 还没有被创建，则创建并缓存
      */
     fun runSelected(editorEx: EditorEx) {
+        arthasBridge ?.let {
+
+        }
         val selected = compactCommand(editorEx.selectionModel.selectedText ?: return)
 
 
@@ -92,15 +99,21 @@ class ArthasQueryConsoleActionGroup(
 
             override fun run(indicator: ProgressIndicator) {
                 runBlockingCancellable {
-                    val coordinator = project.getService(ArthasExecutionManager::class.java)
-                    coordinator.getTemplate(virtualFileAttributes.jvm)?.let {
+                    arthasBridge ?.let {
                         it.execute(selected)
                         return@runBlockingCancellable
                     }
+                    val coordinator = project.getService(ArthasExecutionManager::class.java)
 
                     val arthasBridgeTemplate = blockingContext {
                          coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig, indicator)
                     }
+                    arthasBridge = arthasBridgeTemplate
+                    arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
+                        override fun onClose() {
+                            arthasBridge = null
+                        }
+                    })
 
                     val configurationType =
                         ConfigurationTypeUtil.findConfigurationType(ArthasConfigurationTypeBaseImpl::class.java)
@@ -118,6 +131,10 @@ class ArthasQueryConsoleActionGroup(
                     arthasBridgeTemplate.waitUntilAttached()
                     arthasBridgeTemplate.execute(selected)
                 }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                super.onThrowable(error)
             }
 
             override fun onFinished() {

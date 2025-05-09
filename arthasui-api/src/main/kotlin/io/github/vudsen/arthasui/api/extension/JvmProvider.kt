@@ -4,10 +4,10 @@ import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.ArthasBridgeFactory
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
-import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
+import javax.swing.Icon
 
 interface JvmProvider {
 
@@ -19,12 +19,12 @@ interface JvmProvider {
     /**
      * 搜索默认位置下的 jvm
      */
-    fun searchJvm(template: HostMachineTemplate, providerConfig: JvmProviderConfig): List<JVM>
+    fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): JvmSearchResult
 
     /**
      * 创建一个 [ArthasBridgeFactory]
      */
-    fun createArthasBridgeFactory(jvm: JVM, jvmProviderConfig: JvmProviderConfig, toolchainManager: ToolchainManager): ArthasBridgeFactory
+    fun createArthasBridgeFactory(jvm: JVM, jvmProviderConfig: JvmProviderConfig): ArthasBridgeFactory
 
     /**
      * 创建一个表单
@@ -51,6 +51,17 @@ interface JvmProvider {
      * 尝试在宿主机上生成对应的配置
      * @return 对应的 [JvmProviderConfig], 如果不支持, [JvmProviderConfig.enabled] 为 false
      */
-    fun tryCreateDefaultConfiguration(template: HostMachineTemplate): JvmProviderConfig
+    fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig
+
+    /**
+     * 获取图标
+     */
+    fun getIcon(): Icon
+
+
+    /**
+     * 是否支持该宿主机
+     */
+    fun isSupport(hostMachine: HostMachine): Boolean
 
 }

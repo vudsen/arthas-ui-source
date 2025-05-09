@@ -22,7 +22,7 @@ import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
-import io.github.vudsen.arthasui.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
@@ -74,6 +74,10 @@ class ToolWindowTree(val project: Project) : Disposable {
                 ToolWindowManager.getInstance(project).invokeLater {
                     tree.updateUI()
                 }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                Messages.showErrorDialog(project, error.message, "Load Failed")
             }
         })
     }

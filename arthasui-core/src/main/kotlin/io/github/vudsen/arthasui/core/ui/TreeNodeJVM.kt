@@ -1,10 +1,8 @@
 package io.github.vudsen.arthasui.core.ui
 
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.shortenTextWithEllipsis
 import com.intellij.ui.AnimatedIcon
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
-import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
@@ -15,16 +13,16 @@ class TreeNodeJVM(
     private val rootNode: RecursiveTreeNode,
     val providerConfig: JvmProviderConfig,
     val jvm: JVM,
-    project: Project) : AbstractRecursiveTreeNode() {
+    private val parent: RecursiveTreeNode
+) : AbstractRecursiveTreeNode() {
 
     /**
      * 设置加载状态.
      */
     var loading: Boolean = false
 
-    private val manager = project.getService(ArthasExecutionManager::class.java)
-
     override fun refresh(): List<AbstractRecursiveTreeNode> {
+        parent.refreshRootNode()
         return emptyList()
     }
 

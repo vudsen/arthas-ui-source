@@ -4,9 +4,9 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.arthasui.BridgeTestUtil
 import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.CloseableHostMachine
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.currentOS
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import org.junit.Assert
@@ -55,14 +55,13 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
     }
 
     fun testListFiles() {
-        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
-        val hostMachine = template.getHostMachine()
-        template.mkdirs("/opt/arthas-ui-test/pkg")
+        val hostMachine = BridgeTestUtil.createSshHostMachine(testRootDisposable)
+        hostMachine.mkdirs("/opt/arthas-ui-test/pkg")
         hostMachine.execute("touch", "/opt/arthas-ui-test/hello.txt").ok()
         hostMachine.execute("touch", "/opt/arthas-ui-test/world.txt").ok()
         hostMachine.execute("touch", "/opt/arthas-ui-test/abc123.txt").ok()
 
-        val files = template.listFiles("/opt/arthas-ui-test")
+        val files = hostMachine.listFiles("/opt/arthas-ui-test")
         Assert.assertEquals(listOf("abc123.txt", "hello.txt", "pkg", "world.txt"), files)
     }
 
@@ -70,15 +69,16 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
      * 测试手动安装
      */
     fun testToolChainManualDownload() {
-        val template = BridgeTestUtil.createSshHostMachine(testRootDisposable) {
+        val hostMachine = BridgeTestUtil.createSshHostMachine(testRootDisposable) {
             withExtraHost("api.github.com", "127.0.0.1")
             .withExtraHost("github.com", "127.0.0.1")
         }
-        template.getHostMachineConfig().dataDirectory = "/opt/arthas-ui-test"
 
-        template.mkdirs("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
-        template.getHostMachine().execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
-        template.getHostMachine().execute("tar",
+        hostMachine.getHostMachineConfig().dataDirectory = "/opt/arthas-ui-test"
+
+        hostMachine.mkdirs("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
+        hostMachine.execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
+        hostMachine.execute("tar",
             "-czf",
             "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/arthas-xx.tar.gz",
             "-C",
@@ -86,21 +86,21 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
             "test.txt"
         ).ok()
 
-        val files = template.listFiles("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
+        val files = hostMachine.listFiles("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
         Assert.assertEquals(listOf("arthas-xx.tar.gz", "test.txt"), files)
 
-        val toolchainManager = DefaultToolChainManager(template, null)
+        val toolchainManager = DefaultToolChainManager(hostMachine, null)
         val path = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
         Assert.assertEquals("/opt/arthas-ui-test/pkg/arthas", path)
-        Assert.assertFalse(template.isFileNotExist("/opt/arthas-ui-test/pkg/arthas/test.txt"))
+        Assert.assertFalse(hostMachine.isFileNotExist("/opt/arthas-ui-test/pkg/arthas/test.txt"))
     }
 
 
     fun testDownloadWithIndicator() {
         val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
         val progressIndicator = TestProgressIndicator()
-        template.putUserData(HostMachineTemplate.PROGRESS_INDICATOR, WeakReference(progressIndicator))
+        template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(progressIndicator))
         val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
         template.mkdirs(template.getHostMachineConfig().dataDirectory)
         template.download(

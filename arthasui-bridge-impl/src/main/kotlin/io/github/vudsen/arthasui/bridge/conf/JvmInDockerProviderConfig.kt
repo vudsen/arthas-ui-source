@@ -21,10 +21,6 @@ class JvmInDockerProviderConfig(
         return "Docker"
     }
 
-    override fun getIcon(): Icon {
-        return ArthasUIIcons.Box
-    }
-
     @Deprecated("Use deepCopy instead", replaceWith = ReplaceWith("deepCopy"))
     override fun copy(): JvmProviderConfig {
         return JvmInDockerProviderConfig(enabled, dockerPath, javaHome)

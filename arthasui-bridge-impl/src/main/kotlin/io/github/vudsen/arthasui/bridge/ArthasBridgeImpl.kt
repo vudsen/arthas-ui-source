@@ -362,6 +362,10 @@ class ArthasBridgeImpl(
         }
     }
 
+    override fun isBusy(): Boolean {
+        return executionLock.isLocked || stopFlag
+    }
+
     private fun notifyClosed() {
         if (isClosing) {
             return

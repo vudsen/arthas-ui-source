@@ -1,16 +1,16 @@
 package io.github.vudsen.arthasui.script
 
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.template.HostMachineTemplate
 import io.github.vudsen.arthasui.script.helper.DockerSearchHelper
 import io.github.vudsen.arthasui.script.helper.LocalJvmSearchHelper
 
 /**
  * Lazy load all helpers, the helper instance will be cached after first creation.
  */
-class LazyLoadHelper(private val template: HostMachineTemplate, private val hostMachineConfig: HostMachineConfig) {
+class LazyLoadHelper(private val template: HostMachine, private val hostMachineConfig: HostMachineConfig) {
 
     private var _local: LocalJvmSearchHelper? = null
 

@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge.conf
 import io.github.vudsen.arthasui.bridge.bean.SshConfiguration
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.OS
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
@@ -19,6 +20,12 @@ class SshHostMachineConnectConfig(
      * 操作系统
      */
     var os: OS = OS.LINUX,
+    /**
+     * 当该值非空时，表示优先使用本地的包进行传输，而不是让宿主机自己下载.
+     *
+     * 该值对应一个存在的 [HostMachineConfig.id]，并且 [HostMachineConfig.connect] 一定是 [io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig]
+     */
+    var localPkgSourceId: Long? = null,
 ) : HostMachineConnectConfig(TYPE) {
 
     companion object {
@@ -58,7 +65,7 @@ class SshHostMachineConnectConfig(
     }
 
     override fun deepCopy(): HostMachineConnectConfig {
-        return SshHostMachineConnectConfig(name, ssh, os)
+        return SshHostMachineConnectConfig(name, ssh, os, localPkgSourceId)
     }
 
     override fun toString(): String {

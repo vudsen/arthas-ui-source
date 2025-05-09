@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.api.extension
 import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.ui.FormComponent
 
@@ -23,7 +24,7 @@ interface HostMachineConnectProvider {
      * 使用配置连接宿主机.
      * 如果连接需要关闭，则应该返回 [CloseableHostMachine] 的实例
      */
-    fun connect(config: HostMachineConnectConfig): HostMachine
+    fun connect(config: HostMachineConfig): HostMachine
 
     /**
      * 获取配置文件的类

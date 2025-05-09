@@ -1,7 +1,10 @@
 package io.github.vudsen.arthasui.api
 
 enum class OS {
-    WINDOWS, MAC, LINUX
+    WINDOWS,
+    MAC,
+    LINUX,
+    UNKNOWN
 }
 
 /**
