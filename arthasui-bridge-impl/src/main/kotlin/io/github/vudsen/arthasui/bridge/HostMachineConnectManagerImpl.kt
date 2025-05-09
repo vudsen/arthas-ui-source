@@ -85,7 +85,7 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
             val instance = Proxy.newProxyInstance(
                 HostMachineConnectManagerImpl::class.java.classLoader,
                 hostMachine::class.java.interfaces,
-                PooledResource<CloseableHostMachine>(hostMachine, CloseableHostMachineFallback(config), emptySet()) {
+                PooledResource<CloseableHostMachine>(hostMachine, CloseableHostMachineFallback(config)) {
                     return@PooledResource provider.connect(config) as CloseableHostMachine
                 }
             ) as CloseableHostMachine

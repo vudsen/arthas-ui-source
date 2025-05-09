@@ -39,45 +39,50 @@ class ArthasProcessHandler(
         return null
     }
 
+    override fun isProcessTerminated(): Boolean {
+        if (super.isProcessTerminated()) {
+            return true
+        }
+        arthasBridgeTemplate ?.let {
+            return it.isClosed()
+        }
+        return false
+    }
+
     override fun startNotify() {
         addProcessListener(object : ProcessListener {
 
             override fun startNotified(event: ProcessEvent) {
-                ProcessIOExecutorService.INSTANCE.execute {
-                    runBlocking {
-                        notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
-                        try {
-                            val arthasExecutionManager = project.service<ArthasExecutionManager>()
-                            val bridgeTemplate = arthasExecutionManager.getTemplate(jvm)!!
-                            this@ArthasProcessHandler.arthasBridgeTemplate = bridgeTemplate
-                            bridgeTemplate.addListener(object : ArthasBridgeListener() {
-                                override fun onContent(result: String) {
-                                    notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
-                                }
+                notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
+                try {
+                    val arthasExecutionManager = project.service<ArthasExecutionManager>()
+                    val bridgeTemplate = arthasExecutionManager.getTemplate(jvm)!!
+                    this@ArthasProcessHandler.arthasBridgeTemplate = bridgeTemplate
+                    bridgeTemplate.addListener(object : ArthasBridgeListener() {
+                        override fun onContent(result: String) {
+                            notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
+                        }
 
-                                override fun onClose() {
-                                    notifyProcessTerminated(bridgeTemplate.stop())
-                                }
-                            })
+                        override fun onClose() {
+                            notifyProcessTerminated(bridgeTemplate.stop())
+                        }
+                    })
 
-                            bridgeTemplate.attachNow()
-                            if (!bridgeTemplate.isAlive()) {
-                                notifyProcessTerminated(bridgeTemplate.stop())
-                                return@runBlocking
-                            }
-                        } catch (e: Exception) {
-                            StringWriter(1024).use { result ->
-                                PrintWriter(result).use { pw ->
-                                    e.printStackTrace(pw)
-                                    notifyTextAvailable(
-                                        "\nFailed to attach target jvm: ${jvm.name}\n" + result.toString(),
-                                        ProcessOutputTypes.STDERR
-                                    )
-                                }
-                            }
-                            notifyProcessTerminated(1)
+                    bridgeTemplate.attachNow()
+                    if (!bridgeTemplate.isAlive()) {
+                        notifyProcessTerminated(bridgeTemplate.stop())
+                    }
+                } catch (e: Exception) {
+                    StringWriter(1024).use { result ->
+                        PrintWriter(result).use { pw ->
+                            e.printStackTrace(pw)
+                            notifyTextAvailable(
+                                "\nFailed to attach target jvm: ${jvm.name}\n" + result.toString(),
+                                ProcessOutputTypes.STDERR
+                            )
                         }
                     }
+                    notifyProcessTerminated(1)
                 }
             }
         })
@@ -91,7 +96,6 @@ class ArthasProcessHandler(
     override fun coloredTextAvailable(text: String, attributes: Key<*>) {
         super.notifyTextAvailable(text, attributes)
     }
-
 
 
 }

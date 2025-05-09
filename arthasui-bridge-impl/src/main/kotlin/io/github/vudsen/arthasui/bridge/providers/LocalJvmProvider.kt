@@ -46,6 +46,8 @@ class LocalJvmProvider : JvmProvider {
 
             override fun close() {
                 client.disconnect()
+                client.outputStream.close()
+                client.inputStream.close()
             }
 
         }

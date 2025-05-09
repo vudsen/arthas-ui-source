@@ -15,8 +15,8 @@ class SpinHelper(
     /**
      * 睡眠一段时间，每次睡眠的时间会随着调用的次数越来越久
      */
-    suspend fun sleepSuspend() {
-        delay(currentMilliseconds)
+    fun sleep() {
+        Thread.sleep(currentMilliseconds)
         currentMilliseconds = (currentMilliseconds + step).coerceAtMost(maxSleepMilliseconds)
     }
 

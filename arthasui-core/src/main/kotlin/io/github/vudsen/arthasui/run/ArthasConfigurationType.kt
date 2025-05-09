@@ -6,10 +6,19 @@ import com.intellij.icons.AllIcons
 /**
  * Use [com.intellij.execution.configurations.ConfigurationTypeUtil.findConfigurationType] to retrieve this instance
  */
-class ArthasConfigurationTypeBaseImpl :
+class ArthasConfigurationType :
     ConfigurationTypeBase(
-        "io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl",
+        ID,
         "Arthas",
         "Run arthas",
         AllIcons.Ide.Gift
-    )
+    ) {
+
+        init {
+            addFactory(ArthasConfigurationFactory(this))
+        }
+
+        companion object {
+            const val ID = "io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl"
+        }
+    }

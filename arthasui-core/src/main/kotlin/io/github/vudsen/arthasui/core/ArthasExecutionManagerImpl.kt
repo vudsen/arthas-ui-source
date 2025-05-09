@@ -4,17 +4,12 @@ import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.project.Project
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
-import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
-import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
-import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
-import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import java.lang.ref.WeakReference
 
 /**

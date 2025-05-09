@@ -79,6 +79,8 @@ class TunnelServerArthasBridgeFactory(
 
         override fun close() {
             websocket.sendClose(0, "Client exit.")
+            inputStream.close()
+            outputStream.close()
         }
 
     }

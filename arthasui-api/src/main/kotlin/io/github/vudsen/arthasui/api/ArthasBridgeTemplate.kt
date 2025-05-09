@@ -2,10 +2,10 @@ package io.github.vudsen.arthasui.api
 
 import com.intellij.openapi.application.ApplicationManager
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -22,7 +22,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
 
     private val stashedListeners = CopyOnWriteArrayList<ArthasBridgeListener>()
 
-    private val attachDeferred = CompletableDeferred<Unit>()
+    private val attachFuture = CompletableFuture<Unit>()
 
     private inner class ProxiedArthasBridge : InvocationHandler {
 
@@ -40,7 +40,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
                 val bridge = factory.createBridge()
                 afterBridgeCreated(bridge)
                 delegate = bridge
-                attachDeferred.complete(Unit)
+                attachFuture.complete(Unit)
                 return bridge
             } catch (e: Exception) {
                 notifyBridgeCreateError(e)
@@ -49,7 +49,7 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
         }
     }
 
-    override suspend fun execute(command: String): ArthasResultItem {
+    override fun execute(command: String): ArthasResultItem {
         return proxy.execute(command)
     }
 
@@ -80,8 +80,8 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
      * 通知创建 Bridge 失败，并唤醒所有由于 [waitUntilAttached] 而挂起的协程
      */
     private fun notifyBridgeCreateError(e: Exception) {
-        if (!attachDeferred.isCompleted) {
-            attachDeferred.completeExceptionally(e)
+        if (!attachFuture.isDone) {
+            attachFuture.completeExceptionally(e)
         }
         notifyClose()
     }
@@ -97,8 +97,8 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     }
 
     override fun stop(): Int {
-        if (!attachDeferred.isCompleted) {
-            attachDeferred.completeExceptionally(CancellationException())
+        if (!attachFuture.isDone) {
+            attachFuture.completeExceptionally(CancellationException())
         }
         delegate ?.let {
             return it.stop()
@@ -125,8 +125,8 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
     /**
      * 挂起当前协程，直到 attach 成功
      */
-    suspend fun waitUntilAttached() {
-        attachDeferred.await()
+    fun waitUntilAttached() {
+        attachFuture.get()
     }
 
 }

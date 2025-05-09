@@ -2,6 +2,7 @@ package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressManager
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.common.parser.ArthasFrameDecoder
@@ -13,19 +14,21 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
 import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.Reader
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.text.toByteArray
 
 class ArthasBridgeImpl(
     private val arthasProcess: InteractiveShell
 ) : ArthasBridge {
 
-    private val executionLock = Mutex()
-
+    private val executionLock = ReentrantLock()
 
     /**
      * 停止运行标志
@@ -35,6 +38,7 @@ class ArthasBridgeImpl(
 
     companion object {
         private val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
+
         // ctrl c
         private val EOT = Char(3).toString()
     }
@@ -58,19 +62,23 @@ class ArthasBridgeImpl(
 
     private var exitCode: Int? = null
 
-    private var isClosing = false
 
-
-    private suspend fun ensureAttachStatus() {
+    private fun ensureAttachStatus() {
         if (isAttached) {
             if (!arthasProcess.isAlive()) {
-                val readCharSequence = reader.readText()
-                throw IllegalStateException(readCharSequence)
+                stop()
+                throw IllegalStateException("Bridge closed.")
             }
             return
         }
         logger.info("Start init the arthas bridge.")
-        val result = parse0(DefaultFrameDecoder(), true)
+        val result = try {
+            parse0(DefaultFrameDecoder())
+        } catch (e: Exception) {
+            logger.warn("Init bridge failed: ${e.message}")
+            stop()
+            throw e
+        }
         if (logger.isDebugEnabled) {
             logger.debug(result.toString())
         }
@@ -98,46 +106,34 @@ class ArthasBridgeImpl(
      * @param command 命令，写入前需要按需对命令追加 \n
      * @param updateLastExecuted 是否记录命令的变更
      */
-    private suspend fun writeCommand(command: String, updateLastExecuted: Boolean = true) {
+    private fun writeCommand(command: String, updateLastExecuted: Boolean = true) {
         ensureAttachStatus()
         if (updateLastExecuted) {
             lastExecuted = command
         }
-        withContext(Dispatchers.IO) {
-            outputStream.write(command.toByteArray())
-            outputStream.flush()
-        }
+        outputStream.write(command.toByteArray())
+        outputStream.flush()
     }
 
-    private suspend fun parse0(decoder: ArthasFrameDecoder, handleStop: Boolean): ArthasResultItem {
+    private fun parse0(decoder: ArthasFrameDecoder): ArthasResultItem {
         var data: ArthasResultItem? = null
-        val spinHelper = SpinHelper()
+        val spin = SpinHelper()
         while (true) {
-            val len: Int = withContext(Dispatchers.IO) {
-                val len: Int
-                while (true) {
-                    ensureActive()
-                    if (handleStop) {
-                        ensureNotStop()
-                    }
-                    if (reader.ready()) {
-                        spinHelper.reportSuccess()
-                        len = reader.read(readBuffer)
-                        break
-                    } else if (!arthasProcess.isAlive()){
-                        len = -1
-                        break
-                    } else {
-                        spinHelper.sleepSuspend()
-                    }
+            var len: Int
+            while (true) {
+                ProgressManager.checkCanceled()
+                ensureNotStop()
+                if (reader.ready()) {
+                    len = reader.read()
+                    spin.reportSuccess()
+                    break
+                } else if (!arthasProcess.isAlive()) {
+                    throw CancellationException()
+                } else {
+                    spin.sleep()
                 }
-                return@withContext len
             }
             if (len == -1) {
-                if (!arthasProcess.isAlive()) {
-                    notifyClosed()
-                }
-                // canceled.
                 throw CancellationException()
             }
             onText(len)
@@ -249,11 +245,11 @@ class ArthasBridgeImpl(
         return actualLen + 1
     }
 
-    private suspend fun execute0(command: String): ArthasResultItem {
+    private fun execute0(command: String): ArthasResultItem {
         val pos = command.indexOf(" ")
         if (pos == -1) {
             writeCommand(command)
-            return parse0(DefaultFrameDecoder(), true)
+            return parse0(DefaultFrameDecoder())
         }
 
         val item = when (command.substring(0, pos).trim()) {
@@ -262,9 +258,10 @@ class ArthasBridgeImpl(
                 stop()
                 return StringResult("stop")
             }
+
             else -> {
                 writeCommand(command)
-                return parse0(DefaultFrameDecoder(), true)
+                return parse0(DefaultFrameDecoder())
             }
         }
         return item
@@ -276,7 +273,7 @@ class ArthasBridgeImpl(
         }
     }
 
-    override suspend fun execute(command: String): ArthasResultItem {
+    override fun execute(command: String): ArthasResultItem {
         val newCommand = if (!command.endsWith('\n')) {
             command + '\n'
         } else {
@@ -284,10 +281,9 @@ class ArthasBridgeImpl(
         }
         logger.debug("Trying to execute command: $command")
         ensureNotStop()
-        val spinHelper = SpinHelper()
-        while (!executionLock.tryLock()) {
+        while (!executionLock.tryLock(1, TimeUnit.SECONDS)) {
             ensureNotStop()
-            spinHelper.sleepSuspend()
+            Thread.sleep(200)
             logger.debug("Failed to acquire lock for command: $command")
         }
         if (stopFlag) {
@@ -304,21 +300,20 @@ class ArthasBridgeImpl(
         }
     }
 
+
     /**
      * 当命令被取消后，做收尾操作.
      */
-    private suspend fun cleanOutput() {
-        withContext(NonCancellable) {
-            logger.info("Trying to cancel command: $lastExecuted")
-            writeCommand(EOT, false)
-            // 读取剩余所有内容
-            parse0(DefaultFrameDecoder(), true)
-        }
+    private fun cleanOutput() {
+        logger.info("Trying to cancel command: $lastExecuted")
+        writeCommand(EOT, false)
+        // 读取剩余所有内容
+        parse0(DefaultFrameDecoder())
     }
 
-    private suspend fun ognl(command: String): ArthasResultItem {
+    private fun ognl(command: String): ArthasResultItem {
         writeCommand(command)
-        return parse0(OgnlFrameDecoder(), true)
+        return parse0(OgnlFrameDecoder())
     }
 
     override fun isAlive(): Boolean {
@@ -326,6 +321,12 @@ class ArthasBridgeImpl(
     }
 
     override fun isClosed(): Boolean {
+        if (exitCode != null) {
+            return true
+        }
+        if (arthasProcess.isAlive()) {
+            return false
+        }
         return exitCode != null
     }
 
@@ -334,43 +335,39 @@ class ArthasBridgeImpl(
     }
 
     override fun stop(): Int {
-        exitCode ?.let { return it }
+        exitCode?.let { return it }
         logger.info("Stopping arthas...")
         stopFlag = true
-        runBlocking {
-            val spinHelper = SpinHelper()
-            if (!executionLock.tryLock()) {
-                spinHelper.sleepSuspend()
-            }
-            withContext(NonCancellable) {
-                if (arthasProcess.isAlive()) {
-                    writeCommand("stop\n", true)
-                }
-                var len: Int
-                while (reader.read(readBuffer).also { len = it } != -1) {
-                    onText(len)
-                }
-            }
-        }
+        executionLock.lock()
         try {
+            exitCode ?.let {
+                return it
+            }
+            if (arthasProcess.isAlive()) {
+                try {
+                    outputStream.write("stop\n".toByteArray(StandardCharsets.UTF_8))
+                    outputStream.flush()
+                } catch (_: Exception) { }
+            }
+            var len: Int
+            while (reader.read(readBuffer).also { len = it } != -1) {
+                onText(len)
+            }
             arthasProcess.close()
             val code = arthasProcess.exitCode() ?: 0
             exitCode = code
             return code
         } finally {
             notifyClosed()
+            executionLock.unlock()
         }
     }
 
     override fun isBusy(): Boolean {
-        return executionLock.isLocked || stopFlag
+        return executionLock.isLocked() || stopFlag
     }
 
     private fun notifyClosed() {
-        if (isClosing) {
-            return
-        }
-        isClosing = true
         ApplicationManager.getApplication().executeOnPooledThread {
             for (listener in listeners) {
                 listener.onClose()

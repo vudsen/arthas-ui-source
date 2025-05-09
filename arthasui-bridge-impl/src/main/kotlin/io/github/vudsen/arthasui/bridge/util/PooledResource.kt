@@ -14,10 +14,6 @@ class PooledResource<T : AutoCloseable>(
      * 若资源还未被创建，并且调用的方法被忽略时，将会调用该对象的方法
      */
     private val fallback: T,
-    /**
-     * 忽略的方法，调用该方法不会刷新上传使用时间
-     */
-    private val ignoredMethod: Set<String> = emptySet(),
     private val factory: Factory<T>,
 ) : InvocationHandler {
 
@@ -38,7 +34,7 @@ class PooledResource<T : AutoCloseable>(
         args: Array<out Any?>?
     ): Any? {
         val actualArgs: Array<out Any?> = args ?: emptyArray()
-        if (ignoredMethod.contains(method.name)) {
+        if (!method.isAnnotationPresent(RefreshState::class.java)) {
             delegate.get() ?.let {
                 return method.invoke(it.resource, *actualArgs)
             } ?: return method.invoke(fallback, *actualArgs)

@@ -4,6 +4,7 @@ import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
 import com.intellij.execution.configurations.ConfigurationTypeUtil
+import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.editor.ex.EditorEx
@@ -18,7 +19,8 @@ import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
 import io.github.vudsen.arthasui.run.ArthasConfigurationFactory
-import io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl
+import io.github.vudsen.arthasui.run.ArthasConfigurationType
+import io.github.vudsen.arthasui.run.ArthasProcessOptions
 
 /**
  * Arthas Query Console header actions group.
@@ -98,39 +100,34 @@ class ArthasQueryConsoleActionGroup(
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, selected, true) {
 
             override fun run(indicator: ProgressIndicator) {
-                runBlockingCancellable {
-                    arthasBridge ?.let {
-                        it.execute(selected)
-                        return@runBlockingCancellable
-                    }
-                    val coordinator = project.getService(ArthasExecutionManager::class.java)
-
-                    val arthasBridgeTemplate = blockingContext {
-                         coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig, indicator)
-                    }
-                    arthasBridge = arthasBridgeTemplate
-                    arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
-                        override fun onClose() {
-                            arthasBridge = null
-                        }
-                    })
-
-                    val configurationType =
-                        ConfigurationTypeUtil.findConfigurationType(ArthasConfigurationTypeBaseImpl::class.java)
-
-                    val runnerAndConfigurationSettings = RunManager.getInstance(project)
-                        .createConfiguration(virtualFileAttributes.jvm.name, ArthasConfigurationFactory(configurationType, virtualFileAttributes.jvm))
-
-                    runnerAndConfigurationSettings.isTemporary = true
-
-                    ProgramRunnerUtil.executeConfiguration(
-                        runnerAndConfigurationSettings,
-                        ExecutorRegistry.getInstance().getExecutorById(ToolWindowId.RUN)!!
-                    )
-
-                    arthasBridgeTemplate.waitUntilAttached()
-                    arthasBridgeTemplate.execute(selected)
+                arthasBridge ?.let {
+                    it.execute(selected)
+                    return
                 }
+                val coordinator = project.getService(ArthasExecutionManager::class.java)
+
+                val arthasBridgeTemplate = coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig, indicator)
+                arthasBridge = arthasBridgeTemplate
+                arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
+                    override fun onClose() {
+                        arthasBridge = null
+                    }
+                })
+
+                val runnerAndConfigurationSettings = RunManager.getInstance(project)
+                    .createConfiguration(virtualFileAttributes.jvm.name, ArthasConfigurationType::class.java)
+
+                runnerAndConfigurationSettings.isTemporary = true
+                val base = runnerAndConfigurationSettings.configuration as RunConfigurationBase<ArthasProcessOptions>
+                base.loadState(ArthasProcessOptions(virtualFileAttributes.jvm))
+
+                ProgramRunnerUtil.executeConfiguration(
+                    runnerAndConfigurationSettings,
+                    ExecutorRegistry.getInstance().getExecutorById(ToolWindowId.RUN)!!
+                )
+
+                arthasBridgeTemplate.waitUntilAttached()
+                arthasBridgeTemplate.execute(selected)
             }
 
             override fun onThrowable(error: Throwable) {

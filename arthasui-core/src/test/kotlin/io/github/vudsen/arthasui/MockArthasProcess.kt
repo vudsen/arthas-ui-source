@@ -89,7 +89,12 @@ class MockArthasProcess : InteractiveShell {
         return 0
     }
 
-    override fun close() {}
+    override fun close() {
+        clientOut.close()
+        clientOut.close()
+        serverIn.close()
+        serverOut.close()
+    }
 
 
 }

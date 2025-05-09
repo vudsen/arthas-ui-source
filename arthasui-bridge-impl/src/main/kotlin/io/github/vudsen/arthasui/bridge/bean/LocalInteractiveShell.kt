@@ -33,6 +33,8 @@ class LocalInteractiveShell(private val process: Process) : InteractiveShell {
         }
         try {
             process.destroy()
+            process.outputStream.close()
+            process.inputStream.close()
         } catch (_: Exception) { }
     }
 }

@@ -11,9 +11,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
+import io.github.vudsen.arthasui.bridge.util.RefreshState
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.channel.ChannelExec
 import org.apache.sshd.client.channel.ClientChannelEvent
@@ -74,10 +74,9 @@ class SshLinuxHostMachineImpl(
                 if (channel.isClosed) {
                     return
                 }
-                val closeFuture = channel.close(true)
-                while (!closeFuture.await(1, TimeUnit.SECONDS)) {
-                    ProgressManager.checkCanceled()
-                }
+                channel.close(true).await()
+                actualIn.close()
+                actualOut.close()
             }
 
         }
@@ -111,6 +110,7 @@ class SshLinuxHostMachineImpl(
         logger.info("Connection closed: ${connectConfig.ssh.host}")
     }
 
+    @RefreshState
     override fun execute(vararg command: String): CommandExecuteResult {
         session.createExecChannel(command.joinToOptString(" ")).use { exec ->
             val outputStream = ByteArrayOutputStream(1024)
@@ -131,7 +131,7 @@ class SshLinuxHostMachineImpl(
         }
     }
 
-
+    @RefreshState
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val channel = session.createExecChannel(command.joinToOptString(" "))
         val inputStream = PipedInputStream()
@@ -151,7 +151,7 @@ class SshLinuxHostMachineImpl(
         return connectConfig.os
     }
 
-
+    @RefreshState
     override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val file = File(src)
         if (file.length() == 0L) {
@@ -205,6 +205,7 @@ class SshLinuxHostMachineImpl(
         return "RemoteSshHostMachineImpl(name = ${config.name}, host=${connectConfig.ssh.host}, port=${connectConfig.ssh.port})"
     }
 
+    @RefreshState
     override fun isArm(): Boolean {
         val result = execute("uname", "-a").ok()
         return result.contains("arm", ignoreCase = true) ||
@@ -212,18 +213,22 @@ class SshLinuxHostMachineImpl(
                 result.contains("arm64", ignoreCase = true)
     }
 
+    @RefreshState
     override fun isFileNotExist(path: String): Boolean {
         return execute("test", "-f", path).exitCode != 0
     }
 
+    @RefreshState
     override fun isDirectoryExist(path: String): Boolean {
         return execute("test", "-d", path).exitCode == 0
     }
 
+    @RefreshState
     override fun mkdirs(path: String) {
         execute("mkdir", "-p", path)
     }
 
+    @RefreshState
     override fun listFiles(directory: String): List<String> {
         execute("ls", directory).tryUnwrap() ?.let {
             val result = mutableListOf<String>()
@@ -305,7 +310,7 @@ class SshLinuxHostMachineImpl(
     }
 
 
-
+    @RefreshState
     override fun download(url: String, destPath: String) {
         if (!isFileNotExist(destPath)) {
             return
@@ -353,6 +358,7 @@ class SshLinuxHostMachineImpl(
         execute("mv", brokenFlagPath, destPath).ok()
     }
 
+    @RefreshState
     override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
             execute("unzip", target, "-d", destDir).let {
@@ -375,6 +381,7 @@ class SshLinuxHostMachineImpl(
         return false
     }
 
+    @RefreshState
     override fun grep(
         search: String,
         vararg commands: String
@@ -382,6 +389,7 @@ class SshLinuxHostMachineImpl(
         return execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'")
     }
 
+    @RefreshState
     override fun grep(
         searchChain: Array<String>,
         vararg commands: String
@@ -398,10 +406,12 @@ class SshLinuxHostMachineImpl(
         return execute("sh", "-c", command.toString().trim())
     }
 
+    @RefreshState
     override fun env(name: String): String? {
         return execute("bash", "-lc", "'echo \$$name'").ok().trim()
     }
 
+    @RefreshState
     override fun test() {
         execute("uname", "-a").ok()
     }
