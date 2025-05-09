@@ -74,6 +74,8 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
             .withExtraHost("github.com", "127.0.0.1")
         }
 
+        hostMachine.getHostMachineConfig().dataDirectory = "/opt/arthas-ui-test"
+
         hostMachine.mkdirs("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
         hostMachine.execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
         hostMachine.execute("tar",

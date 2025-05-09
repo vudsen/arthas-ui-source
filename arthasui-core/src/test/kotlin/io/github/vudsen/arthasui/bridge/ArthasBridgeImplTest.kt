@@ -86,7 +86,8 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         val localJvmProviderConfig = template.getHostMachineConfig().providers.find { config -> config is LocalJvmProviderConfig }!!
         // Local
         val provider = service<JvmProviderManager>().getProvider(localJvmProviderConfig)
-        val jvm = provider.searchJvm(template, localJvmProviderConfig).find { jvm -> jvm.name.contains("math-game.jar")}!!
+        val jvm = provider.searchJvm(template, localJvmProviderConfig).result!!.find { jvm -> jvm.name.contains("math-game.jar")}!!
+
 
         val executionManager = project.getService(ArthasExecutionManager::class.java) as ArthasExecutionManagerImpl
         val builder = StringBuilder()
