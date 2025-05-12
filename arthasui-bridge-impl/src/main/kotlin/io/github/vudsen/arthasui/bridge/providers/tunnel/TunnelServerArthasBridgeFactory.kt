@@ -10,10 +10,10 @@ import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.TunnelServerJvm
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
+import java.io.PipedReader
+import java.io.PipedWriter
+import java.io.Reader
+import java.io.Writer
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -28,7 +28,7 @@ class TunnelServerArthasBridgeFactory(
 ) : ArthasBridgeFactory {
 
     companion object {
-        private class FakeInputStream(private val websocket: WebSocket) : OutputStream() {
+        private class FakeWriter(private val websocket: WebSocket) : Writer() {
 
             private val gson = service<SingletonInstanceHolderService>().gson
 
@@ -39,17 +39,19 @@ class TunnelServerArthasBridgeFactory(
                 return gson.toJson(jsonObject)
             }
 
-            override fun write(b: Int) {
-                websocket.sendText(buildMessage(b.toString()), true).get()
+            override fun write(cbuf: CharArray, off: Int, len: Int) {
+                websocket.sendText(buildMessage(String(cbuf, off, len)), true)
             }
 
-            override fun write(b: ByteArray) {
-                websocket.sendText(buildMessage(String(b, StandardCharsets.UTF_8)), true).get()
+            override fun write(str: String) {
+                websocket.sendText(buildMessage(str), true)
             }
 
-            override fun write(b: ByteArray, off: Int, len: Int) {
-                websocket.sendText(buildMessage(String(b, off, len, StandardCharsets.UTF_8)), true).get()
-            }
+            override fun flush() {}
+
+            override fun close() {}
+
+
 
         }
     }
@@ -57,16 +59,17 @@ class TunnelServerArthasBridgeFactory(
     private var exitCode: Int? = null
 
     private inner class WebSocketInteractiveShell(
-        private val inputStream: InputStream,
-        private val outputStream: OutputStream,
+        private val reader: Reader,
+        private val writer: Writer,
         private val websocket: WebSocket
     ) : InteractiveShell {
-        override fun getInputStream(): InputStream {
-            return inputStream
+
+        override fun getReader(): Reader {
+            return reader
         }
 
-        override fun getOutputStream(): OutputStream {
-            return outputStream
+        override fun getWriter(): Writer {
+            return writer
         }
 
         override fun isAlive(): Boolean {
@@ -79,23 +82,25 @@ class TunnelServerArthasBridgeFactory(
 
         override fun close() {
             websocket.sendClose(0, "Client exit.")
+            reader.close()
+            writer.close()
         }
 
     }
 
-    private inner class MyWebSocketListener(private val outputStream: OutputStream, private val future: CompletableFuture<Unit>) : WebSocket.Listener {
+    private inner class MyWebSocketListener(private val writer: Writer, private val future: CompletableFuture<Unit>) : WebSocket.Listener {
 
         override fun onBinary(
             webSocket: WebSocket?,
             data: ByteBuffer,
             last: Boolean
         ): CompletionStage<*>? {
-            outputStream.write(data.toByteArray())
+            writer.write(String(data.toByteArray(), StandardCharsets.UTF_8))
             return super.onBinary(webSocket, data, last)
         }
 
         override fun onText(webSocket: WebSocket?, data: CharSequence, last: Boolean): CompletionStage<*>? {
-            outputStream.write(data.toString().toByteArray())
+            writer.write(data.toString())
             return super.onText(webSocket, data, last)
         }
 
@@ -124,19 +129,19 @@ class TunnelServerArthasBridgeFactory(
 
     override fun createBridge(): ArthasBridge {
         val client = HttpClient.newHttpClient()
-        val actualInput = PipedInputStream()
+        val actualReader = PipedReader()
 
         val future = CompletableFuture<Unit>()
 
         val webSocket = client.newWebSocketBuilder()
             .buildAsync(
                 URI.create(config.wsPath + "?method=connectArthas&id=${jvm.id}&targetServer=${jvm.agent.clientConnectHost}"),
-                MyWebSocketListener(PipedOutputStream(actualInput), future)
+                MyWebSocketListener(PipedWriter(actualReader), future)
             )
             .join()
 
         future.get()
-        return ArthasBridgeImpl(WebSocketInteractiveShell(actualInput, FakeInputStream(webSocket), webSocket))
+        return ArthasBridgeImpl(WebSocketInteractiveShell(actualReader, FakeWriter(webSocket), webSocket))
     }
 
 

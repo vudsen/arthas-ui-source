@@ -1,13 +1,13 @@
 package io.github.vudsen.arthasui.api.bean
 
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.Reader
+import java.io.Writer
 
-interface InteractiveShell : AutoCloseable{
+interface InteractiveShell : AutoCloseable {
 
-    fun getInputStream(): InputStream
+    fun getReader(): Reader
 
-    fun getOutputStream(): OutputStream
+    fun getWriter(): Writer
 
     fun isAlive(): Boolean
 

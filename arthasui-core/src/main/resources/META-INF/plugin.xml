@@ -45,7 +45,7 @@
                                  parentId="tools"
                                  instance="io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable"/>
 
-        <configurationType implementation="io.github.vudsen.arthasui.run.ArthasConfigurationTypeBaseImpl"/>
+        <configurationType implementation="io.github.vudsen.arthasui.run.ArthasConfigurationType"/>
         <toolWindow id="ArthasUI"
                     anchor="right"
                     icon="io.github.vudsen.arthasui.common.ArthasUIIcons.Arthas"

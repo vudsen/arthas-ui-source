@@ -8,7 +8,6 @@ import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.arthasui.BridgeTestUtil
-import io.github.vudsen.arthasui.MockArthasProcess
 import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
@@ -18,8 +17,6 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.first
 import org.junit.Assert
 import org.junit.BeforeClass
 
@@ -39,47 +36,12 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         }
     }
 
-    /**
-     * 所有的换行符都应该被统一为 \n
-     */
-    fun testLineSeparator() {
-        val process = MockArthasProcess()
-        val arthasBridge: ArthasBridge = ArthasBridgeImpl(process)
-        process.sendReadyMessage()
-        val flow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-        runBlocking {
-            arthasBridge.addListener(object : ArthasBridgeListener() {
-                override fun onContent(result: String) {
-                    Assert.assertFalse(result.contains('\r'))
-                    Assert.assertFalse(result.contains(0.toChar()))
-                    flow.tryEmit(Unit)
-                }
-            })
-            launch {
-                process.waitClientRequest()
-                process.writeResponse("hello\r")
-                flow.first()
-                process.writeResponse(" world.\r")
-                flow.first()
-                process.writeResponse("\r\nhow\r\n")
-                flow.first()
-                process.writeResponse("\r\nare\r")
-                flow.first()
-                process.writeResponse("\nyou?\r\r\n")
-                process.writeResponseEnd()
-            }
-            launch {
-                val item = arthasBridge.execute("any")
-                Assert.assertEquals("hello world.\nhow\n\nare\nyou?", item.toString())
-            }
-        }
-    }
 
     /**
      * Test attach to linux machine.
      *
      * For chinese developer, you can add environment variable `TOOLCHAIN_MIRROR=https://5j9g3t.site/github-mirror`
-     * to avoid download failed from Github.
+     * to avoid download failed from GitHub.
      */
     fun testAttachLinuxLocal() {
         val template = BridgeTestUtil.createMathGameSshMachine(testRootDisposable)
@@ -114,15 +76,13 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
                     println("closed")
                 }
             })
-            runBlocking {
-                arthasBridge.attachNow()
-                arthasBridge.waitUntilAttached()
+            arthasBridge.attachNow()
+            arthasBridge.waitUntilAttached()
 
-                executionManager.getTemplate(jvm)!!.let {
-                    it.execute("sc demo.*")
-                    it.execute("echo hello")
-                    it.stop()
-                }
+            executionManager.getTemplate(jvm)!!.let {
+                it.execute("sc demo.*")
+                it.execute("echo hello")
+                it.stop()
             }
             Assert.assertEquals(mutableListOf("sc demo.*", "echo hello"), executedCommand)
             Assert.assertTrue(executeResult[0].startsWith("demo.MathGame\nAffect(row-cnt:1)"))

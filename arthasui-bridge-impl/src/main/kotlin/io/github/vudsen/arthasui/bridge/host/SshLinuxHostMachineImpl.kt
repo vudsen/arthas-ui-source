@@ -11,9 +11,9 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
+import io.github.vudsen.arthasui.bridge.util.RefreshState
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.channel.ChannelExec
 import org.apache.sshd.client.channel.ClientChannelEvent
@@ -27,9 +27,13 @@ import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+import java.io.Reader
+import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.EnumSet
@@ -50,16 +54,20 @@ class SshLinuxHostMachineImpl(
 
         private class SshInteractiveShell(
             private val channel: ChannelExec,
-            private val actualIn: InputStream,
-            private val actualOut: OutputStream
+            actualIn: InputStream,
+            actualOut: OutputStream
         ) : InteractiveShell {
 
-            override fun getInputStream(): InputStream {
-                return actualIn
+            private val reader = InputStreamReader(actualIn)
+
+            private val writer = OutputStreamWriter(actualOut)
+
+            override fun getReader(): Reader {
+                return reader
             }
 
-            override fun getOutputStream(): OutputStream {
-                return actualOut
+            override fun getWriter(): Writer {
+                return writer
             }
 
             override fun isAlive(): Boolean {
@@ -74,10 +82,10 @@ class SshLinuxHostMachineImpl(
                 if (channel.isClosed) {
                     return
                 }
-                val closeFuture = channel.close(true)
-                while (!closeFuture.await(1, TimeUnit.SECONDS)) {
-                    ProgressManager.checkCanceled()
-                }
+                channel.close(true).await()
+                reader.close()
+                // stream is already closed
+                // writer.close()
             }
 
         }
@@ -111,6 +119,7 @@ class SshLinuxHostMachineImpl(
         logger.info("Connection closed: ${connectConfig.ssh.host}")
     }
 
+    @RefreshState
     override fun execute(vararg command: String): CommandExecuteResult {
         session.createExecChannel(command.joinToOptString(" ")).use { exec ->
             val outputStream = ByteArrayOutputStream(1024)
@@ -131,7 +140,7 @@ class SshLinuxHostMachineImpl(
         }
     }
 
-
+    @RefreshState
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val channel = session.createExecChannel(command.joinToOptString(" "))
         val inputStream = PipedInputStream()
@@ -151,7 +160,7 @@ class SshLinuxHostMachineImpl(
         return connectConfig.os
     }
 
-
+    @RefreshState
     override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val file = File(src)
         if (file.length() == 0L) {
@@ -205,6 +214,7 @@ class SshLinuxHostMachineImpl(
         return "RemoteSshHostMachineImpl(name = ${config.name}, host=${connectConfig.ssh.host}, port=${connectConfig.ssh.port})"
     }
 
+    @RefreshState
     override fun isArm(): Boolean {
         val result = execute("uname", "-a").ok()
         return result.contains("arm", ignoreCase = true) ||
@@ -212,18 +222,22 @@ class SshLinuxHostMachineImpl(
                 result.contains("arm64", ignoreCase = true)
     }
 
+    @RefreshState
     override fun isFileNotExist(path: String): Boolean {
         return execute("test", "-f", path).exitCode != 0
     }
 
+    @RefreshState
     override fun isDirectoryExist(path: String): Boolean {
         return execute("test", "-d", path).exitCode == 0
     }
 
+    @RefreshState
     override fun mkdirs(path: String) {
         execute("mkdir", "-p", path)
     }
 
+    @RefreshState
     override fun listFiles(directory: String): List<String> {
         execute("ls", directory).tryUnwrap() ?.let {
             val result = mutableListOf<String>()
@@ -253,7 +267,7 @@ class SshLinuxHostMachineImpl(
         var tp = 0
         try {
             progressIndicator.text = "Downloading $url"
-            BufferedReader(shell.getInputStream().reader()).use { br ->
+            BufferedReader(shell.getReader()).use { br ->
                 var line: String? = ""
                 while (br.readLine().also { line = it } != null) {
                     ProgressManager.checkCanceled()
@@ -305,7 +319,7 @@ class SshLinuxHostMachineImpl(
     }
 
 
-
+    @RefreshState
     override fun download(url: String, destPath: String) {
         if (!isFileNotExist(destPath)) {
             return
@@ -353,6 +367,7 @@ class SshLinuxHostMachineImpl(
         execute("mv", brokenFlagPath, destPath).ok()
     }
 
+    @RefreshState
     override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
             execute("unzip", target, "-d", destDir).let {
@@ -375,6 +390,7 @@ class SshLinuxHostMachineImpl(
         return false
     }
 
+    @RefreshState
     override fun grep(
         search: String,
         vararg commands: String
@@ -382,6 +398,7 @@ class SshLinuxHostMachineImpl(
         return execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'")
     }
 
+    @RefreshState
     override fun grep(
         searchChain: Array<String>,
         vararg commands: String
@@ -398,10 +415,12 @@ class SshLinuxHostMachineImpl(
         return execute("sh", "-c", command.toString().trim())
     }
 
+    @RefreshState
     override fun env(name: String): String? {
         return execute("bash", "-lc", "'echo \$$name'").ok().trim()
     }
 
+    @RefreshState
     override fun test() {
         execute("uname", "-a").ok()
     }

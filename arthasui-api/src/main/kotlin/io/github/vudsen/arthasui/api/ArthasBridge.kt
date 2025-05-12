@@ -13,12 +13,7 @@ interface ArthasBridge {
      * @return 执行后的结果
      */
     @Throws(BridgeException::class)
-    suspend fun execute(command: String): ArthasResultItem
-
-    /**
-     * 连接是否仍然存活. 如果连接意外终止，应该立即输出所有的输出
-     */
-    fun isAlive(): Boolean
+    fun execute(command: String): ArthasResultItem
 
     /**
      * 进程是否完全关闭.
@@ -31,7 +26,7 @@ interface ArthasBridge {
     fun addListener(arthasBridgeListener: ArthasBridgeListener)
 
     /**
-     * 关闭进场并返回 exit code
+     * 关闭进场并返回 exit code. 如果已经关闭，返回退出码
      */
     fun stop(): Int
 

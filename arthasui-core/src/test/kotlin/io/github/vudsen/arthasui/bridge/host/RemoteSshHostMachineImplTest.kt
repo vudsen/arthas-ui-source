@@ -4,8 +4,6 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.arthasui.BridgeTestUtil
 import org.junit.Assert
 import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
 
 class RemoteSshHostMachineImplTest : BasePlatformTestCase() {
 
@@ -24,9 +22,9 @@ class RemoteSshHostMachineImplTest : BasePlatformTestCase() {
             shellPath
         ).ok()
         template.createInteractiveShell("sh", shellPath).use { shell ->
-            val out = shell.getOutputStream()
-            val reader = BufferedReader(InputStreamReader(shell.getInputStream()))
-            out.write("hello world\n".toByteArray(StandardCharsets.UTF_8))
+            val out = shell.getWriter()
+            val reader = BufferedReader(shell.getReader())
+            out.write("hello world\n")
             out.flush()
             var spin = 0
             while (spin < 5) {
