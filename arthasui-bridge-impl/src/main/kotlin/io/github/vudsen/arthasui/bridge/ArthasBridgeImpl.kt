@@ -121,7 +121,7 @@ class ArthasBridgeImpl(
                 ProgressManager.checkCanceled()
                 ensureNotStop()
                 if (reader.ready()) {
-                    len = reader.read()
+                    len = reader.read(readBuffer)
                     spin.reportSuccess()
                     break
                 } else if (!arthasProcess.isAlive()) {
