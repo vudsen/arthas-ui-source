@@ -84,7 +84,8 @@ class SshLinuxHostMachineImpl(
                 }
                 channel.close(true).await()
                 reader.close()
-                writer.close()
+                // stream is already closed
+                // writer.close()
             }
 
         }
