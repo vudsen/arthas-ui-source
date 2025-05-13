@@ -14,7 +14,8 @@ import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
 import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
-import io.github.vudsen.arthasui.bridge.toolchain.K8sToolChainManager
+import io.github.vudsen.arthasui.bridge.host.K8sPodHostMachine
+import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.K8sJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
@@ -43,12 +44,15 @@ class K8sJvmProvider() : JvmProvider {
         return ArthasBridgeFactory {
             jvm as PodJvm
             val hostMachine = jvm.context.template as K8sHostMachine
+            val k8sPodHostMachine = K8sPodHostMachine(jvm, hostMachine)
 
-            val toolChainManager = K8sToolChainManager(
-                hostMachine,
+            val localHostMachine =
                 ToolChainManagerUtil.findLocalHostMachine(hostMachine.getConfiguration().localPkgSourceId)
-                    ?: throw IllegalStateException("No such local host machine, id: ${hostMachine.getConfiguration().localPkgSourceId}, please check your configuration"),
-                jvm,
+                    ?: throw IllegalStateException("Local host machine not exist, please check your configuration.")
+
+            val toolChainManager = DefaultToolChainManager(
+                k8sPodHostMachine,
+                localHostMachine,
                 ToolChainManagerUtil.mirror
             )
 

@@ -68,12 +68,12 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
         return CommandExecuteResult(String(process.inputStream.readAllBytes(), StandardCharsets.UTF_8), process.exitValue())
     }
 
-    private fun createInteractiveShell0(jvm: PodJvm, vararg command: String): Process {
+    fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
         return Exec(apiClient).exec(jvm.namespace, jvm.id, command, true)
     }
 
     fun createInteractiveShell(jvm: PodJvm, vararg command: String): InteractiveShell {
-        return StandardInteractiveShell(createInteractiveShell0(jvm, *command))
+        return StandardInteractiveShell(createOriginalInteractiveShell(jvm, *command))
     }
 
 
