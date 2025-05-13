@@ -8,17 +8,17 @@ import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 
-object ToolChainManagerFactory {
+object ToolChainManagerUtil {
 
-    private val mirror = System.getenv("TOOLCHAIN_MIRROR")
+    val mirror = System.getenv("TOOLCHAIN_MIRROR")
 
-    private fun findDelegate(id: Long?): ShellAvailableHostMachine? {
+    fun findLocalHostMachine(id: Long?): ShellAvailableHostMachine? {
         if (id == null) {
             return null
         }
         val localHostMachineConfig = service<ArthasUISettingsPersistent>().state.hostMachines.find { v -> v.id == id }
         if (localHostMachineConfig == null) {
-            throw IllegalStateException("No such id '${id}', please consider update your configuration.")
+            return null
         }
         val local = service<HostMachineConnectManager>().connect(localHostMachineConfig)
         if (local is ShellAvailableHostMachine) {
@@ -30,7 +30,7 @@ object ToolChainManagerFactory {
     fun createToolChainManager(current: ShellAvailableHostMachine): ToolchainManager {
         return DefaultToolChainManager(
             current,
-            if (current is SshLinuxHostMachineImpl) { findDelegate(current.getConfiguration().localPkgSourceId) } else { null },
+            if (current is SshLinuxHostMachineImpl) { findLocalHostMachine(current.getConfiguration().localPkgSourceId) } else { null },
             mirror
         )
     }

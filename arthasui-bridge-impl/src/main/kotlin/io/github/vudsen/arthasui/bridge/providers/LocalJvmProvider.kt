@@ -14,13 +14,11 @@ import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
+import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import org.apache.commons.net.telnet.TelnetClient
-import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.io.Reader
 import java.io.Writer
@@ -112,7 +110,7 @@ class LocalJvmProvider : JvmProvider {
     ): ArthasBridgeFactory {
         val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val toolchainManager = ToolChainManagerFactory.createToolChainManager(hostMachine)
+        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
 
         val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
         val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)

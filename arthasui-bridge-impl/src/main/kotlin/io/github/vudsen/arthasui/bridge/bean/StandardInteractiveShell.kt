@@ -4,7 +4,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import java.io.Reader
 import java.io.Writer
 
-class LocalInteractiveShell(private val pro: Process) : InteractiveShell {
+class StandardInteractiveShell(private val pro: Process) : InteractiveShell {
 
     override fun getReader(): Reader {
         return pro.inputReader()

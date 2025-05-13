@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge.providers.tunnel
 
-import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.bean.UIContext
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
@@ -18,10 +18,11 @@ class TunnelServerConnectProvider : HostMachineConnectProvider {
 
     override fun createForm(
         oldEntity: HostMachineConnectConfig?,
-        parentDisposable: Disposable
+        context: UIContext
     ): FormComponent<HostMachineConnectConfig> {
-        return TunnelServerConnectForm(oldEntity, parentDisposable)
+        return TunnelServerConnectForm(oldEntity, context.parentDisposable)
     }
+
 
     override fun connect(config: HostMachineConfig): HostMachine {
         return TunnelServerHostMachine(config)
