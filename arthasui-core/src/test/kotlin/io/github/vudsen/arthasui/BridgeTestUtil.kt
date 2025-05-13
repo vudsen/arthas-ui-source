@@ -83,9 +83,6 @@ object BridgeTestUtil {
         instance[key] ?.let {
             return it
         }
-        if (currentOS() != OS.LINUX) {
-            throw UnsupportedOperationException("Only linux is allowed")
-        }
         val sshContainer = GenericContainer(DockerImageName.parse(image))
             .withExposedPorts(22)
 
