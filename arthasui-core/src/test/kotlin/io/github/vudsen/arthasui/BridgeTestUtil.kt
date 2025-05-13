@@ -57,7 +57,7 @@ object BridgeTestUtil {
     }
 
     fun createMathGameSshMachine(parentDisposable: Disposable): ShellAvailableHostMachine {
-        val server = setupContainer("xu2237803016/ssh-server-with-math-game:0.0.3", parentDisposable, null)
+        val server = setupContainer("vudsen/ssh-server-with-math-game:0.0.3", parentDisposable, null)
         val config = HostMachineConfig(
             -1,
             "Remote",
