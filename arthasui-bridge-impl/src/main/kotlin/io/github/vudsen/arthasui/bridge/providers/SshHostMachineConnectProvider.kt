@@ -32,9 +32,9 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
 
     override fun createForm(
         oldEntity: HostMachineConnectConfig?,
-        context: UIContext
+        parentDisposable: Disposable
     ): FormComponent<HostMachineConnectConfig> {
-        return SshConfigurationForm(oldEntity, context.parentDisposable)
+        return SshConfigurationForm(oldEntity, parentDisposable)
     }
 
 

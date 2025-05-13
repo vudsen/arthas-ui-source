@@ -111,8 +111,8 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
                     ProgressManager.getInstance().run(object : Task.Modal(null, "Test Connection", true) {
 
                         override fun run(p0: ProgressIndicator) {
-                            val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig)
                             try {
+                                val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig)
                                 hostMachine.test()
                                 currentIndex++
                                 updateButtonUI()

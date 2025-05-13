@@ -16,16 +16,8 @@ interface HostMachineConnectProvider {
     fun getName(): String
 
 
-    /**
-     * 创建一个表单, 用于创建一个对应的连接配置
-     * @param oldEntity 旧配置，如果非空，表示为更新
-     */
-    fun createForm(oldEntity: HostMachineConnectConfig?, context: UIContext): FormComponent<HostMachineConnectConfig>
 
-    @Deprecated("use fun createForm(oldEntity: HostMachineConnectConfig?, context: UIContext) instead")
-    fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig> {
-        return createForm(oldEntity, UIContext(parentDisposable))
-    }
+    fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig>
 
 
     /**

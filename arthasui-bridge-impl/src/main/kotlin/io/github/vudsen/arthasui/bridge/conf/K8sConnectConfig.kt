@@ -32,10 +32,10 @@ class K8sConnectConfig(
     var localPkgSourceId: Long? = null,
 ) : HostMachineConnectConfig(TYPE) {
 
-    enum class AuthorizationType {
-        KUBE_CONFIG,
-        KUBE_CONFIG_FILE,
-        TOKEN,
+    enum class AuthorizationType(val displayName: String) {
+        TOKEN("Token"),
+        KUBE_CONFIG("Kubeconfig"),
+        KUBE_CONFIG_FILE("Kubeconfig File"),
     }
 
     data class TokenAuthorization(

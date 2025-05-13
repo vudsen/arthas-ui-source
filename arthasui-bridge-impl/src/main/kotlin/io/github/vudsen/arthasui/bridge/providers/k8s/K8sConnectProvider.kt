@@ -19,10 +19,11 @@ class K8sConnectProvider : HostMachineConnectProvider {
 
     override fun createForm(
         oldEntity: HostMachineConnectConfig?,
-        context: UIContext
+        parentDisposable: Disposable
     ): FormComponent<HostMachineConnectConfig> {
-        return K8sConnectForm(oldEntity, context)
+        return K8sConnectForm(oldEntity, parentDisposable)
     }
+
 
 
     override fun connect(config: HostMachineConfig): HostMachine {
