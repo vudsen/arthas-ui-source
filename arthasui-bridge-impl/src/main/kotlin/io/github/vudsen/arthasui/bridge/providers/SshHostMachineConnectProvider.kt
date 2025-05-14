@@ -1,7 +1,6 @@
 package io.github.vudsen.arthasui.bridge.providers
 
 import com.intellij.openapi.Disposable
-import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.bean.UIContext
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
@@ -38,7 +37,7 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
     }
 
 
-    override fun connect(config: HostMachineConfig): CloseableHostMachine {
+    override fun connect(config: HostMachineConfig): SshLinuxHostMachineImpl {
         return SshLinuxHostMachineImpl(config, MyCloseableExecutorService())
     }
 

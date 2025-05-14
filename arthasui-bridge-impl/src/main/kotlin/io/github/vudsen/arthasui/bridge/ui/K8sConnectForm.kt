@@ -7,9 +7,9 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.EditorTextField
-import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.TextAccessor
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
@@ -39,6 +39,7 @@ class K8sConnectForm(
     private val segmentButtonBind = SegmentButtonBind(state)
 
     override fun getState(): K8sConnectConfig {
+        state.token = tokenAuthorization
         return state
     }
 
@@ -64,10 +65,7 @@ class K8sConnectForm(
     private fun createFileChooser(): TextFieldWithBrowseButton {
         val fileChooser = TextFieldWithBrowseButton()
         val fileChooserDescriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
-        fileChooser.addBrowseFolderListener(
-            null,
-            fileChooserDescriptor
-        )
+        fileChooser.addBrowseFolderListener(TextBrowseFolderListener(fileChooserDescriptor))
         return fileChooser
     }
 
