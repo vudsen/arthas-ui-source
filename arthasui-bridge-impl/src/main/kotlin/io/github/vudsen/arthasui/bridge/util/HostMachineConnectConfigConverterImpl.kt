@@ -8,6 +8,7 @@ import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.api.bean.EmptyConnectConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfigConverter
+import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
 
 
@@ -20,6 +21,7 @@ class HostMachineConnectConfigConverterImpl : HostMachineConnectConfigConverter 
                 .registerSubtype(LocalConnectConfig::class.java, LocalConnectConfig.TYPE)
                 .registerSubtype(SshHostMachineConnectConfig::class.java, SshHostMachineConnectConfig.TYPE)
                 .registerSubtype(TunnelServerConnectConfig::class.java, TunnelServerConnectConfig.TYPE)
+                .registerSubtype(K8sConnectConfig::class.java, K8sConnectConfig.TYPE)
             gson = GsonBuilder().registerTypeAdapterFactory(adapterFactory).create()
         }
 

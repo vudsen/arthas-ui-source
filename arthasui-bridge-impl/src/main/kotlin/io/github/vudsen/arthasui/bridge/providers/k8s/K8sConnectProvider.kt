@@ -1,4 +1,4 @@
-package io.github.vudsen.arthasui.bridge.providers.tunnel
+package io.github.vudsen.arthasui.bridge.providers.k8s
 
 import com.intellij.openapi.Disposable
 import io.github.vudsen.arthasui.api.HostMachine
@@ -7,30 +7,31 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
-import io.github.vudsen.arthasui.bridge.conf.TunnelServerConnectConfig
-import io.github.vudsen.arthasui.bridge.host.TunnelServerHostMachine
-import io.github.vudsen.arthasui.bridge.ui.TunnelServerConnectForm
+import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
+import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
+import io.github.vudsen.arthasui.bridge.ui.K8sConnectForm
 
-class TunnelServerConnectProvider : HostMachineConnectProvider {
+class K8sConnectProvider : HostMachineConnectProvider {
 
     override fun getName(): String {
-        return "Tunnel Server"
+        return "Kubernetes"
     }
 
     override fun createForm(
         oldEntity: HostMachineConnectConfig?,
         parentDisposable: Disposable
     ): FormComponent<HostMachineConnectConfig> {
-        return TunnelServerConnectForm(oldEntity, parentDisposable)
+        return K8sConnectForm(oldEntity, parentDisposable)
     }
+
 
 
     override fun connect(config: HostMachineConfig): HostMachine {
-        return TunnelServerHostMachine(config)
+        return K8sHostMachine(config)
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {
-        return TunnelServerConnectConfig::class.java
+        return K8sConnectConfig::class.java
     }
 
     override fun isCloseableHostMachine(): Boolean {

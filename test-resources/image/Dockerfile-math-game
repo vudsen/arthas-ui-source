@@ -1,0 +1,7 @@
+# vudsen/math-game
+FROM eclipse-temurin:21.0.7_6-jre-noble
+
+WORKDIR /opt/arthas
+ADD math-game.jar /opt/arthas/math-game.jar
+
+CMD ["java", "-jar", "math-game.jar"]

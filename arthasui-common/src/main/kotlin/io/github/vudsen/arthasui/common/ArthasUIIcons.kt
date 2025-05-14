@@ -30,4 +30,11 @@ object ArthasUIIcons {
 
     @JvmField
     val App = IconLoader.getIcon("/icons/app.svg", javaClass)
+
+    @JvmField
+    val Kubernetes = IconLoader.getIcon("/icons/kubernetes.svg", javaClass)
+
+    @JvmField
+    val Cubes = IconLoader.getIcon("/icons/cubes.svg", javaClass)
+
 }

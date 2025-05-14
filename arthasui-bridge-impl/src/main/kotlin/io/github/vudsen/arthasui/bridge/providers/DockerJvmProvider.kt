@@ -11,12 +11,11 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
-import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.DockerJvm
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
-import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerFactory
+import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
 import io.github.vudsen.arthasui.bridge.ui.DockerJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import io.github.vudsen.arthasui.common.util.MapTypeToken
@@ -76,7 +75,7 @@ class DockerJvmProvider : JvmProvider {
         jvmProviderConfig: JvmProviderConfig,
     ): ArthasBridgeFactory {
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val toolchainManager = ToolChainManagerFactory.createToolChainManager(hostMachine)
+        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
         val config = jvmProviderConfig as JvmInDockerProviderConfig
         val javaExecutable = if (config.javaHome.isEmpty()) {
             "java"

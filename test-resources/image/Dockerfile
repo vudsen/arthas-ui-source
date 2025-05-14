@@ -1,3 +1,4 @@
+# vudsen/ssh-server-with-math-game
 FROM rastasheep/ubuntu-sshd:18.04
 
 ENV JAVA_HOME /opt/java

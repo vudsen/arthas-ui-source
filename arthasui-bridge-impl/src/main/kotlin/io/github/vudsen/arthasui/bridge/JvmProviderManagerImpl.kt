@@ -6,6 +6,7 @@ import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.bridge.providers.DockerJvmProvider
 import io.github.vudsen.arthasui.bridge.providers.LocalJvmProvider
+import io.github.vudsen.arthasui.bridge.providers.k8s.K8sJvmProvider
 import io.github.vudsen.arthasui.bridge.providers.tunnel.TunnelServerJvmProvider
 
 class JvmProviderManagerImpl : JvmProviderManager {
@@ -16,6 +17,7 @@ class JvmProviderManagerImpl : JvmProviderManager {
         register(LocalJvmProvider())
         register(DockerJvmProvider())
         register(TunnelServerJvmProvider())
+        register(K8sJvmProvider())
     }
 
 

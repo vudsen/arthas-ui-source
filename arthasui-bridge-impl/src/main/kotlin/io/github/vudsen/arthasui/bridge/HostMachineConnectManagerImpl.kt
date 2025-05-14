@@ -9,9 +9,12 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
+import io.github.vudsen.arthasui.bridge.host.AbstractLinuxShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.CloseableHostMachineFallback
 import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
+import io.github.vudsen.arthasui.bridge.providers.k8s.K8sConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.tunnel.TunnelServerConnectProvider
 import io.github.vudsen.arthasui.bridge.util.PooledResource
 import java.lang.reflect.Proxy
@@ -34,6 +37,7 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
         register(LocalHostMachineConnectProvider())
         register(SshHostMachineConnectProvider())
         register(TunnelServerConnectProvider())
+        register(K8sConnectProvider())
     }
 
     /**
@@ -82,9 +86,14 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
 
         synchronized(config) {
             cache[config.connect] ?.let { return it }
+            val interfaces = if (hostMachine is AbstractLinuxShellAvailableHostMachine) {
+                arrayOf(*hostMachine::class.java.interfaces, ShellAvailableHostMachine::class.java)
+            } else {
+                hostMachine::class.java.interfaces
+            }
             val instance = Proxy.newProxyInstance(
                 HostMachineConnectManagerImpl::class.java.classLoader,
-                hostMachine::class.java.interfaces,
+                interfaces,
                 PooledResource<CloseableHostMachine>(hostMachine, CloseableHostMachineFallback(config)) {
                     return@PooledResource provider.connect(config) as CloseableHostMachine
                 }

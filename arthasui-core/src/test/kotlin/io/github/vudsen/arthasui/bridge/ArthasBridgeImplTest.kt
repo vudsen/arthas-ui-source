@@ -1,40 +1,18 @@
 package io.github.vudsen.arthasui.bridge
 
-import com.intellij.mock.MockApplication
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.LogLevel
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.arthasui.BridgeTestUtil
 import io.github.vudsen.arthasui.TestProgressIndicator
-import io.github.vudsen.arthasui.api.ArthasBridge
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl
-import kotlinx.coroutines.*
 import org.junit.Assert
-import org.junit.BeforeClass
 
 class ArthasBridgeImplTest : BasePlatformTestCase() {
-
-
-    companion object {
-
-        @BeforeClass
-        @JvmStatic
-        fun beforeAll() {
-            val disposable = Disposable { }
-            ApplicationManager.setApplication(MockApplication(disposable), disposable)
-
-            val logger = Logger.getInstance(ArthasBridgeImpl::class.java)
-            logger.setLevel(LogLevel.DEBUG)
-        }
-    }
 
 
     /**
@@ -97,4 +75,13 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         }
     }
 
+//    /**
+//     * Test attach to the jvm in kubernetes pod.
+//     *
+//     * You have to set up a kubernetes cluster in your local machine before run this test.
+//     * The automation system will use [k0s](https://docs.k0sproject.io/stable/k0s-in-docker/) as the cluster.
+//     */
+//    fun `Test kubernetes attach`() {
+//
+//    }
 }

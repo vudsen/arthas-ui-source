@@ -12,7 +12,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
-import io.github.vudsen.arthasui.bridge.bean.LocalInteractiveShell
+import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.ByteArrayOutputStream
@@ -76,7 +76,7 @@ class LocalHostMachineImpl(
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()
-        return LocalInteractiveShell(process)
+        return StandardInteractiveShell(process)
     }
 
     override fun getOS(): OS {

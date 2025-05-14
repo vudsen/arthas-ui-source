@@ -7,6 +7,7 @@ import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfigConfigConverter
 import io.github.vudsen.arthasui.bridge.conf.JvmInDockerProviderConfig
+import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.TunnelServerProviderConfig
 
@@ -18,6 +19,7 @@ class JvmProviderConfigConfigConverterImpl : JvmProviderConfigConfigConverter {
             .registerSubtype(LocalJvmProviderConfig::class.java, LocalJvmProviderConfig.TYPE)
             .registerSubtype(JvmInDockerProviderConfig::class.java, JvmInDockerProviderConfig.TYPE)
             .registerSubtype(TunnelServerProviderConfig::class.java, TunnelServerProviderConfig.TYPE)
+            .registerSubtype(K8sJvmProviderConfig::class.java, K8sJvmProviderConfig.TYPE)
         gson = GsonBuilder().registerTypeAdapterFactory(adapterFactory).create()
     }
 
