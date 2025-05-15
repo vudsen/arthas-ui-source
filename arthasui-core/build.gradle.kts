@@ -1,6 +1,7 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductInfo
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.io.FileInputStream
@@ -9,7 +10,8 @@ import java.io.FileOutputStream
 dependencies {
     implementation("ognl:ognl:3.4.6")
     testImplementation(kotlin("test"))
-    testImplementation("org.testcontainers", "testcontainers", "1.20.6")
+    testImplementation(project(":arthasui-test"))
+    testImplementation(libs.testContainers)
     testImplementation(libs.kubernetesClient)
 
     intellijPlatform {
@@ -53,33 +55,45 @@ val integrationTestImplementation: Configuration by configurations.getting {
     extendsFrom(configurations.testImplementation.get())
 }
 
+val platformInternalVersion = providers.gradleProperty("platformInternalVersion").get()
+
 dependencies {
     integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
     integrationTestImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     integrationTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
-    integrationTestImplementation("com.jetbrains.intellij.java", "java-rt", providers.gradleProperty("platformInternalVersion").get())
+    integrationTestImplementation("com.jetbrains.intellij.java", "java-rt", platformInternalVersion)
+    integrationTestImplementation(project(":arthasui-test"))
+    integrationTestImplementation(libs.testContainers)
 }
 
 
 val integrationTest = task<Test>("integrationTest") {
-    // avoid download twice
-    val file = File(
-        rootProject.projectDir.absolutePath + "/out/ide-tests/installers/IC/ideaIC-${
-            providers.gradleProperty("platformInternalVersion").get()
-        }.tar.gz"
-    )
-    if (!file.exists()) {
-        val deps = dependencies.create("idea", "ideaIC", providers.gradleProperty("platformVersion").get(), ext = "tar.gz")
-        val files = configurations.detachedConfiguration(deps).files
-        file.parentFile.mkdirs()
-        val source = files.first()
-        logger.info("Copying ${source.absolutePath} to ${file.absolutePath}")
-        FileInputStream(source).channel.use { from ->
-            FileOutputStream(file).channel.use { to ->
-                from.transferTo(0, from.size(), to);
+    if (ProductInfo.Launch.OS.current == ProductInfo.Launch.OS.Linux) {
+        // avoid download twice
+        val file = File(
+            rootProject.projectDir.absolutePath + "/out/ide-tests/installers/IC/ideaIC-${
+                providers.gradleProperty("platformInternalVersion").get()
+            }.tar.gz"
+        )
+        if (!file.exists()) {
+            val deps = dependencies.create("idea", "ideaIC", providers.gradleProperty("platformVersion").get(), ext = "tar.gz")
+            val files = configurations.detachedConfiguration(deps).files
+            file.parentFile.mkdirs()
+            val source = files.first()
+            logger.info("Copying ${source.absolutePath} to ${file.absolutePath}")
+            FileInputStream(source).channel.use { from ->
+                FileOutputStream(file).channel.use { to ->
+                    from.transferTo(0, from.size(), to);
+                }
             }
         }
     }
+    // intellij.test.jars.location=/root/.gradle/
+    //idea.home.path=/root/project/arthas-ui-new/out/ide-tests/cache/builds/IC-243.26053.27/idea-IC-243.26053.27
+
+    val squashed = dependencies.create("com.jetbrains.intellij.tools", "ide-starter-squashed", platformInternalVersion, ext = "jar")
+    systemProperty("intellij.test.jars.location", configurations.detachedConfiguration(squashed).files.first().absolutePath)
+    systemProperty("idea.home.path", "${project.projectDir.absolutePath}/out/ide-tests/cache/builds/IC-${platformInternalVersion}/idea-IC-${platformInternalVersion}")
 
     systemProperty("platformVersion", providers.gradleProperty("platformVersion").get())
     val integrationTestSourceSet = sourceSets.getByName("integrationTest")

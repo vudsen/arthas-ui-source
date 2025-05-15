@@ -12,6 +12,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
+import io.github.vudsen.arthasui.bridge.providers.k8s.MyK8sExecProcess
 import io.kubernetes.client.Exec
 import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.openapi.apis.CoreV1Api
@@ -60,26 +61,22 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
 
 
     fun execute(jvm: PodJvm, vararg command: String): CommandExecuteResult {
-        val exec = Exec(apiClient)
-        val errorFuture = CompletableFuture<Throwable>()
+        val process = MyK8sExecProcess(
+            apiClient,
+            jvm.namespace,
+            jvm.id,
+            false,
+            true,
+            command,
+            null
+        )
 
-
-        exec.onUnhandledError = Consumer<Throwable> { err ->
-            errorFuture.complete(err)
-        }
-        val process = exec.exec(jvm.namespace, jvm.id, command, false, true)
-        val inputStream = process.inputStream
-        val errorStream = process.errorStream
         while (!process.waitFor(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
         }
-        if (process.exitValue() >= 0) {
-            val out: ByteArray = byteArrayOf(*inputStream.readAllBytes(), *errorStream.readAllBytes())
-            return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
-        }
-        val err = errorFuture.get()
-        logger.error(err)
-        return CommandExecuteResult(err.message ?: "Unknown", process.exitValue())
+
+        val out: ByteArray = byteArrayOf(*process.inputStream.readAllBytes())
+        return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
     }
 
     fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {

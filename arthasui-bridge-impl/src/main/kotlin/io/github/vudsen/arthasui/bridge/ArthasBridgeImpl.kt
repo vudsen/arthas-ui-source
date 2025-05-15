@@ -280,7 +280,6 @@ class ArthasBridgeImpl(
         ensureNotStop()
         while (!executionLock.tryLock(1, TimeUnit.SECONDS)) {
             ensureNotStop()
-            Thread.sleep(200)
             logger.debug("Failed to acquire lock for command: $command")
         }
         if (stopFlag) {

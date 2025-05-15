@@ -11,6 +11,7 @@ qodana = "2024.2.3"
 minaSshd = "2.15.0"
 
 [libraries]
+testContainers = { group = "org.testcontainers", name = "testcontainers", version = "1.20.6" }
 kubernetesClient = { group = "io.kubernetes", name = "client-java", version.ref = "kubernetesClient" }
 
 [plugins]

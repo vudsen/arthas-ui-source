@@ -42,8 +42,6 @@ class K8sPodHostMachine(
         try {
             process =
                 hostMachine.createOriginalInteractiveShell(jvm, "sh", "-c", "cat > ${dest}")
-            val inputStream = process.inputStream
-            val outputStream = process.outputStream
             var written = 0L
             val total = file.length().toDouble()
             val totalMb = String.format("%.2f", total / 1024 / 1024)

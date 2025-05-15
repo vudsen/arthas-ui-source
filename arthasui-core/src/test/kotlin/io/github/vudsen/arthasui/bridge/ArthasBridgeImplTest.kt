@@ -2,7 +2,7 @@ package io.github.vudsen.arthasui.bridge
 
 import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import io.github.vudsen.arthasui.BridgeTestUtil
+import io.github.vudsen.test.BridgeTestUtil
 import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasExecutionManager

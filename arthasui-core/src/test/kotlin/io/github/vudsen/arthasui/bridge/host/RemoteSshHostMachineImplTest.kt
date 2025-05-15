@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import io.github.vudsen.arthasui.BridgeTestUtil
+import io.github.vudsen.test.BridgeTestUtil
 import org.junit.Assert
 import java.io.BufferedReader
 
