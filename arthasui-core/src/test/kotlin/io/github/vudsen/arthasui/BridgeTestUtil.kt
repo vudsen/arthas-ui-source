@@ -4,7 +4,6 @@ import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Disposer
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.currentOS
@@ -24,7 +23,7 @@ object BridgeTestUtil {
 
     fun createLocalHostMachine(): ShellAvailableHostMachine {
         val config = HostMachineConfig(
-            -1,
+            (Math.random() * 10000).toLong(),
             "Test Local",
             LocalConnectConfig(),
             mutableListOf(LocalJvmProviderConfig()),

@@ -1,7 +1,9 @@
 package io.github.vudsen.arthasui.bridge.host
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
+import com.intellij.util.Consumer
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -19,9 +21,15 @@ import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.util.Config
 import java.io.CharArrayReader
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
+
+    companion object {
+        private val logger = Logger.getInstance(K8sHostMachine::class.java)
+    }
 
     private val apiClient: ApiClient
 
@@ -52,15 +60,40 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
 
 
     fun execute(jvm: PodJvm, vararg command: String): CommandExecuteResult {
-        val process = Exec(apiClient).exec(jvm.namespace, jvm.id, command, false)
+        val exec = Exec(apiClient)
+        val errorFuture = CompletableFuture<Throwable>()
+
+
+        exec.onUnhandledError = Consumer<Throwable> { err ->
+            errorFuture.complete(err)
+        }
+        val process = exec.exec(jvm.namespace, jvm.id, command, false, true)
+        val inputStream = process.inputStream
+        val errorStream = process.errorStream
         while (!process.waitFor(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
         }
-        return CommandExecuteResult(String(process.inputStream.readAllBytes(), StandardCharsets.UTF_8), process.exitValue())
+        if (process.exitValue() >= 0) {
+            val out: ByteArray = byteArrayOf(*inputStream.readAllBytes(), *errorStream.readAllBytes())
+            return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
+        }
+        val err = errorFuture.get()
+        logger.error(err)
+        return CommandExecuteResult(err.message ?: "Unknown", process.exitValue())
     }
 
     fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
-        return Exec(apiClient).exec(jvm.namespace, jvm.id, command, true)
+        val exec = Exec(apiClient)
+        val errorFuture = CompletableFuture<Throwable>()
+
+        exec.onUnhandledError = Consumer<Throwable> { err ->
+            errorFuture.completeExceptionally(err)
+        }
+        val process = exec.exec(jvm.namespace, jvm.id, command, true, true)
+        try {
+            errorFuture.get(200, TimeUnit.MILLISECONDS)
+        } catch (_: TimeoutException) { }
+        return process
     }
 
     fun createInteractiveShell(jvm: PodJvm, vararg command: String): InteractiveShell {

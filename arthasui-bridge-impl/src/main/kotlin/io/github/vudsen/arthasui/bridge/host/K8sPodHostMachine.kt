@@ -41,28 +41,29 @@ class K8sPodHostMachine(
         var process: Process? = null
         try {
             process =
-                hostMachine.createOriginalInteractiveShell(jvm, "sh", "-c", "\"cat > ${dest}\"")
+                hostMachine.createOriginalInteractiveShell(jvm, "sh", "-c", "cat > ${dest}")
+            val inputStream = process.inputStream
+            val outputStream = process.outputStream
             var written = 0L
             val total = file.length().toDouble()
             val totalMb = String.format("%.2f", total / 1024 / 1024)
             FileInputStream(src).use { input ->
-                BufferedOutputStream(process.outputStream).use { bos ->
-                    val buf = ByteArray((file.length() / 2).coerceAtMost(5 * 1024 * 1024).toInt())
-                    var len: Int
-                    while (input.read(buf).also { len = it } != -1) {
-                        ProgressManager.checkCanceled()
-                        bos.write(buf, 0, len)
-                        indicator?.let {
-                            it.fraction = written / total
-                            it.text = "Uploading ${file.name} to $dest (${
-                                String.format(
-                                    "%.2f",
-                                    written.toDouble() / 1024 / 1024
-                                )
-                            }MB / ${totalMb}MB)"
-                        }
-                        written += len
+                val bos = process.outputStream
+                val buf = ByteArray((file.length() / 2).coerceAtMost(1 * 1024 * 1024).toInt())
+                var len: Int
+                while (input.read(buf).also { len = it } != -1) {
+                    ProgressManager.checkCanceled()
+                    bos.write(buf, 0, len)
+                    indicator?.let {
+                        it.fraction = written / total
+                        it.text = "Uploading ${file.name} to $dest (${
+                            String.format(
+                                "%.2f",
+                                written.toDouble() / 1024 / 1024
+                            )
+                        }MB / ${totalMb}MB)"
                     }
+                    written += len
                 }
             }
         } finally {

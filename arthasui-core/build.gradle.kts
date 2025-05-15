@@ -10,6 +10,7 @@ dependencies {
     implementation("ognl:ognl:3.4.6")
     testImplementation(kotlin("test"))
     testImplementation("org.testcontainers", "testcontainers", "1.20.6")
+    testImplementation(libs.kubernetesClient)
 
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))

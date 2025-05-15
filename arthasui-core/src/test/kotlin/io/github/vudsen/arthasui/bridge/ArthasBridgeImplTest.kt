@@ -7,20 +7,30 @@ import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.ArthasResultItem
+import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.conf.ArthasUISettings
+import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.HostMachineConfig
+import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
+import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
+import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
+import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
 import io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl
 import org.junit.Assert
 
+/**
+ * Test attach.
+ *
+ * For chinese developer, you can add environment variable `TOOLCHAIN_MIRROR=https://5j9g3t.site/github-mirror`
+ * to avoid download failed from GitHub.
+ */
 class ArthasBridgeImplTest : BasePlatformTestCase() {
 
 
-    /**
-     * Test attach to linux machine.
-     *
-     * For chinese developer, you can add environment variable `TOOLCHAIN_MIRROR=https://5j9g3t.site/github-mirror`
-     * to avoid download failed from GitHub.
-     */
     fun testAttachLinuxLocal() {
         val template = BridgeTestUtil.createMathGameSshMachine(testRootDisposable)
         val localJvmProviderConfig = template.getHostMachineConfig().providers.find { config -> config is LocalJvmProviderConfig }!!
@@ -29,6 +39,14 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         val jvm = provider.searchJvm(template, localJvmProviderConfig).result!!.find { jvm -> jvm.name.contains("math-game.jar")}!!
 
 
+        testBridge(jvm, template, localJvmProviderConfig)
+    }
+
+    private fun testBridge(
+        jvm: JVM,
+        template: HostMachine,
+        providerConfig: JvmProviderConfig
+    ) {
         val executionManager = project.getService(ArthasExecutionManager::class.java) as ArthasExecutionManagerImpl
         val builder = StringBuilder()
         val executedCommand = mutableListOf<String>()
@@ -37,7 +55,7 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
             val arthasBridge = executionManager.initTemplate(
                 jvm,
                 template.getHostMachineConfig(),
-                localJvmProviderConfig,
+                providerConfig,
                 TestProgressIndicator()
             )
             arthasBridge.addListener(object : ArthasBridgeListener() {
@@ -70,18 +88,57 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
                 println(builder.toString())
             }
             throw e;
-        } finally {
-            executionManager.githubApiMirror = null
         }
     }
 
-//    /**
-//     * Test attach to the jvm in kubernetes pod.
-//     *
-//     * You have to set up a kubernetes cluster in your local machine before run this test.
-//     * The automation system will use [k0s](https://docs.k0sproject.io/stable/k0s-in-docker/) as the cluster.
-//     */
-//    fun `Test kubernetes attach`() {
-//
-//    }
+    /**
+     * Test attach to the jvm in kubernetes pod.
+     *
+     * You have to set up a kubernetes cluster in your local machine before run this test. After that, apply the `k8s-ci-setup.yaml` file in the resources folder.
+     */
+    fun testKubernetes() {
+        val localHostMachine = BridgeTestUtil.createLocalHostMachine()
+
+        // maybe `https://127.0.0.1:6443`
+        val apiServerUrl = System.getenv("K8S_API_SERVER_URL")
+        // `kubectl create token arthas-ui-ci -n arthas-ui-test`
+        val token = System.getenv("K8S_TOKEN")
+        val providerConfig = K8sJvmProviderConfig(true)
+        val k8sHostMachineConfig = HostMachineConfig(
+            -1,
+            "Kubernetes",
+            K8sConnectConfig(
+                token = K8sConnectConfig.TokenAuthorization(token, apiServerUrl),
+                authorizationType = K8sConnectConfig.AuthorizationType.TOKEN,
+                validateSSL = false,
+                localPkgSourceId = localHostMachine.getHostMachineConfig().id
+            ),
+            mutableListOf(providerConfig),
+            mutableListOf(),
+            "/opt/arthas-ui"
+        )
+        val hostMachine = service<HostMachineConnectManager>().connect(k8sHostMachineConfig)
+
+
+        val jvmProvider = service<JvmProviderManager>().getProvider(providerConfig)
+        val result = jvmProvider.searchJvm(hostMachine, providerConfig)
+        val namespace = result.childs!!.find { ns -> ns.getName() == "arthas-ui-test" }
+        val mathGame = namespace!!.load().result!!.find { pod -> pod.name.contains("math-game") }!!
+
+        val persistent = service<ArthasUISettingsPersistent>()
+        val old = persistent.state
+        try {
+            persistent.loadState(
+                ArthasUISettings(
+                    mutableListOf(
+                        k8sHostMachineConfig,
+                        localHostMachine.getHostMachineConfig()
+                    )
+                )
+            )
+            testBridge(mathGame, hostMachine, providerConfig)
+        } finally {
+            persistent.loadState(old)
+        }
+    }
 }

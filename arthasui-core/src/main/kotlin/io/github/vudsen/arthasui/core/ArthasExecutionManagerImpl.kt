@@ -34,8 +34,6 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
      */
     private val bridges = WeakHashMap<JVM, ArthasBridgeHolder>()
 
-    var githubApiMirror: String? = null
-
     private fun getHolderAndEnsureAlive(jvm: JVM): ArthasBridgeHolder? {
         bridges[jvm] ?.let {
             if (it.arthasBridge.isClosed()) {

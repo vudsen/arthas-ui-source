@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arthas-ui-test
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: arthas-ui-ci
+  namespace: arthas-ui-test
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: math-game
+  namespace: arthas-ui-test
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: math-game
+    spec:
+      serviceAccountName: arthas-ui-ci
+      containers:
+        - name: math-game
+          image: vudsen/math-game:0.0.1
+          resources:
+            requests:
+              memory: 40Mi
+            limits:
+              memory: 80Mi
+  selector:
+    matchLabels:
+      app: math-game
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ci-role
+  namespace: arthas-ui-test
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs:
+      - get
+      - post
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ci-role-biding
+  namespace: arthas-ui-test
+subjects:
+  - kind: ServiceAccount
+    name: arthas-ui-ci
+    apiGroup: ""
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ci-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: list-namespaces
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arthas-ui-ci-list-namespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: list-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: arthas-ui-ci
+    namespace: arthas-ui-test

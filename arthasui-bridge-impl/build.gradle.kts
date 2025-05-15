@@ -11,8 +11,8 @@ dependencies {
     implementation("commons-net:commons-net:3.11.1") {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
-    implementation("io.kubernetes:client-java:23.0.0")
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation(libs.kubernetesClient)
 
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
