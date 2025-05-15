@@ -141,9 +141,9 @@ class ArthasBridgeImpl(
             if (frame != null) {
                 try {
                     data = decoder.parse(frame)
-                    notifyFinish(data, frame)
+                    notifyFinish(data, frame, lastExecuted)
                 } catch (e: Exception) {
-                    notifyError(frame, e)
+                    notifyError(frame, e, lastExecuted)
                     return StringResult(frame)
                 }
                 break
@@ -155,24 +155,24 @@ class ArthasBridgeImpl(
         return data
     }
 
-    private fun notifyError(frame: String, exception: Exception) {
-        if (lastExecuted == "") {
+    private fun notifyError(frame: String, exception: Exception, command: String) {
+        if (command == "") {
             return
         }
         ApplicationManager.getApplication().executeOnPooledThread {
             for (listener in listeners) {
-                listener.onError(lastExecuted, frame, exception)
+                listener.onError(command, frame, exception)
             }
         }
     }
 
-    private fun notifyFinish(result: ArthasResultItem, rawContent: String) {
-        if (lastExecuted == "") {
+    private fun notifyFinish(result: ArthasResultItem, rawContent: String, command: String) {
+        if (command == "") {
             return
         }
         ApplicationManager.getApplication().executeOnPooledThread {
             for (listener in listeners) {
-                listener.onFinish(lastExecuted.trim(), result, rawContent)
+                listener.onFinish(command.trim(), result, rawContent)
             }
         }
     }
