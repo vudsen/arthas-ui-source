@@ -62,7 +62,9 @@ jobs:
         run: |
           kubectl apply -f test-resources/k8s-ci-setup.yaml
           kubectl get pods -A
-          kubectl describe delpoy/math-game -n arthas-ui-test
+          sleep 20
+          kubectl get pods -A
+          kubectl describe deploy/math-game -n arthas-ui-test
           kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
           SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:test
 
