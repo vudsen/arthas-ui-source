@@ -60,7 +60,8 @@ jobs:
       - name: Run Tests
         id: test
         run: |
-          kubectl apply -f test-resources/k8s-ci-setup.yaml && \ 
+          kubectl apply -f test-resources/k8s-ci-setup.yaml
+          kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
           SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:test
         env:
           K8S_TOKEN: ${{ steps.k3s.outputs.SA_TOKEN }}
