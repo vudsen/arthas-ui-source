@@ -61,11 +61,10 @@ jobs:
         id: test
         run: |
           kubectl apply -f test-resources/k8s-ci-setup.yaml
+          kubectl get pods -A
+          kubectl describe delpoy/math-game -n arthas-ui-test
           kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
           SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:test
-        env:
-          K8S_TOKEN: ${{ steps.k3s.outputs.SA_TOKEN }}
-          K8S_API_SERVER_URL: https://127.0.0.1:6443
 
       - name: Upload Test Output
         if: failure() && steps.test.outcome == 'failure'
