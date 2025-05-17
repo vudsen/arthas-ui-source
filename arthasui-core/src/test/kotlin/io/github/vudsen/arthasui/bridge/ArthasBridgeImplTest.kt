@@ -94,7 +94,7 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
     /**
      * Test attach to the jvm in kubernetes pod.
      *
-     * You have to set up a kubernetes cluster in your local machine before run this test. After that, apply the `k8s-ci-setup.yaml` file in the resources folder.
+     * You have to set up a kubernetes cluster in your local machine before run this test. After that, apply the `k8s-ci-setup.yaml` file in `test-resources` folder.
      */
     fun testKubernetes() {
         val localHostMachine = BridgeTestUtil.createLocalHostMachine()

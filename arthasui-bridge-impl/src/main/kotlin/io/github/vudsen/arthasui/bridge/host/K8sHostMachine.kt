@@ -93,6 +93,7 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
             command,
             null
         )
+        process.name = command.joinToString(" ")
         return process
     }
 
@@ -112,9 +113,8 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
                     }
                 }
                 return false
-            } ?: let {
-                return true
             }
+            return true
         } catch (_: Exception) {
             return false
         }

@@ -41,7 +41,8 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
                 return null
             }
             return it
-        } ?: return null
+        }
+        return null
     }
 
 

@@ -9,13 +9,9 @@ import io.kubernetes.client.util.Streams
 import io.kubernetes.client.util.WebSocketStreamHandler
 import io.kubernetes.client.util.WebSockets
 import org.apache.commons.lang3.StringUtils
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
-import java.io.UnsupportedEncodingException
+import java.io.*
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -40,6 +36,8 @@ class MyK8sExecProcess(
     private val pipedOutputStream = PipedOutputStream(actualInputStream)
 
     private var stdin: OutputStream? = null
+
+    var name: String? = null
 
     init {
         val encodedCommand = arrayOfNulls<String>(command.size)
@@ -77,12 +75,22 @@ class MyK8sExecProcess(
 
     inner class MyK8sSocketListener : WebSocketStreamHandler() {
 
+        private val buffer by lazy { ByteArray(2048) }
+
         override fun handleMessage(stream: Int, inStream: InputStream) {
+            name ?.let {
+                println(name)
+            }
             if (stream != 3) {
                 super.handleMessage(stream, inStream)
                 if (stream == 255) {
                     // TODO, does the exit code right?
                     exitCodeFuture.complete(1)
+                }
+                var len = 0
+                val underlyingInputStream = getInputStream(stream)
+                while (underlyingInputStream.available() > 0 && underlyingInputStream.read(buffer).also { len = it } > 0) {
+                    pipedOutputStream.write(buffer, 0, len)
                 }
                 return
             }
@@ -101,10 +109,10 @@ class MyK8sExecProcess(
                 pipedOutputStream.write(status.message.toByteArray())
                 exitCodeFuture.complete(status.code ?: 1)
             } else {
-                TODO()
+                pipedOutputStream.write("Unknown response message: $body".toByteArray(StandardCharsets.UTF_8))
+                exitCodeFuture.complete(1)
             }
             this.close()
-
         }
 
 
@@ -147,7 +155,10 @@ class MyK8sExecProcess(
     }
 
     override fun exitValue(): Int {
-        return exitCodeFuture.get()
+        if (exitCodeFuture.isDone) {
+            return exitCodeFuture.get()
+        }
+        throw IllegalThreadStateException()
     }
 
     override fun destroy() {

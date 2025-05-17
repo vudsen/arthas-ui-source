@@ -51,9 +51,21 @@ jobs:
         run: |
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
+      - name: Setup k3s
+        uses: debianmaster/actions-k3s@v1.0.5
+        with:
+          version: 'latest'
+        id: k3s
+        run: |
+          kubectl apply -f test-resources/k8s-ci-setup.yaml
+          echo SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` >> $GITHUB_OUTPUT
+
       - name: Run Tests
         id: test
         run: ./gradlew arthasui-core:test
+        env:
+          K8S_TOKEN: ${{ steps.k3s.outputs.SA_TOKEN }}
+          K8S_API_SERVER_URL: https://127.0.0.1:6443
 
       - name: Upload Test Output
         if: failure() && steps.test.outcome == 'failure'
