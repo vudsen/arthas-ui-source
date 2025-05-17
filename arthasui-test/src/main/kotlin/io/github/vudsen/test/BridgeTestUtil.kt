@@ -34,7 +34,10 @@ object BridgeTestUtil {
     }
 
     fun createSshHostMachine(parentDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): ShellAvailableHostMachine {
-        val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable, customise)
+        val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable) {
+            customise?.invoke(this)
+            withExposedPorts(22)
+        }
         val config = HostMachineConfig(
             -1,
             "Remote",
@@ -55,7 +58,9 @@ object BridgeTestUtil {
     }
 
     fun createMathGameSshMachine(parentDisposable: Disposable): ShellAvailableHostMachine {
-        val server = setupContainer("vudsen/ssh-server-with-math-game:0.0.3", parentDisposable, null)
+        val server = setupContainer("vudsen/ssh-server-with-math-game:0.0.3", parentDisposable) {
+            withExposedPorts(22)
+        }
         val config = HostMachineConfig(
             -1,
             "Remote",
@@ -82,7 +87,6 @@ object BridgeTestUtil {
             return it
         }
         val sshContainer = GenericContainer(DockerImageName.parse(image))
-            .withExposedPorts(22)
 
         customise ?.let { it(sshContainer)  }
 

@@ -100,7 +100,7 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
         val localHostMachine = BridgeTestUtil.createLocalHostMachine()
 
         // maybe `https://127.0.0.1:6443`
-        val apiServerUrl = System.getenv("K8S_API_SERVER_URL")
+        val apiServerUrl = System.getenv("K8S_API_SERVER_URL") ?: "https://127.0.0.1:6443"
         // `kubectl create token arthas-ui-ci -n arthas-ui-test`
         val token = System.getenv("K8S_TOKEN")
         val providerConfig = K8sJvmProviderConfig(true)
