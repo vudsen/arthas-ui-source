@@ -32,7 +32,7 @@ spec:
             requests:
               memory: 40Mi
             limits:
-              memory: 80Mi
+              memory: 150Mi
   selector:
     matchLabels:
       app: math-game

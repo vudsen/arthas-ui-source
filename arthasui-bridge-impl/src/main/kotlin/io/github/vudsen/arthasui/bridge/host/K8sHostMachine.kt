@@ -32,7 +32,7 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
         private val logger = Logger.getInstance(K8sHostMachine::class.java)
     }
 
-    private val apiClient: ApiClient
+    val apiClient: ApiClient
 
     init {
         val connect = config.connect as K8sConnectConfig
@@ -75,21 +75,24 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
             ProgressManager.checkCanceled()
         }
 
-        val out: ByteArray = byteArrayOf(*process.inputStream.readAllBytes())
-        return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
+        try {
+            val out: ByteArray = byteArrayOf(*process.inputStream.readAllBytes())
+            return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
+        } finally {
+            process.inputStream.close()
+        }
     }
 
-    fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
-        val exec = Exec(apiClient)
-        val errorFuture = CompletableFuture<Throwable>()
-
-        exec.onUnhandledError = Consumer<Throwable> { err ->
-            errorFuture.completeExceptionally(err)
-        }
-        val process = exec.exec(jvm.namespace, jvm.id, command, true, true)
-        try {
-            errorFuture.get(200, TimeUnit.MILLISECONDS)
-        } catch (_: TimeoutException) { }
+    private fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
+        val process = MyK8sExecProcess(
+            apiClient,
+            jvm.namespace,
+            jvm.id,
+            true,
+            true,
+            command,
+            null
+        )
         return process
     }
 

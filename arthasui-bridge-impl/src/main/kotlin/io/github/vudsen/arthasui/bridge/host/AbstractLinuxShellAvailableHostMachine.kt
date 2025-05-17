@@ -186,14 +186,7 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
     override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
             execute("unzip", target, "-d", destDir).let {
-                if (it.exitCode == 127) {
-                    return false
-                } else if (it.exitCode == 0) {
-                    return true
-                }
-                // throw exp
-                it.ok()
-                return false
+                return it.exitCode == 0
             }
         } else if (target.endsWith(".tgz") || target.endsWith(".tar.gz")) {
             execute("tar", "-zxvf", target, "-C", destDir).ok()

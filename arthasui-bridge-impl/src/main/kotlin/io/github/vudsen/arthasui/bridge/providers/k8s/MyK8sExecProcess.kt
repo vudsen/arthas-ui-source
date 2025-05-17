@@ -80,6 +80,10 @@ class MyK8sExecProcess(
         override fun handleMessage(stream: Int, inStream: InputStream) {
             if (stream != 3) {
                 super.handleMessage(stream, inStream)
+                if (stream == 255) {
+                    // TODO, does the exit code right?
+                    exitCodeFuture.complete(1)
+                }
                 return
             }
             val returnType = object : TypeToken<V1Status?>() {}.type
@@ -95,7 +99,7 @@ class MyK8sExecProcess(
                 exitCodeFuture.complete(0)
             } else if (KubernetesConstants.V1STATUS_FAILURE == status.status) {
                 pipedOutputStream.write(status.message.toByteArray())
-                exitCodeFuture.complete(status.code)
+                exitCodeFuture.complete(status.code ?: 1)
             } else {
                 TODO()
             }
