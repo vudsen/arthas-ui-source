@@ -76,16 +76,11 @@ object BridgeTestUtil {
         return template
     }
 
-    private val instance = WeakHashMap<String, GenericContainer<*>>()
-
     /**
      * 创建容器
      */
     fun setupContainer(image: String, rootDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): GenericContainer<*> {
         val key = image + rootDisposable.toString()
-        instance[key] ?.let {
-            return it
-        }
         val sshContainer = GenericContainer(DockerImageName.parse(image))
 
         customise ?.let { it(sshContainer)  }
@@ -95,7 +90,6 @@ object BridgeTestUtil {
         }
 
         sshContainer.start();
-        instance[key] = sshContainer
         return sshContainer
     }
 
