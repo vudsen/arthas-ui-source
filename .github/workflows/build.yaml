@@ -56,13 +56,12 @@ jobs:
         with:
           version: 'latest'
         id: k3s
-        run: |
-          kubectl apply -f test-resources/k8s-ci-setup.yaml
-          echo SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` >> $GITHUB_OUTPUT
 
       - name: Run Tests
         id: test
-        run: ./gradlew arthasui-core:test
+        run: |
+          kubectl apply -f test-resources/k8s-ci-setup.yaml && \ 
+          SA_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:test
         env:
           K8S_TOKEN: ${{ steps.k3s.outputs.SA_TOKEN }}
           K8S_API_SERVER_URL: https://127.0.0.1:6443
