@@ -1,13 +1,10 @@
-package io.github.vudsen.arthasui
+package io.github.vudsen.test
 
-import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Disposer
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
-import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.SshConfiguration
@@ -19,12 +16,13 @@ import org.testcontainers.shaded.org.bouncycastle.util.encoders.Base64
 import org.testcontainers.utility.DockerImageName
 import java.io.File
 import java.io.FileOutputStream
+import java.util.WeakHashMap
 
 object BridgeTestUtil {
 
     fun createLocalHostMachine(): ShellAvailableHostMachine {
         val config = HostMachineConfig(
-            -1,
+            (Math.random() * 10000).toLong(),
             "Test Local",
             LocalConnectConfig(),
             mutableListOf(LocalJvmProviderConfig()),
@@ -36,7 +34,10 @@ object BridgeTestUtil {
     }
 
     fun createSshHostMachine(parentDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): ShellAvailableHostMachine {
-        val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable, customise)
+        val server = setupContainer("rastasheep/ubuntu-sshd:18.04", parentDisposable) {
+            customise?.invoke(this)
+            withExposedPorts(22)
+        }
         val config = HostMachineConfig(
             -1,
             "Remote",
@@ -57,7 +58,9 @@ object BridgeTestUtil {
     }
 
     fun createMathGameSshMachine(parentDisposable: Disposable): ShellAvailableHostMachine {
-        val server = setupContainer("vudsen/ssh-server-with-math-game:0.0.3", parentDisposable, null)
+        val server = setupContainer("vudsen/ssh-server-with-math-game:0.0.3", parentDisposable) {
+            withExposedPorts(22)
+        }
         val config = HostMachineConfig(
             -1,
             "Remote",
@@ -73,18 +76,12 @@ object BridgeTestUtil {
         return template
     }
 
-    private val instance = WeakHashMap<String, GenericContainer<*>>()
-
     /**
      * 创建容器
      */
-    private fun setupContainer(image: String, rootDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): GenericContainer<*> {
+    fun setupContainer(image: String, rootDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): GenericContainer<*> {
         val key = image + rootDisposable.toString()
-        instance[key] ?.let {
-            return it
-        }
         val sshContainer = GenericContainer(DockerImageName.parse(image))
-            .withExposedPorts(22)
 
         customise ?.let { it(sshContainer)  }
 
@@ -93,7 +90,6 @@ object BridgeTestUtil {
         }
 
         sshContainer.start();
-        instance[key] = sshContainer
         return sshContainer
     }
 

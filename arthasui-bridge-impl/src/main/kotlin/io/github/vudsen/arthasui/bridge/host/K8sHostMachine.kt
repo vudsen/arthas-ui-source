@@ -1,7 +1,9 @@
 package io.github.vudsen.arthasui.bridge.host
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
+import com.intellij.util.Consumer
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -10,6 +12,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
+import io.github.vudsen.arthasui.bridge.providers.k8s.MyK8sExecProcess
 import io.kubernetes.client.Exec
 import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.openapi.apis.CoreV1Api
@@ -19,11 +22,17 @@ import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.util.Config
 import java.io.CharArrayReader
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
 
-    private val apiClient: ApiClient
+    companion object {
+        private val logger = Logger.getInstance(K8sHostMachine::class.java)
+    }
+
+    val apiClient: ApiClient
 
     init {
         val connect = config.connect as K8sConnectConfig
@@ -52,15 +61,40 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
 
 
     fun execute(jvm: PodJvm, vararg command: String): CommandExecuteResult {
-        val process = Exec(apiClient).exec(jvm.namespace, jvm.id, command, false)
+        val process = MyK8sExecProcess(
+            apiClient,
+            jvm.namespace,
+            jvm.id,
+            false,
+            true,
+            command,
+            null
+        )
+
         while (!process.waitFor(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
         }
-        return CommandExecuteResult(String(process.inputStream.readAllBytes(), StandardCharsets.UTF_8), process.exitValue())
+
+        try {
+            val out: ByteArray = byteArrayOf(*process.inputStream.readAllBytes())
+            return CommandExecuteResult(String(out, StandardCharsets.UTF_8), process.exitValue())
+        } finally {
+            process.inputStream.close()
+        }
     }
 
-    fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
-        return Exec(apiClient).exec(jvm.namespace, jvm.id, command, true)
+    private fun createOriginalInteractiveShell(jvm: PodJvm, vararg command: String): Process {
+        val process = MyK8sExecProcess(
+            apiClient,
+            jvm.namespace,
+            jvm.id,
+            true,
+            true,
+            command,
+            null
+        )
+        process.name = command.joinToString(" ")
+        return process
     }
 
     fun createInteractiveShell(jvm: PodJvm, vararg command: String): InteractiveShell {
@@ -79,9 +113,8 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
                     }
                 }
                 return false
-            } ?: let {
-                return true
             }
+            return true
         } catch (_: Exception) {
             return false
         }

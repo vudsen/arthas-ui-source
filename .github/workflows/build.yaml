@@ -51,9 +51,22 @@ jobs:
         run: |
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
+      - name: Setup k3s
+        uses: debianmaster/actions-k3s@v1.0.5
+        with:
+          version: 'latest'
+        id: k3s
+
       - name: Run Tests
         id: test
-        run: ./gradlew arthasui-core:test
+        run: |
+          kubectl apply -f test-resources/k8s-ci-setup.yaml
+          kubectl get pods -A
+          sleep 20
+          kubectl get pods -A
+          kubectl describe deploy/math-game -n arthas-ui-test
+          kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
+          K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:test
 
       - name: Upload Test Output
         if: failure() && steps.test.outcome == 'failure'

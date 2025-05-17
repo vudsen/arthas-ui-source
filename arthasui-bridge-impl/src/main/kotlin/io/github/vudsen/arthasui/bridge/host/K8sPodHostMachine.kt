@@ -1,16 +1,15 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
-import java.io.BufferedOutputStream
+import io.kubernetes.client.Copy
 import java.io.File
-import java.io.FileInputStream
+import kotlin.io.path.Path
 
 class K8sPodHostMachine(
     private val jvm: PodJvm,
@@ -38,35 +37,10 @@ class K8sPodHostMachine(
             it.pushState()
             it.text = "Uploading ${file.name} to $dest"
         }
-        var process: Process? = null
         try {
-            process =
-                hostMachine.createOriginalInteractiveShell(jvm, "sh", "-c", "\"cat > ${dest}\"")
-            var written = 0L
-            val total = file.length().toDouble()
-            val totalMb = String.format("%.2f", total / 1024 / 1024)
-            FileInputStream(src).use { input ->
-                BufferedOutputStream(process.outputStream).use { bos ->
-                    val buf = ByteArray((file.length() / 2).coerceAtMost(5 * 1024 * 1024).toInt())
-                    var len: Int
-                    while (input.read(buf).also { len = it } != -1) {
-                        ProgressManager.checkCanceled()
-                        bos.write(buf, 0, len)
-                        indicator?.let {
-                            it.fraction = written / total
-                            it.text = "Uploading ${file.name} to $dest (${
-                                String.format(
-                                    "%.2f",
-                                    written.toDouble() / 1024 / 1024
-                                )
-                            }MB / ${totalMb}MB)"
-                        }
-                        written += len
-                    }
-                }
-            }
+            // TODO 使用 websocket 手动上传，支持进度条
+            Copy(hostMachine.apiClient).copyFileToPod(jvm.namespace, jvm.id, jvm.containerName, Path(src), Path(dest))
         } finally {
-            process?.destroy()
             indicator?.popState()
         }
 

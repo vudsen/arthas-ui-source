@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge.template
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import io.github.vudsen.arthasui.BridgeTestUtil
+import io.github.vudsen.test.BridgeTestUtil
 import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.HostMachine

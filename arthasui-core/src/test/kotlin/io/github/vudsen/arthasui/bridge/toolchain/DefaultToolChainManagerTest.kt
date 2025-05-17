@@ -1,7 +1,7 @@
 package io.github.vudsen.arthasui.bridge.toolchain
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import io.github.vudsen.arthasui.BridgeTestUtil
+import io.github.vudsen.test.BridgeTestUtil
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import org.junit.Assert
 import java.io.File
