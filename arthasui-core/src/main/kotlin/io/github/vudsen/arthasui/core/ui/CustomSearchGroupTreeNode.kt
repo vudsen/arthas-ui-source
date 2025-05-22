@@ -64,4 +64,8 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
     override fun hashCode(): Int {
         return group.hashCode()
     }
+
+    override fun toString(): String {
+        return group.name
+    }
 }

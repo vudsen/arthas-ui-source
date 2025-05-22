@@ -5,7 +5,9 @@ import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import java.awt.FlowLayout
+import java.util.*
 import javax.swing.*
+import kotlin.collections.ArrayList
 
 /**
  * 支持 [JvmSearchDelegate]，渲染树形结构
@@ -41,6 +43,10 @@ class TreeNodeSearcher(
 
     override fun hashCode(): Int {
         return delegate.hashCode()
+    }
+
+    override fun toString(): String {
+        return delegate.getName()
     }
 
     override fun render(tree: JTree): JComponent {

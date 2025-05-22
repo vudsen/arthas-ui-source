@@ -15,10 +15,7 @@ import com.intellij.ide.starter.runner.Starter
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import io.github.vudsen.test.BridgeTestUtil
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import org.junit.jupiter.api.*
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import org.testcontainers.containers.GenericContainer
@@ -60,7 +57,9 @@ class PluginTest  {
         @BeforeAll
         @JvmStatic
         fun beforeEach() {
-            server = BridgeTestUtil.setupContainer("vudsen/ssh-server-with-math-game:0.0.3", rootDisposable, null)
+            server = BridgeTestUtil.setupContainer("vudsen/ssh-server-with-math-game:0.0.3", rootDisposable) {
+                withExposedPorts(22)
+            }
         }
 
         @AfterAll
@@ -96,12 +95,97 @@ class PluginTest  {
                 button("Apply").click()
                 createSshHostMachine()
 
-                Thread.sleep(30.minutes.inWholeMilliseconds)
+                button("OK").click()
+                val tree = x(
+                    xQuery { and(byType("com.intellij.ui.treeStructure.Tree"), byVisibleText("Self || Remote")) },
+                    JTreeUiComponent::class.java
+                )
+                testArthasRunning(tree)
+                tree.doubleClickRow(1)
 
+                Thread.sleep(30.minutes.inWholeMilliseconds)
             }
         }
     }
 
+    private fun IdeaFrameUI.testArthasRunning(tree: JTreeUiComponent) {
+        val editor = x(xQuery { byType("com.intellij.openapi.editor.impl.EditorComponentImpl") })
+        editor.setFocus()
+        editor.keyboard {
+            Thread.sleep(1.seconds.inWholeMilliseconds)
+            enterText("sc demo.*")
+            hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_A)
+            x(xQuery { byAccessibleName("Execute Command") }).click()
+        }
+        val outputEditor = x(xQuery {
+            and(
+                byType("com.intellij.openapi.editor.impl.EditorComponentImpl"),
+                byAccessibleName("Editor")
+            )
+        })
+
+        textAssert(outputEditor, "demo.MathGame")
+
+        editor.setFocus()
+        editor.keyboard {
+            hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_A)
+            backspace()
+            enterText("echo hello")
+            hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_A)
+            x(xQuery { byAccessibleName("Execute Command") }).click()
+        }
+        Thread.sleep(1.seconds.inWholeMilliseconds)
+        toolbar.x(xQuery { byAccessibleName("Stop 'math-game.jar'") }).click()
+        textAssert(outputEditor, "hello")
+        x(xQuery { byType("com.intellij.ui.tabs.impl.ActionButton\$2") }).click()
+    }
+
+    private fun textAssert(comp:  UiComponent, expected: String) {
+        for (spin in 0..10) {
+            if (comp.getAllTexts(expected).size == 1) {
+                return
+            }
+            Thread.sleep(1.seconds.inWholeMilliseconds)
+        }
+        Assertions.fail<Nothing>("No matching text: \"$expected\" found")
+    }
+
+    private fun IdeaFrameUI.createK8sHostMachine() {
+        dialog {
+            x(xQuery { byAccessibleName("Add") }).click()
+        }
+
+        dialog(title = "New Host Machine") {
+            // Create a Local Host Machine.
+            textField(
+                xQuery{
+                    and(byAccessibleName("Name"), byType("com.intellij.ui.components.JBTextField"))
+                }
+            ).apply {
+                this.setFocus()
+                keyboard {
+                    enterText("Kubernetes")
+                }
+            }
+            comboBox(xQuery { and(byAccessibleName("Connect type"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
+            list().clickItem("Kubernetes", false)
+
+            x(xQuery { and(byAccessibleName("Url"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    enterText(System.getenv("K8S_API_SERVER_URL") ?: "https://127.0.0.1:6443")
+                }
+            }
+            x(xQuery { and(byAccessibleName("Token"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    enterText(System.getenv("K8S_TOKEN"))
+                }
+            }
+
+            button("Create").click()
+        }
+    }
 
     private fun IdeaFrameUI.createSshHostMachine() {
         dialog {
@@ -123,17 +207,10 @@ class PluginTest  {
             comboBox(xQuery { and(byAccessibleName("Connect type"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
             list().clickItem("SSH", false)
 
-            Thread.sleep(1.seconds.inWholeMilliseconds)
             x(xQuery { and(byAccessibleName("host"), byType("com.intellij.ui.components.JBTextField")) }).let {
                 it.setFocus()
                 it.keyboard {
                     enterText(server.host)
-                }
-            }
-            x(xQuery { and(byAccessibleName("username"), byType("com.intellij.ui.components.JBTextField")) }).let {
-                it.setFocus()
-                it.keyboard {
-                    enterText("root")
                 }
             }
             x(xQuery { and(byAccessibleName("port"), byType("com.intellij.ui.components.JBTextField")) }).let {
@@ -145,6 +222,12 @@ class PluginTest  {
                     enterText(server.firstMappedPort.toString())
                 }
             }
+            x(xQuery { and(byAccessibleName("username"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    enterText("root")
+                }
+            }
             x(xQuery { and(byAccessibleName("password"), byType("com.intellij.ui.components.JBPasswordField")) }).let {
                 it.setFocus()
                 it.keyboard {
@@ -152,9 +235,16 @@ class PluginTest  {
                 }
             }
             comboBox(xQuery { and(byAccessibleName("Transfer local file"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
-            list().clickItem("Local")
+            list().clickItem("Self")
             button("Next").click()
-            Thread.sleep(30.minutes.inWholeMilliseconds)
+            x( xQuery {byAccessibleName("Enable") }).click()
+
+            x(xQuery { and(byAccessibleName("Java home"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    enterText("/opt/java")
+                }
+            }
             // Finish the create.
             button("Create").click()
         }
@@ -176,7 +266,7 @@ class PluginTest  {
             ).apply {
                 this.setFocus()
                 keyboard {
-                    enterText("Local")
+                    enterText("Self")
                 }
             }
             button("Next").click()

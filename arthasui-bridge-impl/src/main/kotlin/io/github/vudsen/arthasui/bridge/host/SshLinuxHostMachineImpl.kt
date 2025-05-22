@@ -176,7 +176,7 @@ class SshLinuxHostMachineImpl(
             SftpClientFactory.instance().createSftpClient(session).use { client ->
                 client.open(dest, listOf(SftpClient.OpenMode.Write, SftpClient.OpenMode.Create)).use { handle ->
                     file.inputStream().use { input ->
-                        val buf = ByteArray((file.length() / 2).coerceAtMost(5 * 1024 * 1024).toInt())
+                        val buf = ByteArray((file.length() / 2).coerceAtMost(3 * 1024 * 1024).toInt())
                         var len: Int
                         while (input.read(buf).also { len = it } != -1) {
                             ProgressManager.checkCanceled()

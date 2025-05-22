@@ -117,7 +117,9 @@ class ArthasQueryConsoleActionGroup(
 
                 runnerAndConfigurationSettings.isTemporary = true
                 val base = runnerAndConfigurationSettings.configuration as RunConfigurationBase<ArthasProcessOptions>
-                base.loadState(ArthasProcessOptions(virtualFileAttributes.jvm))
+                base.loadState(ArthasProcessOptions().apply {
+                    jvm = virtualFileAttributes.jvm
+                })
 
                 ProgramRunnerUtil.executeConfiguration(
                     runnerAndConfigurationSettings,
@@ -142,7 +144,7 @@ class ArthasQueryConsoleActionGroup(
 
 
     private val actions: Array<AnAction> = arrayOf(
-        object : AnAction(AllIcons.RunConfigurations.TestState.Run) {
+        object : AnAction("Execute Command", "Execute the arthas command", AllIcons.RunConfigurations.TestState.Run) {
 
 
             override fun actionPerformed(e: AnActionEvent) {

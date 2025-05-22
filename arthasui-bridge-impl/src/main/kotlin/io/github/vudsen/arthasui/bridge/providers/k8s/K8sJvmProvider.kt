@@ -20,7 +20,7 @@ import io.github.vudsen.arthasui.bridge.ui.K8sJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
-class K8sJvmProvider() : JvmProvider {
+class K8sJvmProvider : JvmProvider {
 
     override fun getName(): String {
         return "Namespaces"
