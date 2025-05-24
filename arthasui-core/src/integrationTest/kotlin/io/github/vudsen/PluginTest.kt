@@ -150,7 +150,7 @@ class PluginTest  {
             x(xQuery { byAccessibleName("Execute Command") }).click()
         }
         Thread.sleep(1.seconds.inWholeMilliseconds)
-        toolbar.x(xQuery { byAttribute("myicon", "stop.svg") }).click()
+        x(xQuery { byType("com.intellij.openapi.wm.impl.headertoolbar.MainToolbar") }).x(xQuery { byAttribute("myicon", "stop.svg") }).click()
         textAssert(outputEditor, "hello")
         // close the editor
         x(xQuery { byType("com.intellij.ui.tabs.impl.ActionButton\$2") }).click()
