@@ -13,6 +13,52 @@ permissions:
   pull-requests: write
 
 jobs:
+  integrationTest:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup k3s
+        uses: debianmaster/actions-k3s@v1.0.5
+        with:
+          version: 'latest'
+
+      - name: Run Tests
+        id: test
+        run: |
+          kubectl apply -f test-resources/k8s-ci-setup.yaml
+          kubectl get pods -A
+          INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
+          echo "INTERNAL_VERSION=INTERNAL_VERSION" >> $GITHUB_ENV
+
+          sleep 15
+          kubectl get pods -A
+          kubectl describe deploy/math-game -n arthas-ui-test
+          kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
+          K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:integrationTest
+
+      - name: Upload Test Output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: "./out/ide-tests/tests/${{ steps.test.outputs.INTERNAL_VERSION }}/testExample/log/screenshots/*/*"
   build:
     name: Build
     runs-on: ubuntu-latest

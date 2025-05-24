@@ -99,7 +99,7 @@ class K8sJvmProvider : JvmProvider {
     override fun isJvmInactive(jvm: JVM): Boolean {
         jvm as PodJvm
         val hostMachine = jvm.context.template as K8sHostMachine
-        return hostMachine.isPodExist(jvm.id, jvm.namespace, jvm.containerName)
+        return hostMachine.isPodNotExist(jvm.id, jvm.namespace, jvm.containerName)
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {

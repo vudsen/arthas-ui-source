@@ -19,6 +19,8 @@ import org.junit.jupiter.api.*
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import org.testcontainers.containers.GenericContainer
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
 import java.io.File
 import kotlin.io.path.Path
@@ -73,7 +75,7 @@ class PluginTest  {
 
 
     @Test
-    fun testWithoutProject() {
+    fun testBasicAttach() {
         Starter.newContext(
              "testExample",
             TestCase(IdeProductProvider.IC, LocalProjectInfo(Path("src/integrationTest/resources/test-projects/simple-project")))
@@ -94,21 +96,34 @@ class PluginTest  {
                 createLocalHostMachine()
                 button("Apply").click()
                 createSshHostMachine()
+                createK8sHostMachine()
 
                 button("OK").click()
                 val tree = x(
-                    xQuery { and(byType("com.intellij.ui.treeStructure.Tree"), byVisibleText("Self || Remote")) },
+                    xQuery { and(byType("com.intellij.ui.treeStructure.Tree"), byVisibleText("Self || Remote || Kubernetes")) },
                     JTreeUiComponent::class.java
                 )
-                testArthasRunning(tree)
+                tree.doubleClickRow(1)
+                tree.doubleClickRow(2)
+                tree.doubleClickRow(2)
+                tree.doubleClickRow(3)
+                testArthasRunning()
                 tree.doubleClickRow(1)
 
-                Thread.sleep(30.minutes.inWholeMilliseconds)
+
+                // test k8s
+                tree.doubleClickRow(2)
+                tree.doubleClickRow(3)
+                tree.doubleClickRow(3)
+                tree.doubleClickRow(4)
+                tree.doubleClickRow(4)
+                tree.doubleClickRow(5)
+                testArthasRunning()
             }
         }
     }
 
-    private fun IdeaFrameUI.testArthasRunning(tree: JTreeUiComponent) {
+    private fun IdeaFrameUI.testArthasRunning() {
         val editor = x(xQuery { byType("com.intellij.openapi.editor.impl.EditorComponentImpl") })
         editor.setFocus()
         editor.keyboard {
@@ -135,9 +150,11 @@ class PluginTest  {
             x(xQuery { byAccessibleName("Execute Command") }).click()
         }
         Thread.sleep(1.seconds.inWholeMilliseconds)
-        toolbar.x(xQuery { byAccessibleName("Stop 'math-game.jar'") }).click()
+        toolbar.x(xQuery { byAttribute("myicon", "stop.svg") }).click()
         textAssert(outputEditor, "hello")
+        // close the editor
         x(xQuery { byType("com.intellij.ui.tabs.impl.ActionButton\$2") }).click()
+        x(xQuery { byAccessibleName("Hide") }).click()
     }
 
     private fun textAssert(comp:  UiComponent, expected: String) {
@@ -179,10 +196,14 @@ class PluginTest  {
             x(xQuery { and(byAccessibleName("Token"), byType("com.intellij.ui.components.JBTextField")) }).let {
                 it.setFocus()
                 it.keyboard {
-                    enterText(System.getenv("K8S_TOKEN"))
+                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(System.getenv("K8S_TOKEN")), null)
+                    hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_V)
                 }
             }
-
+            x(xQuery { byAccessibleName("Validate SSL") }).click()
+            comboBox(xQuery { and(byAccessibleName("Transfer local file"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
+            list().clickItem("Self")
+            button("Next").click()
             button("Create").click()
         }
     }
