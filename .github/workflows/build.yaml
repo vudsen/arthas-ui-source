@@ -39,26 +39,33 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Run Tests
-        id: test
-        run: |
-          kubectl apply -f test-resources/k8s-ci-setup.yaml
-          kubectl get pods -A
-          INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
-          echo "INTERNAL_VERSION=INTERNAL_VERSION" >> $GITHUB_ENV
-
-          sleep 15
-          kubectl get pods -A
-          kubectl describe deploy/math-game -n arthas-ui-test
-          kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
-          K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:integrationTest
+      - name: Run integration test
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: |
+            kubectl apply -f test-resources/k8s-ci-setup.yaml
+            kubectl get pods -A
+            INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
+            echo "INTERNAL_VERSION=INTERNAL_VERSION" >> $GITHUB_ENV
+  
+            sleep 15
+            kubectl get pods -A
+            kubectl describe deploy/math-game -n arthas-ui-test
+            kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
+            K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:integrationTest
 
       - name: Upload Test Output
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: screenshots
           path: "./out/ide-tests/tests/${{ steps.test.outputs.INTERNAL_VERSION }}/testExample/log/screenshots/*/*"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-report
+          path: ./arthasui-core/build/distributions/content/*/*
   build:
     name: Build
     runs-on: ubuntu-latest
