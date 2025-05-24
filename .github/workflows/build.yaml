@@ -38,28 +38,33 @@ jobs:
         uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'latest'
+      - name: Setup K8s
+        id: k8s
+        run: |
+          kubectl apply -f test-resources/k8s-ci-setup.yaml
+          kubectl get pods -A
+          INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
+          echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> $GITHUB_ENV
+          sleep 20
+          kubectl get pods -A
+          kubectl describe deploy/math-game -n arthas-ui-test
+          kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
+          K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test`
+          echo "token=$K8S_TOKEN" >> $GITHUB_ENV
 
       - name: Run integration test
         uses: GabrielBB/xvfb-action@v1
         with:
-          run: |
-            kubectl apply -f test-resources/k8s-ci-setup.yaml
-            kubectl get pods -A
-            INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
-            echo "INTERNAL_VERSION=INTERNAL_VERSION" >> $GITHUB_ENV
-  
-            sleep 15
-            kubectl get pods -A
-            kubectl describe deploy/math-game -n arthas-ui-test
-            kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
-            K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test` ./gradlew arthasui-core:integrationTest
+          run: ./gradlew arthasui-core:integrationTest
+        env:
+          K8S_TOKEN: ${{ steps.k8s.outputs.token }}
 
       - name: Upload Test Output
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: "./out/ide-tests/tests/${{ steps.test.outputs.INTERNAL_VERSION }}/testExample/log/screenshots/*/*"
+          path: "./out/ide-tests/tests/${{ steps.k8s.outputs.INTERNAL_VERSION }}/testExample/log/screenshots/*/*"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: failure()
@@ -155,7 +160,7 @@ jobs:
 
   verify:
     name: Verify plugin
-    needs: [ build ]
+    needs: [ build, integrationTest ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
