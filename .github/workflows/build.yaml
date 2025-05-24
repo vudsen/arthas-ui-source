@@ -70,7 +70,7 @@ jobs:
         if: failure()
         with:
           name: test-report
-          path: ./arthasui-core/build/distributions/content/*/*
+          path: ./arthasui-core/build/reports/tests/integrationTest/*/*
   build:
     name: Build
     runs-on: ubuntu-latest
