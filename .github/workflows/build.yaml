@@ -43,7 +43,7 @@ jobs:
         run: |
           kubectl apply -f test-resources/k8s-ci-setup.yaml
           kubectl get pods -A
-          INTERNAL_VERSION=$(grep '^platformInternalVersion=' gradle.properties | cut -d'=' -f2)
+          INTERNAL_VERSION=`cat gradle.properties | grep platformInternalVersion | cut -d'=' -f2 | tr -d ' '`
           echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> $GITHUB_ENV
           sleep 20
           kubectl get pods -A
@@ -63,8 +63,8 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots
-          path: "./out/ide-tests/tests/${{ steps.k8s.outputs.INTERNAL_VERSION }}/testExample/log/screenshots/*/*"
+          name: logs
+          path: "./out/ide-tests/tests/IC-${{ steps.k8s.outputs.INTERNAL_VERSION }}/testExample/log/*/*"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: failure()
