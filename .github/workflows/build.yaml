@@ -38,34 +38,34 @@ jobs:
         uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'latest'
-      - name: Setup K8s
+      - name: Setup Environment
         id: k8s
         run: |
           kubectl apply -f test-resources/k8s-ci-setup.yaml
           kubectl get pods -A
           INTERNAL_VERSION=`cat gradle.properties | grep platformInternalVersion | cut -d'=' -f2 | tr -d ' '`
-          echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> $GITHUB_ENV
+          echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> GITHUB_OUTPUT
           sleep 20
           kubectl get pods -A
           kubectl describe deploy/math-game -n arthas-ui-test
           kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
           K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test`
-          echo "token=$K8S_TOKEN" >> $GITHUB_ENV
+          echo "token=$K8S_TOKEN" >> GITHUB_OUTPUT
 
-      - name: Run integration test
+      - name: Run Integration Test
         uses: GabrielBB/xvfb-action@v1
         with:
           run: ./gradlew arthasui-core:integrationTest
         env:
           K8S_TOKEN: ${{ steps.k8s.outputs.token }}
 
-      - name: Upload Test Output
+      - name: Upload UI Logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: logs
           path: "./out/ide-tests/tests/IC-${{ steps.k8s.outputs.INTERNAL_VERSION }}/testExample/log/*/*"
-      - name: Upload artifact
+      - name: Upload Test Report
         uses: actions/upload-artifact@v4
         if: failure()
         with:
