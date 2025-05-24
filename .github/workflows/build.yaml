@@ -44,13 +44,13 @@ jobs:
           kubectl apply -f test-resources/k8s-ci-setup.yaml
           kubectl get pods -A
           INTERNAL_VERSION=`cat gradle.properties | grep platformInternalVersion | cut -d'=' -f2 | tr -d ' '`
-          echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> GITHUB_OUTPUT
+          echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> $GITHUB_OUTPUT
           sleep 20
           kubectl get pods -A
           kubectl describe deploy/math-game -n arthas-ui-test
           kubectl wait --for=condition=ready pod -l app=math-game -n arthas-ui-test --timeout=60s
           K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test`
-          echo "token=$K8S_TOKEN" >> GITHUB_OUTPUT
+          echo "token=$K8S_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Run Integration Test
         uses: GabrielBB/xvfb-action@v1
