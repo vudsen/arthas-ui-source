@@ -3,7 +3,6 @@ package io.github.vudsen.arthasui.bridge.host
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
-import com.intellij.util.Consumer
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -13,7 +12,6 @@ import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
 import io.github.vudsen.arthasui.bridge.providers.k8s.MyK8sExecProcess
-import io.kubernetes.client.Exec
 import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.kubernetes.client.openapi.apis.VersionApi
@@ -22,9 +20,7 @@ import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.util.Config
 import java.io.CharArrayReader
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
 
@@ -102,21 +98,21 @@ class K8sHostMachine(private val config: HostMachineConfig) : HostMachine {
     }
 
 
-    fun isPodExist(name: String, namespace: String, container: String?): Boolean {
+    fun isPodNotExist(name: String, namespace: String, container: String?): Boolean {
         val api = CoreV1Api(apiClient)
         try {
             val pod = api.readNamespacedPod(name, namespace).execute() ?: return false
             container ?.let {
                 for (ctr in pod.spec.containers) {
                     if (ctr.name == container) {
-                        return true
+                        return false
                     }
                 }
-                return false
+                return true
             }
-            return true
-        } catch (_: Exception) {
             return false
+        } catch (_: Exception) {
+            return true
         }
     }
 

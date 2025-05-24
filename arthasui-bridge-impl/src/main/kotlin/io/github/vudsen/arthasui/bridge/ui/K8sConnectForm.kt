@@ -11,9 +11,7 @@ import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.TextAccessor
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.bindText
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ComponentPredicate
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
@@ -35,11 +33,13 @@ class K8sConnectForm(
 
     private val tokenAuthorization = state.token ?: K8sConnectConfig.TokenAuthorization()
 
+    private val delegateUi = LocalJvmDownloadDelegateCommonUI(state.localPkgSourceId)
 
     private val segmentButtonBind = SegmentButtonBind(state)
 
     override fun getState(): K8sConnectConfig {
         state.token = tokenAuthorization
+        state.localPkgSourceId = delegateUi.resolveSelectedDelegateId()
         return state
     }
 
@@ -157,6 +157,13 @@ class K8sConnectForm(
                     textField().label("Token").bindText(tokenAuthorization::token).align(Align.FILL)
                 }
             }.visibleIf(SegmentButtonPredicate(K8sConnectConfig.AuthorizationType.TOKEN))
+
+            group("Feature") {
+                delegateUi.createComponent(this)
+                row {
+                    checkBox("Validate SSL").bindSelected(state::validateSSL).align(Align.FILL)
+                }
+            }
         }
     }
 

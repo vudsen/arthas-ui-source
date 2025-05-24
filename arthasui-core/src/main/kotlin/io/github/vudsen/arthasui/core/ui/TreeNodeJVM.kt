@@ -68,5 +68,9 @@ class TreeNodeJVM(
         return jvm.hashCode()
     }
 
+    override fun toString(): String {
+        return jvm.name
+    }
+
 
 }

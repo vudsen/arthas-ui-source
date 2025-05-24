@@ -15,55 +15,17 @@ import io.github.vudsen.arthasui.common.validation.TextComponentValidators
 class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable: Disposable) :
     AbstractFormComponent<HostMachineConnectConfig>(parentDisposable) {
 
-
-    companion object {
-        private const val DISABLED = "<Disabled>"
-    }
-
-    private val transferEle: List<String>
-
-    private var selectedLocalMachine: String?
-
-    private val localHostMachines: List<HostMachineConfig>
-
     private val state: SshHostMachineConnectConfig = if (oldState is SshHostMachineConnectConfig) {
         oldState
     } else {
         SshHostMachineConnectConfig("")
     }
 
-    init {
-        val service = service<ArthasUISettingsPersistent>()
-        val localHostMachines = mutableListOf<HostMachineConfig>()
-        var selectedLocalMachine: String? = DISABLED
-
-        val transferEle = mutableListOf<String>()
-        transferEle.add(DISABLED)
-        for (hostMachine in service.state.hostMachines) {
-            if (hostMachine.connect is LocalConnectConfig) {
-                localHostMachines.add(hostMachine)
-                transferEle.add(hostMachine.name)
-                if (state.localPkgSourceId == hostMachine.id) {
-                    selectedLocalMachine = hostMachine.name
-                }
-            }
-        }
-        this.selectedLocalMachine = selectedLocalMachine
-        this.transferEle = transferEle
-        this.localHostMachines = localHostMachines
-    }
+    private val delegateUi = LocalJvmDownloadDelegateCommonUI(state.localPkgSourceId)
 
 
     override fun getState(): HostMachineConnectConfig {
-        if (selectedLocalMachine == null || selectedLocalMachine == DISABLED) {
-            state.localPkgSourceId = null
-        } else {
-            val i = transferEle.indexOf(selectedLocalMachine)
-            if (i < 0) {
-                throw IllegalStateException("Unreachable code.")
-            }
-            state.localPkgSourceId = localHostMachines[i - 1].id
-        }
+        state.localPkgSourceId = delegateUi.resolveSelectedDelegateId()
         return state
     }
 
@@ -92,16 +54,10 @@ class SshConfigurationForm(oldState: HostMachineConnectConfig?, parentDisposable
                 }
             }
             group("Feature") {
-                row {
-                    comboBox(transferEle)
-                        .bindItem(this@SshConfigurationForm::selectedLocalMachine)
-                        .label("Transfer local file")
-                        .comment("Transfer local package to remote host instead of download it in remote host")
-                }
+                delegateUi.createComponent(this)
             }
         }
     }
-
 
 
 }

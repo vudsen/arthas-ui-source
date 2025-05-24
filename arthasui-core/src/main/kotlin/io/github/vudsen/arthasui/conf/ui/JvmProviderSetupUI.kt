@@ -137,9 +137,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
     }
 
     fun apply(): HostMachineConfig? {
-        commonDialogPanel ?: return null ?:let {
-            it.apply() ?: return null
-        }
+        commonDialogPanel?.apply()
         val result = mutableListOf<JvmProviderConfig>()
         for (i in formTabs.indices) {
             val formTab = formTabs[i]
