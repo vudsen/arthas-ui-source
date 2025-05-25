@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.run
 
 import com.intellij.execution.process.*
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -54,35 +55,37 @@ class ArthasProcessHandler(
 
             override fun startNotified(event: ProcessEvent) {
                 notifyTextAvailable("Trying to attach to target jvm: ${jvm.name}\n", ProcessOutputTypes.STDOUT)
-                try {
-                    val arthasExecutionManager = project.service<ArthasExecutionManager>()
-                    val bridgeTemplate = arthasExecutionManager.getTemplate(jvm)!!
-                    this@ArthasProcessHandler.arthasBridgeTemplate = bridgeTemplate
-                    bridgeTemplate.addListener(object : ArthasBridgeListener() {
-                        override fun onContent(result: String) {
-                            notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
-                        }
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    try {
+                        val arthasExecutionManager = project.service<ArthasExecutionManager>()
+                        val bridgeTemplate = arthasExecutionManager.getTemplate(jvm)!!
+                        this@ArthasProcessHandler.arthasBridgeTemplate = bridgeTemplate
+                        bridgeTemplate.addListener(object : ArthasBridgeListener() {
+                            override fun onContent(result: String) {
+                                notifyTextAvailable(result, ProcessOutputTypes.STDOUT)
+                            }
 
-                        override fun onClose() {
+                            override fun onClose() {
+                                notifyProcessTerminated(bridgeTemplate.stop())
+                            }
+                        })
+
+                        bridgeTemplate.attachNow()
+                        if (bridgeTemplate.isClosed()) {
                             notifyProcessTerminated(bridgeTemplate.stop())
                         }
-                    })
-
-                    bridgeTemplate.attachNow()
-                    if (bridgeTemplate.isClosed()) {
-                        notifyProcessTerminated(bridgeTemplate.stop())
-                    }
-                } catch (e: Exception) {
-                    StringWriter(1024).use { result ->
-                        PrintWriter(result).use { pw ->
-                            e.printStackTrace(pw)
-                            notifyTextAvailable(
-                                "\nFailed to attach target jvm: ${jvm.name}\n" + result.toString(),
-                                ProcessOutputTypes.STDERR
-                            )
+                    } catch (e: Exception) {
+                        StringWriter(1024).use { result ->
+                            PrintWriter(result).use { pw ->
+                                e.printStackTrace(pw)
+                                notifyTextAvailable(
+                                    "\nFailed to attach target jvm: ${jvm.name}\n" + result.toString(),
+                                    ProcessOutputTypes.STDERR
+                                )
+                            }
                         }
+                        notifyProcessTerminated(1)
                     }
-                    notifyProcessTerminated(1)
                 }
             }
         })

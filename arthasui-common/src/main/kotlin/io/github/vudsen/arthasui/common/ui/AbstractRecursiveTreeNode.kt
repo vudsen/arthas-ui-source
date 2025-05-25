@@ -61,6 +61,6 @@ abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
 
     abstract override fun hashCode(): Int
 
-
+    abstract override fun toString(): String
     
 }

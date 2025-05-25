@@ -14,7 +14,9 @@ import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
+import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import org.apache.commons.net.telnet.TelnetClient
@@ -71,7 +73,8 @@ class LocalJvmProvider : JvmProvider {
                     continue
                 }
                 val command = line.substring(i + 1)
-                if (command.contains("grep java")) {
+                // 过滤掉 Jps 是因为集成测试不好选中树节点
+                if (command.contains("grep java") || command.endsWith("Jps")) {
                     continue
                 }
                 val pid = line.substring(0, i)
@@ -89,7 +92,7 @@ class LocalJvmProvider : JvmProvider {
 
     override fun searchJvm(hostMachine: HostMachine, providerConfig: JvmProviderConfig): JvmSearchResult {
         if (hostMachine !is ShellAvailableHostMachine) {
-            return JvmSearchResult(emptyList())
+            return JvmSearchResult(mutableListOf())
         }
         val config = providerConfig as LocalJvmProviderConfig
         val out: String = hostMachine.execute("${config.javaHome}/bin/jps", "-l").let {
@@ -110,7 +113,11 @@ class LocalJvmProvider : JvmProvider {
     ): ArthasBridgeFactory {
         val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
+        val connectConfig = hostMachine.getConfiguration() as SshHostMachineConnectConfig
+        val toolchainManager = DefaultToolChainManager(
+            hostMachine,
+            ToolChainManagerUtil.findLocalHostMachine(connectConfig.localPkgSourceId)
+        )
 
         val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
         val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)

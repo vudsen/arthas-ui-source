@@ -58,12 +58,15 @@ class UpdateHostMachineDialogUI(
                         .align(Align.FILL)
                         .validationOnApply(TextComponentValidators())
                 }
-                row {
-                    textField()
-                        .label("Data directory")
-                        .bindText(state::dataDirectory)
-                        .align(Align.FILL)
-                        .validationOnApply(TextComponentValidators())
+                if (state.dataDirectory != "") {
+                    // 创建时如果没有设置 dataDirectory，则不显示
+                    row {
+                        textField()
+                            .label("Data directory")
+                            .bindText(state::dataDirectory)
+                            .align(Align.FILL)
+                            .validationOnApply(TextComponentValidators())
+                    }
                 }
             }
             lateinit var connectComboBox: ComboBox<String>

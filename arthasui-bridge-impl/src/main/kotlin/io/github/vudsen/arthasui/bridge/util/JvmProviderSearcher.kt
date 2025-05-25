@@ -5,6 +5,7 @@ import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
 import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
+import java.util.Collections
 import javax.swing.Icon
 
 /**
@@ -25,7 +26,13 @@ class JvmProviderSearcher(
     }
 
     override fun load(): JvmSearchResult {
-        return provider.searchJvm(hostMachine, providerConfig)
+        val result = provider.searchJvm(hostMachine, providerConfig)
+        result.result ?.let {
+            val sorted = it.sortedWith { a, b -> a.id.compareTo(b.id) }
+            result.result = sorted
+        }
+
+        return result
     }
 
 

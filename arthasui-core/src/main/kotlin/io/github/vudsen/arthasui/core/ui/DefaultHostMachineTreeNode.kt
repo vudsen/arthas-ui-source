@@ -85,5 +85,9 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
         return config.hashCode()
     }
 
+    override fun toString(): String {
+        return config.name
+    }
+
 
 }
