@@ -152,7 +152,7 @@ class PluginTest  {
         Thread.sleep(1.seconds.inWholeMilliseconds)
         x(xQuery { byType("com.intellij.openapi.wm.impl.headertoolbar.MainToolbar") }).x(xQuery { byAttribute("myicon", "stop.svg") }).click()
         textAssert(outputEditor, "hello")
-        x(xQuery { byAccessibleName("Hide") }).click()
+        x(xQuery { and(byType("com.intellij.openapi.wm.impl.SquareStripeButton"), byAccessibleName("Run")) }).click()
     }
 
     private fun textAssert(comp:  UiComponent, expected: String) {
