@@ -5,5 +5,9 @@ enum class ToolChain {
     /**
      * 获取 arthas-bin.zip
      */
-    ARTHAS_BUNDLE
+    ARTHAS_BUNDLE,
+    /**
+     * 该工具链直接执行可执行文件
+     */
+    KUBECTL
 }

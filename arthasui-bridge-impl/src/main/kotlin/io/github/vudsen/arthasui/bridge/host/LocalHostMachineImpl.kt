@@ -282,6 +282,35 @@ class LocalHostMachineImpl(
         return (File(dest)).absolutePath
     }
 
+    private fun mv0(src: File, dest: File) {
+        if (!src.exists()) {
+            return
+        }
+
+        if (src.isDirectory) {
+            if (!dest.exists()) {
+                dest.mkdirs()
+            }
+
+            src.listFiles()?.forEach { file ->
+                val target = File(dest, file.name)
+                mv0(file, target)
+            }
+
+            src.delete()
+        } else {
+            src.renameTo(dest).takeIf { it } ?: run {
+                // renameTo 失败，尝试复制再删除
+                src.copyTo(dest, overwrite = true)
+                src.delete()
+            }
+        }
+    }
+
+    override fun mv(src: String, dest: String, recursive: Boolean) {
+        mv0(File(src), File(dest))
+    }
+
     private val myData = HashMap<Key<*>, Any?>()
 
     override fun <T : Any?> getUserData(key: Key<T>): T? {

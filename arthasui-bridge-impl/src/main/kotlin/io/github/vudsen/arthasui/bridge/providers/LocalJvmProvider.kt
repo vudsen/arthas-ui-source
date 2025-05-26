@@ -113,11 +113,7 @@ class LocalJvmProvider : JvmProvider {
     ): ArthasBridgeFactory {
         val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val connectConfig = hostMachine.getConfiguration() as SshHostMachineConnectConfig
-        val toolchainManager = DefaultToolChainManager(
-            hostMachine,
-            ToolChainManagerUtil.findLocalHostMachine(connectConfig.localPkgSourceId)
-        )
+        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
 
         val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
         val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)

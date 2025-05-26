@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.host
 
+import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
@@ -237,4 +238,11 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         return this
     }
 
+    override fun mv(src: String, dest: String, recursive: Boolean) {
+        if (recursive) {
+            execute("mv", "-r", src, dest)
+        } else {
+            execute("mv", src, dest)
+        }
+    }
 }

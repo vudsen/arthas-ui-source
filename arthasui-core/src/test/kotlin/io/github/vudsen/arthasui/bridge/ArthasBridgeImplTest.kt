@@ -18,7 +18,6 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.bridge.conf.K8sConnectConfig
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
 import io.github.vudsen.arthasui.core.ArthasExecutionManagerImpl
 import org.junit.Assert
 

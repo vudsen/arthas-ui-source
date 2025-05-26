@@ -1,22 +1,22 @@
 package io.github.vudsen.arthasui.bridge.providers.k8s
 
-import io.github.vudsen.arthasui.api.bean.JvmContext
+import com.google.gson.JsonArray
 import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
-import io.kubernetes.client.openapi.models.V1Pod
 import javax.swing.Icon
 
 /**
  * 多容器 Pod 搜索节点
  */
 class K8sMultiContainerChildSearcher(
-    private val context: JvmContext,
-    private val pod: V1Pod
-) : JvmSearchDelegate{
+    private val baseJvm: PodJvm,
+    private val containers: JsonArray
+) : JvmSearchDelegate {
+
     override fun getName(): String {
-        return pod.metadata.name
+        return baseJvm.name
     }
 
     override fun getIcon(): Icon {
@@ -25,7 +25,15 @@ class K8sMultiContainerChildSearcher(
 
     override fun load(): JvmSearchResult {
         return JvmSearchResult(
-            pod.spec.containers.map { ctr -> PodJvm(pod.metadata.name, pod.metadata.name, context, pod.metadata.namespace, ctr.name) },
+            containers.map { ctr ->
+                PodJvm(
+                    baseJvm.name,
+                    baseJvm.name,
+                    baseJvm.context,
+                    baseJvm.namespace,
+                    ctr.asJsonObject.get("name").asString
+                )
+            },
             null
         )
     }
@@ -36,11 +44,16 @@ class K8sMultiContainerChildSearcher(
 
         other as K8sMultiContainerChildSearcher
 
-        return pod == other.pod
+        if (baseJvm != other.baseJvm) return false
+        if (containers != other.containers) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        return pod.hashCode()
+        var result = baseJvm.hashCode()
+        result = 31 * result + containers.hashCode()
+        return result
     }
 
 

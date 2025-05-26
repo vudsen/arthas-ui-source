@@ -1,21 +1,22 @@
 package io.github.vudsen.arthasui.bridge.providers.k8s
 
+import com.google.gson.JsonObject
+import com.intellij.openapi.components.service
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.bean.JvmContext
 import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
-import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
+import io.github.vudsen.arthasui.bridge.util.KubectlClient
 import io.github.vudsen.arthasui.common.ArthasUIIcons
+import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 import javax.swing.Icon
 
 /**
  * 命名空间节点
  */
 class K8sNamespaceChildSearcher(
-    private val hostMachine: K8sHostMachine,
-    private val providerConfig: K8sJvmProviderConfig,
+    private val kubectlClient: KubectlClient,
     private val namespace: String
 ) : JvmSearchDelegate {
 
@@ -30,14 +31,26 @@ class K8sNamespaceChildSearcher(
     override fun load(): JvmSearchResult {
         val jvmResult = mutableListOf<JVM>()
         val delegate = mutableListOf<JvmSearchDelegate>()
-        val ctx = JvmContext(hostMachine, providerConfig)
-        for (pod in hostMachine.listPod(namespace)) {
-            val containers = pod.spec.containers
-            if (containers.size == 1) {
-                jvmResult.add(PodJvm(pod.metadata.name, pod.metadata.name, ctx, namespace, null))
+
+        val ctx = JvmContext(kubectlClient.hostMachine, kubectlClient.config)
+        val result = kubectlClient.execute("get", "pods", "-n", namespace, "-o=json").ok()
+        val gson = service<SingletonInstanceHolderService>().gson
+
+        val resp = gson.fromJson(result, JsonObject::class.java)
+
+        for (element in resp.getAsJsonArray("items")) {
+            val pod = element.asJsonObject
+            val spec = pod.getAsJsonObject("spec")
+            val ctrs = spec.getAsJsonArray("containers")
+            val metadata = pod.getAsJsonObject("metadata")
+            val name = metadata.get("name").asString
+            val base = PodJvm(name, name, ctx, namespace, null)
+            if (ctrs.size() == 1) {
+                jvmResult.add(base)
             } else {
-                delegate.add(K8sMultiContainerChildSearcher(ctx, pod))
+                delegate.add(K8sMultiContainerChildSearcher(base, ctrs))
             }
+            spec
         }
         return JvmSearchResult(jvmResult, delegate)
     }

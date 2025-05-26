@@ -9,6 +9,11 @@ import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
+import org.apache.http.HttpStatus
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.util.EntityUtils
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -21,6 +26,8 @@ class DefaultToolChainManager(
     ToolchainManager {
 
     var mirror = mirror ?: "https://api.github.com"
+
+    private val httpClient = HttpClientBuilder.create().build()
 
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
@@ -107,29 +114,32 @@ class DefaultToolChainManager(
     }
 
     /**
-     * 下载文件
-     * @return 文件名称
+     * 下载文件，提供委托实现
+     * @return 文件最终路径
      */
-    private fun finalDownload(
-        asset: Asset,
-    ): String {
+    private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
-        val filename = asset.name
 
+        val dest = hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
         localDownloadProxy?.let {
-            val dest = hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
-            localDownloadProxy.download(asset.browserDownloadUrl, local)
+            localDownloadProxy.download(url, local)
             hostMachine.mkdirs(hostMachineConfig.dataDirectory)
             hostMachine
                 .transferFile(local, dest, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get())
         } ?: let {
             hostMachine.download(
-                asset.browserDownloadUrl,
-                hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+                url,
+                dest
             )
         }
-        return filename
+        return dest
+    }
+
+    private fun finalDownload(
+        asset: Asset,
+    ): String {
+        return finalDownload(asset.browserDownloadUrl, asset.name)
     }
 
 
@@ -158,9 +168,47 @@ class DefaultToolChainManager(
                 }
             }
             ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
+            ToolChain.KUBECTL -> prepareKubectl()
         }
     }
 
+
+    private fun prepareKubectl(): String {
+        val httpGet = HttpGet("https://cdn.dl.k8s.io/release/stable.txt")
+        httpGet.config = RequestConfig.custom()
+            .setConnectTimeout(2000)
+            .setConnectionRequestTimeout(2000)
+            .setSocketTimeout(2000)
+            .build()
+
+        val version: String = httpClient.execute(httpGet).use { response ->
+            val body = EntityUtils.toString(response.entity, StandardCharsets.UTF_8)
+            if (response.statusLine.statusCode != HttpStatus.SC_OK) {
+                throw IllegalStateException("Failed to query latest version of kubernetes, body: $body")
+            }
+            body
+        }
+        val downloadUrl = when (hostMachine.getOS()) {
+            OS.WINDOWS -> "https://dl.k8s.io/release/${version}/bin/windows/amd64/kubectl.exe"
+            OS.LINUX -> {
+                if (hostMachine.isArm()) {
+                    "https://dl.k8s.io/release/${version}/bin/linux/arm64/kubectl"
+                } else {
+                    "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
+                }
+            }
+            OS.MAC -> "https://dl.k8s.io/release/${version}/bin/darwin/amd64/kubectl"
+            else -> throw IllegalStateException("Unknown OS")
+        }
+        val filename = downloadUrl.substringAfterLast('/')
+        val downloaded = finalDownload(downloadUrl, filename)
+
+        val home = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/"
+        hostMachine.mkdirs(home)
+        val finalFilePath = "$home/$filename"
+        hostMachine.mv(downloaded, finalFilePath, false)
+        return finalFilePath
+    }
 
     private fun fetchLatestData(pkg: String): ApiData {
         val url = URL("${mirror}/repos/$pkg/releases/latest")

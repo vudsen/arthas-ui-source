@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.api.host
 
+import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -99,5 +100,9 @@ interface ShellAvailableHostMachine : HostMachine {
      */
     fun resolveDefaultDataDirectory(): String
 
+    /**
+     * 移动文件
+     */
+    fun mv(src: String, dest: String, recursive: Boolean)
 
 }

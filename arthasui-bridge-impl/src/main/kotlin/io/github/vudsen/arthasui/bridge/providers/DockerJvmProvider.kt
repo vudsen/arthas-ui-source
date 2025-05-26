@@ -75,8 +75,8 @@ class DockerJvmProvider : JvmProvider {
         jvmProviderConfig: JvmProviderConfig,
     ): ArthasBridgeFactory {
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
         val config = jvmProviderConfig as JvmInDockerProviderConfig
+        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
         val javaExecutable = if (config.javaHome.isEmpty()) {
             "java"
         }  else {

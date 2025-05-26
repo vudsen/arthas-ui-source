@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.bridge.conf
 
-import com.intellij.icons.AllIcons
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.common.ArthasUIIcons
