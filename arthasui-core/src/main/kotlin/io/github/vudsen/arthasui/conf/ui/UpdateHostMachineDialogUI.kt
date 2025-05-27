@@ -86,7 +86,7 @@ class UpdateHostMachineDialogUI(
                     }.visibleIf(ComboBoxPredicate(connectComboBox) { v -> v == provider.getName() })
                 }
             }
-            group("Provider Config") {
+            group("Provider Config",false) {
                 row {
                     cell(jvmProviderConfigUI.getComponent()).align(Align.FILL)
                 }

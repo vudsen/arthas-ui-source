@@ -14,6 +14,7 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -201,11 +202,14 @@ class DefaultToolChainManager(
             else -> throw IllegalStateException("Unknown OS")
         }
         val filename = downloadUrl.substringAfterLast('/')
+        val home = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/"
+        val finalFilePath = "$home/$filename"
+        if (File(finalFilePath).exists()) {
+            return finalFilePath
+        }
         val downloaded = finalDownload(downloadUrl, filename)
 
-        val home = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/"
         hostMachine.mkdirs(home)
-        val finalFilePath = "$home/$filename"
         hostMachine.mv(downloaded, finalFilePath, false)
         return finalFilePath
     }

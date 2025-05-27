@@ -120,7 +120,7 @@ class LocalHostMachineImpl(
     }
 
     override fun listFiles(directory: String): List<String> {
-        return File(directory).listFiles().map { v -> v.name }
+        return File(directory).listFiles()?.map { v -> v.name } ?: emptyList()
     }
 
     override fun download(url: String, destPath: String) {
@@ -132,37 +132,53 @@ class LocalHostMachineImpl(
             logger.warn("Failed to create directory for file: $destPath")
         }
 
+        val tempFile = File(destFile.parentFile.absolutePath + "/" + destFile.name + ".tmp")
+
         val progressIndicator = getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
-        progressIndicator?.text = "Downloading $url..."
+        val baseText = "Downloading $url"
+        progressIndicator ?.let {
+            it.pushState()
+            it.text = baseText
+        }
 
-        destFile.outputStream().use { output ->
-            val connection = URL(url).openConnection() as HttpURLConnection
-            try {
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    throw IllegalStateException(
-                        "Unexpected HTTP status ${connection.responseCode}, body: ${
-                            String(
-                                connection.inputStream.readAllBytes(),
-                                StandardCharsets.UTF_8
-                            )
-                        }"
-                    )
-                }
-                val total = connection.contentLength
-
-                connection.inputStream.use { input ->
-                    val buffer = ByteArray(1024)
-                    var bytesRead: Int
-                    var totalBytesRead = 0
-                    while (input.read(buffer).also { bytesRead = it } != -1) {
-                        output.write(buffer, 0, bytesRead)
-                        totalBytesRead += bytesRead
-                        progressIndicator?.fraction = totalBytesRead.toDouble() / total
+        try {
+            tempFile.outputStream().use { output ->
+                val connection = URL(url).openConnection() as HttpURLConnection
+                try {
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                        throw IllegalStateException(
+                            "Unexpected HTTP status ${connection.responseCode}, body: ${
+                                String(
+                                    connection.inputStream.readAllBytes(),
+                                    StandardCharsets.UTF_8
+                                )
+                            }"
+                        )
                     }
+                    val total = connection.contentLength
+                    val totalMb = String.format("%.2f", total * 1.0 / 1024 / 1024)
+
+                    connection.inputStream.use { input ->
+                        val buffer = ByteArray(connection.contentLength.coerceAtMost(1024 * 1024 * 10))
+                        var bytesRead: Int
+                        var totalBytesRead = 0
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            output.write(buffer, 0, bytesRead)
+                            totalBytesRead += bytesRead
+                            ProgressManager.checkCanceled()
+                            progressIndicator ?.let {
+                                it.fraction = totalBytesRead.toDouble() / total
+                                it.text = "$baseText (${String.format("%.2fMB", totalBytesRead * 1.0 / 1024 / 1024)} / ${totalMb}MB)"
+                            }
+                        }
+                    }
+                } finally {
+                    connection.disconnect()
                 }
-            } finally {
-                connection.disconnect()
             }
+            tempFile.renameTo(destFile)
+        } finally {
+            progressIndicator?.popState()
         }
     }
 

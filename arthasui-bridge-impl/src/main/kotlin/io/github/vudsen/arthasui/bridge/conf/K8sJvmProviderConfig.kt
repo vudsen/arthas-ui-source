@@ -50,11 +50,11 @@ class K8sJvmProviderConfig(
         return TYPE
     }
 
-    override fun copy(): JvmProviderConfig {
+    override fun copy(): K8sJvmProviderConfig {
         return K8sJvmProviderConfig(enabled)
     }
 
-    override fun deepCopy(): JvmProviderConfig {
+    override fun deepCopy(): K8sJvmProviderConfig {
         return K8sJvmProviderConfig(enabled)
     }
 

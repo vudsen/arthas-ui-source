@@ -1,5 +1,7 @@
 package io.github.vudsen.arthasui.core.ui
 
+import com.intellij.openapi.ui.getUserData
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmSearchDelegate
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
@@ -19,6 +21,7 @@ class TreeNodeSearcher(
 ) : AbstractRecursiveTreeNode() {
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
+        ctx.template.putUserData(HostMachine.PROGRESS_INDICATOR, ctx.tree.getUserData(HostMachine.PROGRESS_INDICATOR))
         val jvmList = delegate.load()
         jvmList.result ?.let {
             val result = ArrayList<AbstractRecursiveTreeNode>(it.size)

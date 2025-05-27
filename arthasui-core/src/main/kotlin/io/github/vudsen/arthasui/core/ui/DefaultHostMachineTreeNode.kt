@@ -1,7 +1,12 @@
 package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.openapi.components.service
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.getUserData
+import com.intellij.ui.treeStructure.Tree
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
@@ -9,12 +14,17 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.bridge.util.JvmProviderSearcher
 import java.awt.FlowLayout
+import java.lang.ref.WeakReference
 import javax.swing.*
 
 /**
  * 默认的根节点
  */
-open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Project) : AbstractRecursiveTreeNode() {
+open class DefaultHostMachineTreeNode(
+    val config: HostMachineConfig,
+    project: Project,
+    tree: Tree
+) : AbstractRecursiveTreeNode() {
 
 
     protected val ctx: TreeNodeContext
@@ -24,7 +34,7 @@ open class DefaultHostMachineTreeNode(val config: HostMachineConfig, project: Pr
     init {
         val factory = service<HostMachineConnectManager>()
         val hostMachine = factory.connect(config)
-        ctx = TreeNodeContext(hostMachine, this, project, config)
+        ctx = TreeNodeContext(hostMachine, this, project, config, tree)
     }
 
     fun getConnectConfig(): HostMachineConfig {

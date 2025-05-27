@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.core.ui
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.treeStructure.Tree
 import io.github.vudsen.arthasui.api.CloseableHostMachine
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
@@ -8,7 +9,7 @@ import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 /**
  * 默认可关闭的树节点
  */
-class DefaultCloseableTreeNode(config: HostMachineConfig, project: Project) : DefaultHostMachineTreeNode(config, project),
+class DefaultCloseableTreeNode(config: HostMachineConfig, project: Project, tree: Tree) : DefaultHostMachineTreeNode(config, project, tree),
     CloseableTreeNode {
 
     private fun getHostMachine(): CloseableHostMachine = ctx.template as CloseableHostMachine

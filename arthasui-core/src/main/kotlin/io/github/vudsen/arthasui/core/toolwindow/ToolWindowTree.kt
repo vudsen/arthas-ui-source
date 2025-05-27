@@ -9,14 +9,15 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.ui.putUserData
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.ui.util.minimumWidth
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
-import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
@@ -26,6 +27,7 @@ import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
+import java.lang.ref.WeakReference
 import javax.swing.JComponent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -39,11 +41,6 @@ class ToolWindowTree(val project: Project) : Disposable {
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
 
-    /**
-     * Structure:
-     * - `Invisible Root`
-     *  - --> [HostMachineNode]
-     */
     val tree = Tree(DefaultTreeModel(rootModel))
 
     private val updateListener =  {
@@ -64,12 +61,25 @@ class ToolWindowTree(val project: Project) : Disposable {
         tree.isRootVisible = false
     }
 
+    private var isRunning = false
+
     /**
      * 刷新某个一个节点
      */
     fun launchRefreshNodeTask(node: RecursiveTreeNode) {
+        if (isRunning) {
+            return
+        }
+        isRunning = true
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Load arthas nodes", true) {
+
+            override fun onFinished() {
+                super.onFinished()
+                isRunning = false
+            }
+
             override fun run(indicator: ProgressIndicator) {
+                tree.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(indicator))
                 node.refreshRootNode()
                 ToolWindowManager.getInstance(project).invokeLater {
                     tree.updateUI()
@@ -99,10 +109,10 @@ class ToolWindowTree(val project: Project) : Disposable {
         for (hostMachineConfig in persistent.state.hostMachines) {
             val node: AbstractRecursiveTreeNode
             if (hostMachineConfig.connect.isRequireClose()) {
-                node = DefaultCloseableTreeNode(hostMachineConfig, project)
+                node = DefaultCloseableTreeNode(hostMachineConfig, project, tree)
                 Disposer.register(this, node)
             } else {
-                node = DefaultHostMachineTreeNode(hostMachineConfig, project)
+                node = DefaultHostMachineTreeNode(hostMachineConfig, project, tree)
             }
             rootModel.add(node.refreshRootNode())
         }
