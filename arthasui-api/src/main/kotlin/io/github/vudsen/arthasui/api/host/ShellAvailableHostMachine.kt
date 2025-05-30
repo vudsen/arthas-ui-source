@@ -26,8 +26,8 @@ interface ShellAvailableHostMachine : HostMachine {
 
     /**
      * 将本地的文件发送到宿主机上面
-     * @param src 文件路径
-     * @param dest 目标路径，指定文件绝对路径
+     * @param src 本地文件路径
+     * @param dest 目标路径，指定文件的绝对路径。 **需要确保父目录存在**
      */
     fun transferFile(src: String, dest: String, indicator: ProgressIndicator?)
 

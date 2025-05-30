@@ -24,6 +24,10 @@ class K8sJvmProviderConfig(
      * 当前激活的认证方式
      */
     var authorizationType: AuthorizationType = AuthorizationType.BUILTIN,
+    /**
+     * 是否为 arm 架构的 k8s 集群
+     */
+    var isArm: Boolean = false
 ) : JvmProviderConfig(TYPE, enabled) {
 
     enum class AuthorizationType(val displayName: String) {

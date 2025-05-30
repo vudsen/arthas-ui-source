@@ -16,7 +16,7 @@ class KubectlClient(
     val hostMachine: ShellAvailableHostMachine,
     val config: K8sJvmProviderConfig,
     /**
-     * 设置容器
+     * 设置容器. 若该参数非空，则后续指令只能使用 exc 或其它可以指定容器的指令
      */
     var container: String? = null
 ) {
@@ -35,13 +35,24 @@ class KubectlClient(
         commands
     }
 
+    private var checked = false
+
+    private fun isKubeconfigLatest(kubeconfigPath: String, currentContent: String): Boolean {
+        if (checked) {
+            return true
+        }
+        checked = true
+        return String(File(kubeconfigPath).readBytes()) == currentContent
+    }
+
     private fun createKubeconfig(hostMachine: ShellAvailableHostMachine, content: String): String {
         var tempFile: File? = null
         val dest = hostMachine.getHostMachineConfig().dataDirectory + "/conf/kubeconfig"
         try {
-            if (!hostMachine.isFileNotExist(dest)) {
+            if (!hostMachine.isFileNotExist(dest) && isKubeconfigLatest(dest, content)) {
                 return dest
             }
+            hostMachine.mkdirs(hostMachine.getHostMachineConfig().dataDirectory + "/conf")
             tempFile = File.createTempFile("arthas-ui-kubeconfig", "")
             FileOutputStream(tempFile).use {ins ->
                 ins.write(content.toByteArray(StandardCharsets.UTF_8))
@@ -74,11 +85,12 @@ class KubectlClient(
             return Pair(kubectl, createKubeconfig(hostMachine, config.kubeConfig!!))
         } else if (config.authorizationType == K8sJvmProviderConfig.AuthorizationType.TOKEN) {
             val token = config.token!!
-            return Pair(kubectl, createKubeconfig(hostMachine, """apiVersion: v1
+            return Pair(kubectl, createKubeconfig(hostMachine, """
+                apiVersion: v1
                 kind: Config
                 clusters:
                 - cluster:
-                    server: https://${token.url}
+                    server: ${token.url}
                     insecure-skip-tls-verify: true
                   name: my-cluster
                 users:
@@ -91,7 +103,7 @@ class KubectlClient(
                     user: token-user
                   name: token-context
                 current-context: token-context
-            """.trimIndent()))
+                """.trimIndent()))
         } else {
             throw IllegalStateException("Unsupported authorization type: ${config.authorizationType}")
         }

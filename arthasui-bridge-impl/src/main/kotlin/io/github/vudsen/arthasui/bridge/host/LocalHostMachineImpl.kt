@@ -108,7 +108,7 @@ class LocalHostMachineImpl(
     }
 
     override fun isFileNotExist(path: String): Boolean {
-        return File(path).exists()
+        return !File(path).exists()
     }
 
     override fun isDirectoryExist(path: String): Boolean {

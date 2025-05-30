@@ -168,6 +168,16 @@ class DefaultToolChainManager(
                     }
                 }
             }
+            ToolChain.JATTACH_BUNDLE_LINUX -> preparePackage("jattach-linux-x64", "jattach/jattach") { assets ->
+                assets.find { v ->
+                    v.name.endsWith("x64.tgz")
+                }
+            }
+            ToolChain.JATTACH_BUNDLE_LINUX_ARM -> preparePackage("jattach-linux-arm64", "jattach/jattach") { assets ->
+                assets.find { v ->
+                    v.name.endsWith("arm64.tgz")
+                }
+            }
             ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
             ToolChain.KUBECTL -> prepareKubectl()
         }
