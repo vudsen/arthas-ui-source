@@ -18,7 +18,7 @@ class KubectlClient(
     /**
      * 设置容器. 若该参数非空，则后续指令只能使用 exc 或其它可以指定容器的指令
      */
-    var container: String? = null
+    var container: String? = null,
 ) {
 
     private val baseCommand: MutableList<String> by lazy {
@@ -38,6 +38,7 @@ class KubectlClient(
     private var checked = false
 
     private fun isKubeconfigLatest(kubeconfigPath: String, currentContent: String): Boolean {
+        // TODO 在保存配置时覆盖 kubeconfig
         if (checked) {
             return true
         }

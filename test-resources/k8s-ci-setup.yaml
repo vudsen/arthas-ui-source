@@ -24,6 +24,9 @@ spec:
       labels:
         app: math-game
     spec:
+      securityContext:
+        runAsUser:
+        runAsGroup:
       serviceAccountName: arthas-ui-ci
       containers:
         - name: math-game

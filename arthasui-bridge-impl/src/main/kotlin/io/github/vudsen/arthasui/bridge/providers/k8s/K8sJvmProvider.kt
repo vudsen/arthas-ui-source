@@ -12,7 +12,8 @@ import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
-import io.github.vudsen.arthasui.bridge.host.LocalHostMachineImpl
+import io.github.vudsen.arthasui.bridge.host.K8sPodHostMachine
+import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.K8sJvmProviderForm
 import io.github.vudsen.arthasui.bridge.util.KubectlClient
 import io.github.vudsen.arthasui.common.ArthasUIIcons
@@ -40,71 +41,44 @@ class K8sJvmProvider : JvmProvider {
         })
     }
 
+
+    /**
+     * 由于用户权限的问题，必须先传到远程宿主机，然后再由远程宿主机授权后，再放进容器里解压
+     */
     override fun createArthasBridgeFactory(
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
         return ArthasBridgeFactory {
-            jvm as PodJvm
             val hostMachine = jvm.context.template as ShellAvailableHostMachine
-            jvmProviderConfig as K8sJvmProviderConfig
-            val client = KubectlClient(hostMachine, jvmProviderConfig, jvm.containerName)
-            val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
+            val k8sPodHostMachine = K8sPodHostMachine(jvm as PodJvm, jvmProviderConfig as K8sJvmProviderConfig, hostMachine)
 
-            client.execute("exec", "-n", jvm.namespace, "pod/${jvm.name}", "--", "mkdir", "-p", "/opt/arthas-ui/arthas")
-                .ok()
-            client.execute(
-                "exec",
-                "-n",
-                jvm.namespace,
-                "pod/${jvm.name}",
-                "--",
-                "mkdir",
-                "-p",
-                "/opt/arthas-ui/jattach"
-            ).ok()
+            val toolChainManager = DefaultToolChainManager(
+                k8sPodHostMachine,
+                ToolChainManagerUtil.findLocalDelegate(hostMachine.getConfiguration()),
+                ToolChainManagerUtil.mirror
+            )
 
-
-            val jattachHome: String
-            val arthasHome: String
-
-            // https://github.com/kubernetes/kubernetes/issues/77310
-            // the data directory on windows MUST be located at C:\
-            if (hostMachine is LocalHostMachineImpl && currentOS() == OS.WINDOWS) {
-                jattachHome = (if (jvmProviderConfig.isArm)
-                    toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE) else
-                    toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE_LINUX_ARM)
-                ).substring(2)
-                arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE).substring(2)
+            val jattachHome = if (k8sPodHostMachine.isArm()) {
+                toolChainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
             } else {
-                jattachHome = if (jvmProviderConfig.isArm)
-                    toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE) else
-                    toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE_LINUX_ARM)
-                arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
+                toolChainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
             }
+            k8sPodHostMachine.execute("chmod", "ug+x", "${jattachHome}/jattach")
+            val arthasHome = toolChainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
-            // TODO check file exist.
-            client.execute("cp", arthasHome, "${jvm.name}:/opt/arthas-ui/", "-n", jvm.namespace).ok()
-            client.execute("cp", jattachHome, "${jvm.name}:/opt/arthas-ui/", "-n", jvm.namespace).ok()
-
-            val arthasDirectory = arthasHome.substringAfterLast('/')
-            val jattachDirectory = jattachHome.substringAfterLast('/')
-
-            // TODO chmod jattach
-            client.execute(
-                "exec", "-n", jvm.namespace, "pod/${jvm.name}", "--",
-                "/opt/arthas-ui/${jattachDirectory}/jattach",
+            k8sPodHostMachine.execute(
+                "${jattachHome}/jattach",
                 "1",
                 "load",
                 "instrument",
                 "false",
-                "/opt/arthas-ui/${arthasDirectory}/arthas-agent.jar"
+                "${arthasHome}/arthas-agent.jar"
             ).ok()
 
             ArthasBridgeImpl(
-                client.createInteractiveShell(
-                    "exec", "-n", jvm.namespace, "pod/${jvm.name}", "--",
-                    "java -jar /opt/arthas-ui/${arthasDirectory}/arthas-client.jar"
+                k8sPodHostMachine.createInteractiveShell(
+                    "java -jar ${arthasHome}/arthas-client.jar"
                 )
             )
         }

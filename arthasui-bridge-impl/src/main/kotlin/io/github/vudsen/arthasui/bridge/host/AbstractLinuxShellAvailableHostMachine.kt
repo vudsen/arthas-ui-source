@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
@@ -236,6 +237,10 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
 
     override fun getHostMachine(): HostMachine {
         return this
+    }
+
+    override fun getOS(): OS {
+        return OS.LINUX
     }
 
     override fun mv(src: String, dest: String, recursive: Boolean) {

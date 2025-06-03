@@ -1,20 +1,19 @@
 package io.github.vudsen.arthasui.bridge.factory
 
 import com.intellij.openapi.components.service
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
-import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 
 object ToolChainManagerUtil {
 
     val mirror = System.getenv("TOOLCHAIN_MIRROR")
 
-    fun findLocalHostMachine(id: Long?): ShellAvailableHostMachine? {
+    fun findLocalDelegate(id: Long?): ShellAvailableHostMachine? {
         if (id == null) {
             return null
         }
@@ -29,16 +28,17 @@ object ToolChainManagerUtil {
         return null
     }
 
-    fun createToolChainManager(current: ShellAvailableHostMachine): ToolchainManager {
-        val config = current.getConfiguration()
-        val id: Long? = if (config is SshHostMachineConnectConfig) {
-            config.localPkgSourceId
-        } else {
-            null
+    fun findLocalDelegate(config: HostMachineConnectConfig): ShellAvailableHostMachine? {
+        if (config is SshHostMachineConnectConfig) {
+            return findLocalDelegate(config.localPkgSourceId)
         }
+        return null
+    }
+
+    fun createToolChainManager(current: ShellAvailableHostMachine): ToolchainManager {
         return DefaultToolChainManager(
             current,
-            findLocalHostMachine(id),
+            findLocalDelegate(current.getConfiguration()),
             mirror
         )
     }

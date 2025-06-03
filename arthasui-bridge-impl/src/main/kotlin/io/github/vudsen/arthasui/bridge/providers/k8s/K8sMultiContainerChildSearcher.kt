@@ -26,13 +26,23 @@ class K8sMultiContainerChildSearcher(
     override fun load(): JvmSearchResult {
         return JvmSearchResult(
             containers.map { ctr ->
-                PodJvm(
+                val container = ctr.asJsonObject
+
+                val myBase = PodJvm(
                     baseJvm.name,
                     baseJvm.name,
                     baseJvm.context,
                     baseJvm.namespace,
-                    ctr.asJsonObject.get("name").asString
+                    container.get("name").asString,
+                    null,
+                    null
                 )
+
+                container.getAsJsonObject("securityContext")?.let {
+                    myBase.uid = it.get("runAsUser")?.asString
+                    myBase.gid = it.get("runAsGroup")?.asString
+                }
+                myBase
             },
             null
         )

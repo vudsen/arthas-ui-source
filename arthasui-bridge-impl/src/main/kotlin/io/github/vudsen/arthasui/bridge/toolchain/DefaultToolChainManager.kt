@@ -19,7 +19,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-class DefaultToolChainManager(
+open class DefaultToolChainManager(
     private val hostMachine: ShellAvailableHostMachine,
     private val localDownloadProxy: ShellAvailableHostMachine?,
     mirror: String? = null
@@ -29,6 +29,19 @@ class DefaultToolChainManager(
     var mirror = mirror ?: "https://api.github.com"
 
     private val httpClient = HttpClientBuilder.create().build()
+
+    val currentUid: String
+    val currentGid: String
+
+    init {
+        if (hostMachine.getOS() == OS.LINUX) {
+            currentUid = hostMachine.execute("id", "-u").ok().trim()
+            currentGid = hostMachine.execute("id", "-g").ok().trim()
+        } else {
+            currentUid = "0"
+            currentGid = "0"
+        }
+    }
 
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
@@ -53,8 +66,10 @@ class DefaultToolChainManager(
     private fun searchPkg(search: String): String? {
         val files = hostMachine.listFiles(getDownloadDirectory())
         for (file in files) {
-            if (file.startsWith(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
-                return file
+            if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
+                if (file.startsWith("${currentUid}_${currentGid}_")) {
+                    return file
+                }
             }
         }
         return null
@@ -94,7 +109,7 @@ class DefaultToolChainManager(
      */
     private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
-        val home = "${hostMachineConfig.dataDirectory}/pkg/${pkgName}"
+        val home = "${hostMachineConfig.dataDirectory}/pkg/${resolveDownloadFileName(pkgName)}"
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
@@ -114,6 +129,10 @@ class DefaultToolChainManager(
         return home
     }
 
+    protected fun resolveDownloadFileName(filename: String): String {
+        return "${currentUid}_${currentGid}_${filename}"
+    }
+
     /**
      * 下载文件，提供委托实现
      * @return 文件最终路径
@@ -121,7 +140,7 @@ class DefaultToolChainManager(
     private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
 
-        val dest = hostMachineConfig.dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/${resolveDownloadFileName(filename)}"
         localDownloadProxy?.let {
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             localDownloadProxy.download(url, local)
@@ -166,16 +185,6 @@ class DefaultToolChainManager(
                     else -> {
                         throw IllegalStateException("Unsupported OS: ${hostMachine.getHostMachine().getOS()}")
                     }
-                }
-            }
-            ToolChain.JATTACH_BUNDLE_LINUX -> preparePackage("jattach-linux-x64", "jattach/jattach") { assets ->
-                assets.find { v ->
-                    v.name.endsWith("x64.tgz")
-                }
-            }
-            ToolChain.JATTACH_BUNDLE_LINUX_ARM -> preparePackage("jattach-linux-arm64", "jattach/jattach") { assets ->
-                assets.find { v ->
-                    v.name.endsWith("arm64.tgz")
                 }
             }
             ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }

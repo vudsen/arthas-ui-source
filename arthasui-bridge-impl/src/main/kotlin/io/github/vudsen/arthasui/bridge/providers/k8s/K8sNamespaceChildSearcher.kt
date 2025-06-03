@@ -44,8 +44,12 @@ class K8sNamespaceChildSearcher(
             val ctrs = spec.getAsJsonArray("containers")
             val metadata = pod.getAsJsonObject("metadata")
             val name = metadata.get("name").asString
-            val base = PodJvm(name, name, ctx, namespace, null)
+            val base = PodJvm(name, name, ctx, namespace, null, null, null)
             if (ctrs.size() == 1) {
+                ctrs.get(0).asJsonObject.getAsJsonObject("securityContext")?.let {
+                    base.uid = it.get("runAsUser")?.asString
+                    base.gid = it.get("runAsGroup")?.asString
+                }
                 jvmResult.add(base)
             } else {
                 delegate.add(K8sMultiContainerChildSearcher(base, ctrs))
