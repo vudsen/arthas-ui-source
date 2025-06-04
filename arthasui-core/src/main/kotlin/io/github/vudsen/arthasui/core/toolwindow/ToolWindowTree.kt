@@ -79,7 +79,6 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun run(indicator: ProgressIndicator) {
-                tree.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(indicator))
                 node.refreshRootNode()
                 ToolWindowManager.getInstance(project).invokeLater {
                     tree.updateUI()

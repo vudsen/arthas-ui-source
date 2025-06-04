@@ -53,9 +53,10 @@ class K8sJvmProvider : JvmProvider {
             val hostMachine = jvm.context.template as ShellAvailableHostMachine
             val k8sPodHostMachine = K8sPodHostMachine(jvm as PodJvm, jvmProviderConfig as K8sJvmProviderConfig, hostMachine)
 
+            k8sPodHostMachine.putUserData(HostMachine.PROGRESS_INDICATOR, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR))
             val toolChainManager = DefaultToolChainManager(
                 k8sPodHostMachine,
-                ToolChainManagerUtil.findLocalDelegate(hostMachine.getConfiguration()),
+                hostMachine,
                 ToolChainManagerUtil.mirror
             )
 
@@ -78,7 +79,7 @@ class K8sJvmProvider : JvmProvider {
 
             ArthasBridgeImpl(
                 k8sPodHostMachine.createInteractiveShell(
-                    "java -jar ${arthasHome}/arthas-client.jar"
+                    "java", "-jar", "${arthasHome}/arthas-client.jar"
                 )
             )
         }

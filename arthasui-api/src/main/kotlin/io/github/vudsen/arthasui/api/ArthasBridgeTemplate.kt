@@ -98,9 +98,9 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
             attachFuture.completeExceptionally(CancellationException())
         }
         delegate ?.let {
+            notifyClose()
             return it.stop()
         } ?: let {
-            notifyClose()
             return 0
         }
     }

@@ -31,8 +31,6 @@ class ArthasQueryConsoleActionGroup(
 
     private var lastHighlighter: RangeHighlighter? = null
 
-    private var arthasBridge: ArthasBridgeTemplate? = null
-
     /**
      * 移除回车以及命令结尾的分号
      */
@@ -75,9 +73,6 @@ class ArthasQueryConsoleActionGroup(
      * 获取对应的 [ArthasBridge] 实例，若对应的 Bridge 还没有被创建，则创建并缓存
      */
     fun runSelected(editorEx: EditorEx) {
-        arthasBridge ?.let {
-
-        }
         val selected = compactCommand(editorEx.selectionModel.selectedText ?: return)
 
 
@@ -98,19 +93,17 @@ class ArthasQueryConsoleActionGroup(
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, selected, true) {
 
             override fun run(indicator: ProgressIndicator) {
-                arthasBridge ?.let {
+                val coordinator = project.getService(ArthasExecutionManager::class.java)
+                coordinator.getTemplate(virtualFileAttributes.jvm) ?.let {
                     it.execute(selected)
                     return
                 }
-                val coordinator = project.getService(ArthasExecutionManager::class.java)
 
-                val arthasBridgeTemplate = coordinator.initTemplate(virtualFileAttributes.jvm, virtualFileAttributes.hostMachineConfig, virtualFileAttributes.providerConfig, indicator)
-                arthasBridge = arthasBridgeTemplate
-                arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
-                    override fun onClose() {
-                        arthasBridge = null
-                    }
-                })
+                val arthasBridgeTemplate = coordinator.initTemplate(
+                    virtualFileAttributes.jvm,
+                    virtualFileAttributes.hostMachineConfig,
+                    virtualFileAttributes.providerConfig
+                )
 
                 val runnerAndConfigurationSettings = RunManager.getInstance(project)
                     .createConfiguration(virtualFileAttributes.jvm.name, ArthasConfigurationType::class.java)
@@ -131,7 +124,7 @@ class ArthasQueryConsoleActionGroup(
             }
 
             override fun onThrowable(error: Throwable) {
-                super.onThrowable(error)
+                editorEx.markupModel.removeHighlighter(highlighter)
             }
 
             override fun onFinished() {

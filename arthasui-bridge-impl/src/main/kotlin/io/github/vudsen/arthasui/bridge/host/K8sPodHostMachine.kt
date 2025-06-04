@@ -16,14 +16,22 @@ class K8sPodHostMachine(
     private val hostMachine: ShellAvailableHostMachine
 ) : AbstractLinuxShellAvailableHostMachine() {
 
+    private val hostMachineConfig = hostMachine.getHostMachineConfig().deepCopy()
+
+    init {
+        if (hostMachine is LocalHostMachineImpl) {
+            hostMachineConfig.dataDirectory = "/opt/arthas-ui"
+        }
+    }
+
     private val client = KubectlClient(hostMachine, providerConfig, jvm.containerName)
 
     override fun execute(vararg command: String): CommandExecuteResult {
-        return client.execute("-n", jvm.namespace, "pod", jvm.id, "--", *command)
+        return client.execute("exec", "-n", jvm.namespace, jvm.id, "--", *command)
     }
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
-        return client.createInteractiveShell("-n", jvm.namespace, "pod", jvm.id, "--", *command)
+        return client.createInteractiveShell("exec", "-n",jvm.namespace, "-it", jvm.id, "--", *command)
     }
 
     override fun isArm(): Boolean {
@@ -41,7 +49,7 @@ class K8sPodHostMachine(
         // https://github.com/kubernetes/kubernetes/issues/77310
         // The src can not contain colon, and it must locate in `c:/`
         val actualSrc: String = if (src.startsWith("C:\\") || src.startsWith("c:\\")) {
-            src.substring(3)
+            src.substring(2).replace('\\', '/')
         } else {
             src
         }
@@ -58,11 +66,11 @@ class K8sPodHostMachine(
 
 
     override fun getConfiguration(): HostMachineConnectConfig {
-        return hostMachine.getConfiguration()
+        return hostMachineConfig.connect
     }
 
     override fun getHostMachineConfig(): HostMachineConfig {
-        return hostMachine.getHostMachineConfig()
+        return hostMachineConfig
     }
 
 

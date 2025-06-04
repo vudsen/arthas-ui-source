@@ -17,6 +17,8 @@ interface HostMachine : UserDataHolder{
     companion object {
         /**
          * 进度指示器. 实现类就可以通过该对象反馈进度.
+         *
+         * 对于一个线程中的，可以使用 [com.intellij.openapi.progress.ProgressManager.getGlobalProgressIndicator()]
          */
         val PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
     }

@@ -22,21 +22,21 @@ import java.nio.charset.StandardCharsets
 open class DefaultToolChainManager(
     private val hostMachine: ShellAvailableHostMachine,
     private val localDownloadProxy: ShellAvailableHostMachine?,
-    mirror: String? = null
+    mirror: String? = null,
 ) :
     ToolchainManager {
 
-    var mirror = mirror ?: "https://api.github.com"
+    private var mirror = mirror ?: "https://api.github.com"
 
     private val httpClient = HttpClientBuilder.create().build()
 
-    val currentUid: String
-    val currentGid: String
+    var currentUid: String
+    var currentGid: String
 
     init {
         if (hostMachine.getOS() == OS.LINUX) {
-            currentUid = hostMachine.execute("id", "-u").ok().trim()
-            currentGid = hostMachine.execute("id", "-g").ok().trim()
+            currentUid = hostMachine.execute("id", "-u").tryUnwrap()?.trim() ?: "0"
+            currentGid = hostMachine.execute("id", "-g").tryUnwrap()?.trim() ?: "0"
         } else {
             currentUid = "0"
             currentGid = "0"
@@ -140,11 +140,12 @@ open class DefaultToolChainManager(
     private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
 
-        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/${resolveDownloadFileName(filename)}"
+        val actualFilename = resolveDownloadFileName(filename)
+        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$actualFilename"
         localDownloadProxy?.let {
-            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + actualFilename
             localDownloadProxy.download(url, local)
-            hostMachine.mkdirs(hostMachineConfig.dataDirectory)
+            hostMachine.mkdirs("${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}")
             hostMachine
                 .transferFile(local, dest, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get())
         } ?: let {
@@ -153,7 +154,7 @@ open class DefaultToolChainManager(
                 dest
             )
         }
-        return dest
+        return actualFilename
     }
 
     private fun finalDownload(
@@ -196,9 +197,9 @@ open class DefaultToolChainManager(
     private fun prepareKubectl(): String {
         val httpGet = HttpGet("https://cdn.dl.k8s.io/release/stable.txt")
         httpGet.config = RequestConfig.custom()
-            .setConnectTimeout(2000)
-            .setConnectionRequestTimeout(2000)
-            .setSocketTimeout(2000)
+            .setConnectTimeout(10000)
+            .setConnectionRequestTimeout(10000)
+            .setSocketTimeout(10000)
             .build()
 
         val version: String = httpClient.execute(httpGet).use { response ->
