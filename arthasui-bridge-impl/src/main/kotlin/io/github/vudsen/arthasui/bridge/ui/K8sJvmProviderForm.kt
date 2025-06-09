@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.ui
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.ex.EditorEx
@@ -11,10 +12,7 @@ import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.TextAccessor
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.bindSelected
-import com.intellij.ui.dsl.builder.bindText
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ComponentPredicate
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
@@ -22,7 +20,11 @@ import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.common.ui.CheckBoxPredicate
 import io.github.vudsen.arthasui.common.util.KMutableProperty2MutablePropertyAdapter
 import org.jetbrains.yaml.YAMLFileType
+import java.awt.Component
 import java.awt.Dimension
+import javax.swing.JLabel
+import javax.swing.JList
+import javax.swing.ListCellRenderer
 
 class K8sJvmProviderForm(
     oldState: JvmProviderConfig?,
@@ -38,7 +40,7 @@ class K8sJvmProviderForm(
     private val tokenAuthorization = state.token ?: K8sJvmProviderConfig.TokenAuthorization()
 
 
-    private val segmentButtonBind = SegmentButtonBind(state)
+    private val comboBox = MyComboBind(state)
 
     override fun getState(): JvmProviderConfig {
         state.token = tokenAuthorization
@@ -58,9 +60,11 @@ class K8sJvmProviderForm(
         textField.setPlaceholder("Input Kubeconfig content here.")
         textField.autoscrolls = true
         textField.setDisposedWith(parentDisposable)
-        val editorEx = textField.getEditor(true) as EditorEx
-        editorEx.setHorizontalScrollbarVisible(true)
-        editorEx.setVerticalScrollbarVisible(true)
+        ApplicationManager.getApplication().invokeLater {
+            val editorEx = textField.getEditor(true) as EditorEx
+            editorEx.setHorizontalScrollbarVisible(true)
+            editorEx.setVerticalScrollbarVisible(true)
+        }
         return textField
     }
 
@@ -72,7 +76,7 @@ class K8sJvmProviderForm(
         return fileChooser
     }
 
-    class SegmentButtonBind(private val state: K8sJvmProviderConfig) :
+    class MyComboBind(private val state: K8sJvmProviderConfig) :
         ObservableMutableProperty<K8sJvmProviderConfig.AuthorizationType> {
 
         val listeners: MutableList<(K8sJvmProviderConfig.AuthorizationType) -> Unit> = mutableListOf()
@@ -104,7 +108,7 @@ class K8sJvmProviderForm(
         private val expected: K8sJvmProviderConfig.AuthorizationType
     ) : ComponentPredicate() {
         override fun addListener(listener: (Boolean) -> Unit) {
-            segmentButtonBind.listeners.add { t -> listener(t == expected) }
+            comboBox.listeners.add { t -> listener(t == expected) }
         }
 
         override fun invoke(): Boolean {
@@ -138,7 +142,18 @@ class K8sJvmProviderForm(
             panel {
                 row {
                     label("Authorization type")
-                    segmentedButton(K8sJvmProviderConfig.AuthorizationType.entries) { r -> text = r.displayName }.bind(segmentButtonBind)
+                    comboBox(K8sJvmProviderConfig.AuthorizationType.entries, object :ListCellRenderer<K8sJvmProviderConfig.AuthorizationType?> {
+                        override fun getListCellRendererComponent(
+                            list: JList<out K8sJvmProviderConfig.AuthorizationType?>?,
+                            value: K8sJvmProviderConfig.AuthorizationType?,
+                            index: Int,
+                            isSelected: Boolean,
+                            cellHasFocus: Boolean
+                        ): Component {
+                            return JLabel(value?.displayName)
+                        }
+
+                    }).bindItem(comboBox)
                 }
                 group("Connect Configuration") {
                     row {
