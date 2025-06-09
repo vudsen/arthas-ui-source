@@ -11,4 +11,9 @@ interface ToolchainManager {
      */
     fun getToolChainHomePath(toolChain: ToolChain): String
 
+    /**
+     * 初始化所有必要的目录
+     */
+    fun initDirectories()
+
 }

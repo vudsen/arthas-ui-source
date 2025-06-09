@@ -8,6 +8,7 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
+import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
 import io.github.vudsen.arthasui.bridge.ui.SshConfigurationForm
 import org.apache.sshd.common.Factory
 import org.apache.sshd.common.util.threads.CloseableExecutorService
@@ -38,7 +39,9 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
 
 
     override fun connect(config: HostMachineConfig): SshLinuxHostMachineImpl {
-        return SshLinuxHostMachineImpl(config, MyCloseableExecutorService())
+        val hostMachine = SshLinuxHostMachineImpl(config, MyCloseableExecutorService())
+        ToolChainManagerUtil.createToolChainManager(hostMachine).initDirectories()
+        return hostMachine
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {

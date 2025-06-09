@@ -4,6 +4,7 @@ import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
+import com.intellij.util.io.delete
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -12,6 +13,9 @@ import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl.Companion.logger
 import io.github.vudsen.arthasui.bridge.util.RefreshState
 import java.io.BufferedReader
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import kotlin.io.path.absolutePathString
 
 abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachine {
 
@@ -51,7 +55,11 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
 
     @RefreshState
     override fun mkdirs(path: String) {
-        execute("mkdir", "-p", path)
+        execute("mkdir", "-p", path).let {
+            if (it.exitCode != 0 && it.stdout.contains("Permission denied")) {
+                throw IllegalStateException("Can not create directory `${path}`: ${it.stdout}")
+            }
+        }
     }
 
     @RefreshState
@@ -248,6 +256,23 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
             execute("mv", "-r", src, dest)
         } else {
             execute("mv", src, dest)
+        }
+    }
+
+    override fun createFile(path: String, content: String?) {
+        if (content == null || content.isEmpty()) {
+            execute("touch", path).ok()
+            return
+        }
+        // 先本地创建，创建完后上传
+        val file = Files.createTempFile("arthas-ui-create-file", "txt")
+        try {
+            file.toFile().outputStream().use { os ->
+                os.write(content.toByteArray(StandardCharsets.UTF_8))
+            }
+            transferFile(file.absolutePathString(), path, null)
+        } finally {
+          file.delete()
         }
     }
 }

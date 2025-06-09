@@ -327,6 +327,16 @@ class LocalHostMachineImpl(
         mv0(File(src), File(dest))
     }
 
+    override fun createFile(path: String, content: String?) {
+        if (content == null) {
+            File(path).createNewFile()
+            return
+        }
+        File(path).outputStream().use { os ->
+            os.write(content.toByteArray(StandardCharsets.UTF_8))
+        }
+    }
+
     private val myData = HashMap<Key<*>, Any?>()
 
     override fun <T : Any?> getUserData(key: Key<T>): T? {

@@ -1,6 +1,5 @@
 package io.github.vudsen.arthasui.api.host
 
-import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -104,5 +103,12 @@ interface ShellAvailableHostMachine : HostMachine {
      * 移动文件
      */
     fun mv(src: String, dest: String, recursive: Boolean)
+
+    /**
+     * 创建文件, 若文件已经存在，则会覆盖
+     * @param path 文件路径
+     * @param content 文件内容
+     */
+    fun createFile(path: String, content: String?)
 
 }

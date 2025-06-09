@@ -46,6 +46,8 @@ open class DefaultToolChainManager(
     companion object {
         private val logger = Logger.getInstance(DefaultToolChainManager::class.java)
         const val DOWNLOAD_DIRECTORY = "downloads"
+        const val TOOLCHAIN_VERSION_FILENAME = "tc_version.txt"
+        const val CURRENT_VERSION = 0
 
         private class ApiData(
             var assets: MutableList<Asset> = mutableListOf()
@@ -114,8 +116,6 @@ open class DefaultToolChainManager(
             return home
         }
         val filename: String = searchPkg(pkgName) ?:let {
-            hostMachine.mkdirs(getDownloadDirectory())
-
             val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${hostMachine.getHostMachine().getOS()}, arm: ${hostMachine.isArm()}")
             finalDownload(asset)
         }
@@ -145,7 +145,6 @@ open class DefaultToolChainManager(
         localDownloadProxy?.let {
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + actualFilename
             localDownloadProxy.download(url, local)
-            hostMachine.mkdirs("${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}")
             hostMachine
                 .transferFile(local, dest, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get())
         } ?: let {
@@ -194,6 +193,22 @@ open class DefaultToolChainManager(
     }
 
 
+    override fun initDirectories() {
+        val dataDirectory = hostMachine.getHostMachineConfig().dataDirectory
+        val versionFile = "${dataDirectory}/$TOOLCHAIN_VERSION_FILENAME"
+        if (!hostMachine.isFileNotExist(versionFile)) {
+            return
+        }
+
+        hostMachine.mkdirs("$dataDirectory/${DOWNLOAD_DIRECTORY}")
+        hostMachine.mkdirs("$dataDirectory/pkg")
+        if (hostMachine.getOS() == OS.LINUX) {
+            hostMachine.execute("chmod", "777", dataDirectory).ok()
+        }
+        hostMachine.createFile(versionFile, CURRENT_VERSION.toString())
+    }
+
+
     private fun prepareKubectl(): String {
         val httpGet = HttpGet("https://cdn.dl.k8s.io/release/stable.txt")
         httpGet.config = RequestConfig.custom()
@@ -222,14 +237,12 @@ open class DefaultToolChainManager(
             else -> throw IllegalStateException("Unknown OS")
         }
         val filename = downloadUrl.substringAfterLast('/')
-        val home = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/"
-        val finalFilePath = "$home/$filename"
+        val finalFilePath = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/$filename"
         if (File(finalFilePath).exists()) {
             return finalFilePath
         }
         val downloaded = finalDownload(downloadUrl, filename)
 
-        hostMachine.mkdirs(home)
         hostMachine.mv(downloaded, finalFilePath, false)
         return finalFilePath
     }
