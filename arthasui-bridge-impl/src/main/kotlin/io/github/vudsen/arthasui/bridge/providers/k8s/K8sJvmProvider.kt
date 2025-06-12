@@ -53,7 +53,6 @@ class K8sJvmProvider : JvmProvider {
             val hostMachine = jvm.context.template as ShellAvailableHostMachine
             val k8sPodHostMachine = K8sPodHostMachine(jvm as PodJvm, jvmProviderConfig as K8sJvmProviderConfig, hostMachine)
 
-            k8sPodHostMachine.putUserData(HostMachine.PROGRESS_INDICATOR, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR))
             val toolChainManager = DefaultToolChainManager(
                 k8sPodHostMachine,
                 hostMachine,

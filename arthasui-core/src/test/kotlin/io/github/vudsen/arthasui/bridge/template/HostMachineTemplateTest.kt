@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.template
 
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.test.BridgeTestUtil
 import io.github.vudsen.arthasui.TestProgressIndicator
@@ -99,15 +100,17 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
 
     fun testDownloadWithIndicator() {
         val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
-        val progressIndicator = TestProgressIndicator()
-        template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(progressIndicator))
-        val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
-        template.mkdirs(template.getHostMachineConfig().dataDirectory)
-        template.download(
-            "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.49.1.0/sqlite-jdbc-3.49.1.0.jar",
-            dest
-        )
-        Assert.assertFalse(template.isFileNotExist(dest))
+
+        ProgressManager.getInstance().runProcessWithProgressSynchronously({
+            val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
+            template.mkdirs(template.getHostMachineConfig().dataDirectory)
+            template.download(
+                "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.49.1.0/sqlite-jdbc-3.49.1.0.jar",
+                dest
+            )
+            Assert.assertFalse(template.isFileNotExist(dest))
+        }, "Test", false, null)
+
     }
 
 }

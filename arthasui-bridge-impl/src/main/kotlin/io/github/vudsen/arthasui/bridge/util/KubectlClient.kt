@@ -1,5 +1,6 @@
 package io.github.vudsen.arthasui.bridge.util
 
+import com.intellij.openapi.progress.ProgressIndicator
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
@@ -7,6 +8,7 @@ import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
@@ -61,7 +63,7 @@ class KubectlClient(
             hostMachine.transferFile(
                 tempFile.absolutePath,
                 dest,
-                hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
+                ProgressIndicatorStack.currentIndicator()
             )
         } finally {
             tempFile?.delete()

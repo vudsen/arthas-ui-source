@@ -8,6 +8,7 @@ import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.common.util.SingletonInstanceHolderService
 import org.apache.http.HttpStatus
 import org.apache.http.client.config.RequestConfig
@@ -146,7 +147,7 @@ open class DefaultToolChainManager(
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + actualFilename
             localDownloadProxy.download(url, local)
             hostMachine
-                .transferFile(local, dest, hostMachine.getUserData(HostMachine.PROGRESS_INDICATOR)?.get())
+                .transferFile(local, dest, ProgressIndicatorStack.currentIndicator())
         } ?: let {
             hostMachine.download(
                 url,

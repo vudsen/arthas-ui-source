@@ -14,6 +14,7 @@ import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -134,7 +135,7 @@ class LocalHostMachineImpl(
 
         val tempFile = File(destFile.parentFile.absolutePath + "/" + destFile.name + ".tmp")
 
-        val progressIndicator = getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
+        val progressIndicator = ProgressIndicatorStack.currentIndicator()
         val baseText = "Downloading $url"
         progressIndicator ?.let {
             it.pushState()

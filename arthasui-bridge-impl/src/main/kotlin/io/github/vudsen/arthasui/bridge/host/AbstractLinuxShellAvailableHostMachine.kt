@@ -12,6 +12,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl.Companion.logger
 import io.github.vudsen.arthasui.bridge.util.RefreshState
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import java.io.BufferedReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -154,7 +155,7 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
             throw IllegalStateException("Please provide a absolute valid path")
         }
         val brokenFlagPath = destPath.substring(0, i + 1) + "DOWNLOADING_" + destPath.substring(i + 1)
-        val progressIndicator = getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
+        val progressIndicator = ProgressIndicatorStack.currentIndicator()
 
 
         logger.info("Downloading $url to $brokenFlagPath.")

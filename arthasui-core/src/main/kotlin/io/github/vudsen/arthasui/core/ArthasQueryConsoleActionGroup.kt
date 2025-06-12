@@ -16,6 +16,7 @@ import io.github.vudsen.arthasui.api.ArthasBridgeListener
 import io.github.vudsen.arthasui.api.ArthasBridgeTemplate
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
 import io.github.vudsen.arthasui.run.ArthasConfigurationType
 import io.github.vudsen.arthasui.run.ArthasProcessOptions
@@ -93,6 +94,7 @@ class ArthasQueryConsoleActionGroup(
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, selected, true) {
 
             override fun run(indicator: ProgressIndicator) {
+                ProgressIndicatorStack.push(indicator)
                 val coordinator = project.getService(ArthasExecutionManager::class.java)
                 coordinator.getTemplate(virtualFileAttributes.jvm) ?.let {
                     it.execute(selected)
@@ -123,12 +125,17 @@ class ArthasQueryConsoleActionGroup(
                 arthasBridgeTemplate.execute(selected)
             }
 
-            override fun onThrowable(error: Throwable) {
+            private fun cleanUp() {
+                ProgressIndicatorStack.pop()
                 editorEx.markupModel.removeHighlighter(highlighter)
             }
 
+            override fun onThrowable(error: Throwable) {
+                cleanUp()
+            }
+
             override fun onFinished() {
-                editorEx.markupModel.removeHighlighter(highlighter)
+                cleanUp()
             }
 
         })

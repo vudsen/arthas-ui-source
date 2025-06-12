@@ -54,12 +54,6 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
         }
         log.info("Creating new arthas bridge for $jvm")
 
-        ProgressManager.getGlobalProgressIndicator() ?.let {
-            val factory = service<HostMachineConnectManager>()
-            val template = factory.connect(hostMachineConfig)
-            template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(it))
-        }
-
         val arthasBridgeFactory =
             service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig)
         val arthasBridgeTemplate = ArthasBridgeTemplate(arthasBridgeFactory)

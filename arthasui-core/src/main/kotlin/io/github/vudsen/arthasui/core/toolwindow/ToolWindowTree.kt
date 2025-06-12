@@ -9,14 +9,11 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import com.intellij.openapi.ui.putUserData
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.ui.util.minimumWidth
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
@@ -24,10 +21,11 @@ import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
-import java.lang.ref.WeakReference
+import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -55,7 +53,7 @@ class ToolWindowTree(val project: Project) : Disposable {
         tree.addMouseListener(ToolWindowMouseAdapter(this))
 
         service<ArthasUISettingsPersistent>().addUpdatedListener(updateListener)
-        tree.minimumWidth = 301
+        tree.minimumSize = Dimension(301, tree.minimumSize.height)
         refreshRootNode()
         tree.expandRow(0)
         tree.isRootVisible = false
@@ -79,7 +77,12 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun run(indicator: ProgressIndicator) {
-                node.refreshRootNode()
+                ProgressIndicatorStack.push(indicator)
+                try {
+                    node.refreshRootNode()
+                } finally {
+                    ProgressIndicatorStack.pop()
+                }
                 ToolWindowManager.getInstance(project).invokeLater {
                     tree.updateUI()
                 }

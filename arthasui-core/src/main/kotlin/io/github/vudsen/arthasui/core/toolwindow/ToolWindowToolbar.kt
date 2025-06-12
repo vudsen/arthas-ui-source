@@ -10,6 +10,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.ui.ToolbarDecorator
 import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.conf.ArthasUISettingsConfigurable
 import io.ktor.util.collections.*
 import javax.swing.JPanel
@@ -35,10 +36,12 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
                 ProgressManager.getInstance().run(object : Task.Backgroundable(toolWindow.project, "Closing client", true) {
 
                     override fun run(indicator: ProgressIndicator) {
+                        ProgressIndicatorStack.push(indicator)
                         try {
                             rootNode.close()
                             e.presentation.isEnabled = rootNode.isActive()
                         } finally {
+                            ProgressIndicatorStack.pop()
                             debounce.remove(rootNode)
                         }
                     }
