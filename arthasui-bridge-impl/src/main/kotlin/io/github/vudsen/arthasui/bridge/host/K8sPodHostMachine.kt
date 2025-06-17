@@ -20,7 +20,7 @@ class K8sPodHostMachine(
 
     init {
         if (hostMachine is LocalHostMachineImpl) {
-            hostMachineConfig.dataDirectory = "/opt/arthas-ui"
+            hostMachineConfig.dataDirectory = providerConfig.dataDirectory
         }
     }
 

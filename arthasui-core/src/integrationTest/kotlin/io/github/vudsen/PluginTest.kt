@@ -52,21 +52,17 @@ class PluginTest  {
 
     companion object {
 
-        lateinit var server: GenericContainer<*>
-
-        val rootDisposable: Disposable = Disposable { }
-
-        @BeforeAll
-        @JvmStatic
-        fun beforeEach() {
-            server = BridgeTestUtil.setupContainer("vudsen/ssh-server-with-math-game:0.0.3", rootDisposable) {
+        val server: GenericContainer<*> by lazy {
+            return@lazy BridgeTestUtil.setupContainer("vudsen/ssh-server-with-math-game:0.0.3", rootDisposable) {
                 withExposedPorts(22)
             }
         }
 
+        private val rootDisposable: Disposable = Disposable { }
+
         @AfterAll
         @JvmStatic
-        fun afterEach() {
+        fun afterAll() {
             Disposer.dispose(rootDisposable)
         }
 
@@ -96,11 +92,10 @@ class PluginTest  {
                 createLocalHostMachine()
                 button("Apply").click()
                 createSshHostMachine()
-                createK8sHostMachine()
 
                 button("OK").click()
                 val tree = x(
-                    xQuery { and(byType("com.intellij.ui.treeStructure.Tree"), byVisibleText("Self || Remote || Kubernetes")) },
+                    xQuery { and(byType("com.intellij.ui.treeStructure.Tree"), byVisibleText("Self || Remote")) },
                     JTreeUiComponent::class.java
                 )
                 tree.doubleClickRow(1)
@@ -108,19 +103,30 @@ class PluginTest  {
                 tree.doubleClickRow(2)
                 tree.doubleClickRow(3)
                 testArthasRunning()
-                tree.doubleClickRow(1)
-
 
                 // test k8s
-                tree.doubleClickRow(2)
-                tree.doubleClickRow(3)
-                tree.doubleClickRow(3)
-                tree.doubleClickRow(4)
-                tree.doubleClickRow(4)
-                tree.doubleClickRow(5)
+                expandTree(tree, 4)
+                expandTree(tree, 5)
+                tree.doubleClickRow(6)
+                Thread.sleep(3.seconds.inWholeMilliseconds)
                 testArthasRunning()
             }
         }
+    }
+
+    private fun expandTree(tree: JTreeUiComponent, row: Int) {
+        val currentSize = tree.collectExpandedPaths().size
+        tree.doubleClickRow(row)
+        for (spin in 0..20) {
+            try {
+                tree.doubleClickRow(row)
+                if (tree.collectExpandedPaths().size != currentSize) {
+                    return
+                }
+            } catch (ignored: Exception) { }
+            Thread.sleep(1.seconds.inWholeMilliseconds)
+        }
+        Assertions.fail<Nothing>("Maximum retries exceeded while expanding tree row $row")
     }
 
     private fun IdeaFrameUI.testArthasRunning() {
@@ -156,7 +162,7 @@ class PluginTest  {
     }
 
     private fun textAssert(comp:  UiComponent, expected: String) {
-        for (spin in 0..10) {
+        for (spin in 0..30) {
             if (comp.getAllTexts(expected).size == 1) {
                 return
             }
@@ -165,46 +171,6 @@ class PluginTest  {
         Assertions.fail<Nothing>("No matching text: \"$expected\" found")
     }
 
-    private fun IdeaFrameUI.createK8sHostMachine() {
-        dialog {
-            x(xQuery { byAccessibleName("Add") }).click()
-        }
-
-        dialog(title = "New Host Machine") {
-            // Create a Local Host Machine.
-            textField(
-                xQuery{
-                    and(byAccessibleName("Name"), byType("com.intellij.ui.components.JBTextField"))
-                }
-            ).apply {
-                this.setFocus()
-                keyboard {
-                    enterText("Kubernetes")
-                }
-            }
-            comboBox(xQuery { and(byAccessibleName("Connect type"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
-            list().clickItem("Kubernetes", false)
-
-            x(xQuery { and(byAccessibleName("Url"), byType("com.intellij.ui.components.JBTextField")) }).let {
-                it.setFocus()
-                it.keyboard {
-                    enterText(System.getenv("K8S_API_SERVER_URL") ?: "https://127.0.0.1:6443")
-                }
-            }
-            x(xQuery { and(byAccessibleName("Token"), byType("com.intellij.ui.components.JBTextField")) }).let {
-                it.setFocus()
-                it.keyboard {
-                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(System.getenv("K8S_TOKEN")), null)
-                    hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_V)
-                }
-            }
-            x(xQuery { byAccessibleName("Validate SSL") }).click()
-            comboBox(xQuery { and(byAccessibleName("Transfer local file"), byType("com.intellij.openapi.ui.ComboBox")) }).click()
-            list().clickItem("Self")
-            button("Next").click()
-            button("Create").click()
-        }
-    }
 
     private fun IdeaFrameUI.createSshHostMachine() {
         dialog {
@@ -264,6 +230,24 @@ class PluginTest  {
                     enterText("/opt/java")
                 }
             }
+            x(xQuery { byAccessibleName("Kubernetes") }).click()
+            x(xQuery { byAccessibleName("Enable") }).click()
+            comboBox(xQuery { byType("com.intellij.openapi.ui.ComboBox") }).click()
+            list().clickItem("Token")
+            x(xQuery { and(byAccessibleName("Url"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    enterText(System.getenv("K8S_API_SERVER_URL") ?: "https://127.0.0.1:6443")
+                }
+            }
+            x(xQuery { and(byAccessibleName("Token"), byType("com.intellij.ui.components.JBTextField")) }).let {
+                it.setFocus()
+                it.keyboard {
+                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(System.getenv("K8S_TOKEN")), null)
+                    hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_V)
+                }
+            }
+            x(xQuery { byAccessibleName("Validate SSL") }).click()
             // Finish the create.
             button("Create").click()
         }

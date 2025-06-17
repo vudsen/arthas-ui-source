@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.core.toolwindow
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -36,6 +37,8 @@ import javax.swing.tree.DefaultTreeModel
  * - [CloseableTreeNode] : 用于表示节点可以被关闭
  */
 class ToolWindowTree(val project: Project) : Disposable {
+
+    private val logger = Logger.getInstance(ToolWindowTree::class.java)
 
     private val rootModel = DefaultMutableTreeNode("Invisible Root")
 
@@ -89,6 +92,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun onThrowable(error: Throwable) {
+                logger.error(error)
                 Messages.showErrorDialog(project, error.message, "Load Failed")
             }
         })

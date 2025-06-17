@@ -131,4 +131,14 @@ class HostMachineConnectionManager {
         }
     }
 
+    fun <T : AutoCloseable> reportClosed(node: ManagedInstance<T>) {
+        lock.lock()
+        try {
+            lru.remove(node)
+            tryScheduleNext(false)
+        } finally {
+            lock.unlock()
+        }
+    }
+
 }

@@ -19,7 +19,9 @@ object ProgressIndicatorStack {
     }
 
     fun pop() {
-        stack.pop()
+        if (stack.isNotEmpty()) {
+            stack.pop()
+        }
     }
 
 }

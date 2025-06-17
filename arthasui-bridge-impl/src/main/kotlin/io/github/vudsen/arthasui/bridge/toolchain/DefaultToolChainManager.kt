@@ -3,9 +3,9 @@ package io.github.vudsen.arthasui.bridge.toolchain
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
+import io.github.vudsen.arthasui.api.host.isFileExist
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.toolchain.ToolchainManager
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
@@ -15,7 +15,6 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -66,6 +65,10 @@ open class DefaultToolChainManager(
         return hostMachine.getHostMachineConfig().dataDirectory + "/" + DOWNLOAD_DIRECTORY
     }
 
+    /**
+     * 搜索已有的包
+     * @return 包的完整路径
+     */
     private fun searchPkg(search: String): String? {
         val files = hostMachine.listFiles(getDownloadDirectory())
         for (file in files) {
@@ -112,25 +115,24 @@ open class DefaultToolChainManager(
      */
     private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
-        val home = "${hostMachineConfig.dataDirectory}/pkg/${resolveDownloadFileName(pkgName)}"
+        val home = "${hostMachineConfig.dataDirectory}/pkg/${resolveFilename(pkgName)}"
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
-        val filename: String = searchPkg(pkgName) ?:let {
+        val target: String = searchPkg(pkgName) ?:let {
             val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${hostMachine.getHostMachine().getOS()}, arm: ${hostMachine.isArm()}")
             finalDownload(asset)
         }
         hostMachine.mkdirs(home)
 
-        val unzipTarget = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
-        if (hostMachine.tryUnzip(unzipTarget, home)) {
+        if (hostMachine.tryUnzip(target, home)) {
             return home
         }
-        handleUnzipFailed(unzipTarget, home)
+        handleUnzipFailed(target, home)
         return home
     }
 
-    protected fun resolveDownloadFileName(filename: String): String {
+    private fun resolveFilename(filename: String): String {
         return "${currentUid}_${currentGid}_${filename}"
     }
 
@@ -141,10 +143,9 @@ open class DefaultToolChainManager(
     private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
 
-        val actualFilename = resolveDownloadFileName(filename)
-        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$actualFilename"
+        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
         localDownloadProxy?.let {
-            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + actualFilename
+            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             localDownloadProxy.download(url, local)
             hostMachine
                 .transferFile(local, dest, ProgressIndicatorStack.currentIndicator())
@@ -154,17 +155,18 @@ open class DefaultToolChainManager(
                 dest
             )
         }
-        return actualFilename
+        return dest
     }
 
     private fun finalDownload(
         asset: Asset,
     ): String {
-        return finalDownload(asset.browserDownloadUrl, asset.name)
+        return finalDownload(asset.browserDownloadUrl, resolveFilename(asset.name))
     }
 
 
     override fun getToolChainHomePath(toolChain: ToolChain): String {
+        initDirectories()
         return when (toolChain) {
             ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") { assets ->
                 when (hostMachine.getHostMachine().getOS()) {
@@ -194,10 +196,10 @@ open class DefaultToolChainManager(
     }
 
 
-    override fun initDirectories() {
+    private fun initDirectories() {
         val dataDirectory = hostMachine.getHostMachineConfig().dataDirectory
         val versionFile = "${dataDirectory}/$TOOLCHAIN_VERSION_FILENAME"
-        if (!hostMachine.isFileNotExist(versionFile)) {
+        if (hostMachine.isFileExist(versionFile)) {
             return
         }
 
@@ -237,14 +239,17 @@ open class DefaultToolChainManager(
             OS.MAC -> "https://dl.k8s.io/release/${version}/bin/darwin/amd64/kubectl"
             else -> throw IllegalStateException("Unknown OS")
         }
-        val filename = downloadUrl.substringAfterLast('/')
+        val filename = resolveFilename(downloadUrl.substringAfterLast('/'))
         val finalFilePath = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/$filename"
-        if (File(finalFilePath).exists()) {
+        if (hostMachine.isFileExist(finalFilePath)) {
             return finalFilePath
         }
         val downloaded = finalDownload(downloadUrl, filename)
 
         hostMachine.mv(downloaded, finalFilePath, false)
+        if (hostMachine.getOS() == OS.LINUX) {
+            hostMachine.execute("chmod", "u+x", finalFilePath).ok()
+        }
         return finalFilePath
     }
 

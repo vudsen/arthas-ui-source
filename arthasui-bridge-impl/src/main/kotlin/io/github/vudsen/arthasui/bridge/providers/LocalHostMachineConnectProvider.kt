@@ -27,9 +27,7 @@ class LocalHostMachineConnectProvider : HostMachineConnectProvider {
 
 
     override fun connect(config: HostMachineConfig): HostMachine {
-        return LocalHostMachineImpl(config).apply {
-            ToolChainManagerUtil.createToolChainManager(this).initDirectories()
-        }
+        return LocalHostMachineImpl(config)
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {

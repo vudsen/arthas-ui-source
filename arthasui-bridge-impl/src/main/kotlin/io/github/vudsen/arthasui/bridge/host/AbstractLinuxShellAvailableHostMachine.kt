@@ -254,26 +254,22 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
 
     override fun mv(src: String, dest: String, recursive: Boolean) {
         if (recursive) {
-            execute("mv", "-r", src, dest)
+            execute("mv", "-r", src, dest).ok()
         } else {
-            execute("mv", src, dest)
+            execute("mv", src, dest).ok()
         }
     }
 
     override fun createFile(path: String, content: String?) {
-        if (content == null || content.isEmpty()) {
+        if (content.isNullOrEmpty()) {
             execute("touch", path).ok()
             return
         }
-        // 先本地创建，创建完后上传
-        val file = Files.createTempFile("arthas-ui-create-file", "txt")
-        try {
-            file.toFile().outputStream().use { os ->
-                os.write(content.toByteArray(StandardCharsets.UTF_8))
+        createInteractiveShell("sh", "-c", "'cat > $path'").use { shell ->
+            shell.getWriter().let {
+                it.write(content)
+                it.flush()
             }
-            transferFile(file.absolutePathString(), path, null)
-        } finally {
-          file.delete()
         }
     }
 }

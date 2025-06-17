@@ -133,8 +133,7 @@ class LocalJvmProvider : JvmProvider {
         }
 
         return ArthasBridgeFactory {
-            val r = hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
-            println(r)
+            hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
             val client = TelnetClient().apply {
                 connectTimeout = 10000
             }

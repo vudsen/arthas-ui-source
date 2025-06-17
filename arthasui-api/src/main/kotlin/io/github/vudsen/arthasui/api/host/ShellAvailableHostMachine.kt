@@ -52,6 +52,7 @@ interface ShellAvailableHostMachine : HostMachine {
 
     /**
      * 列出所有文件
+     * @return 所有文件路径，绝对路径
      */
     fun listFiles(directory: String): List<String>
 
@@ -111,4 +112,8 @@ interface ShellAvailableHostMachine : HostMachine {
      */
     fun createFile(path: String, content: String?)
 
+}
+
+fun ShellAvailableHostMachine.isFileExist(path: String): Boolean {
+    return !this.isFileNotExist(path)
 }

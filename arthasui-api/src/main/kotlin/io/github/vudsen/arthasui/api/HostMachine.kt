@@ -1,27 +1,14 @@
 package io.github.vudsen.arthasui.api
 
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolder
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
-import java.lang.ref.WeakReference
 
 
 /**
- * 宿主机
+ * 宿主机。部分耗时的任务可以使用 [io.github.vudsen.arthasui.common.util.ProgressIndicatorStack] 来传递进度条
  */
 interface HostMachine : UserDataHolder{
-
-
-    companion object {
-        /**
-         * 进度指示器. 实现类就可以通过该对象反馈进度.
-         *
-         * 对于一个线程中的，可以使用 [com.intellij.openapi.progress.ProgressManager.getGlobalProgressIndicator()]
-         */
-        val PROGRESS_INDICATOR = Key<WeakReference<ProgressIndicator>>("Download Indicator")
-    }
 
     /**
      * 获取操作系统类型

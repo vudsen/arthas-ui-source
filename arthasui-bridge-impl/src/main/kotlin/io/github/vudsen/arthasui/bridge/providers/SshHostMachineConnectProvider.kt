@@ -39,9 +39,7 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
 
 
     override fun connect(config: HostMachineConfig): SshLinuxHostMachineImpl {
-        val hostMachine = SshLinuxHostMachineImpl(config, MyCloseableExecutorService())
-        ToolChainManagerUtil.createToolChainManager(hostMachine).initDirectories()
-        return hostMachine
+        return SshLinuxHostMachineImpl(config, MyCloseableExecutorService())
     }
 
     override fun getConfigClass(): Class<out HostMachineConnectConfig> {

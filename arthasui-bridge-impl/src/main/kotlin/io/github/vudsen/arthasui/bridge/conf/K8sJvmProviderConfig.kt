@@ -27,7 +27,11 @@ class K8sJvmProviderConfig(
     /**
      * 是否为 arm 架构的 k8s 集群
      */
-    var isArm: Boolean = false
+    var isArm: Boolean = false,
+    /**
+     * 数据目录
+     */
+    var dataDirectory: String = "/opt/arthas-ui",
 ) : JvmProviderConfig(TYPE, enabled) {
 
     enum class AuthorizationType(val displayName: String) {
@@ -55,11 +59,11 @@ class K8sJvmProviderConfig(
     }
 
     override fun copy(): K8sJvmProviderConfig {
-        return K8sJvmProviderConfig(enabled)
+        return deepCopy()
     }
 
     override fun deepCopy(): K8sJvmProviderConfig {
-        return K8sJvmProviderConfig(enabled)
+        return K8sJvmProviderConfig(enabled, kubeConfigFilePath, kubeConfig, token, validateSSL, authorizationType, isArm, dataDirectory)
     }
 
 }

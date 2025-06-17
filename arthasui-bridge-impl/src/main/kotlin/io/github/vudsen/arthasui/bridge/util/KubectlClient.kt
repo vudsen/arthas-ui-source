@@ -1,7 +1,5 @@
 package io.github.vudsen.arthasui.bridge.util
 
-import com.intellij.openapi.progress.ProgressIndicator
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
@@ -30,6 +28,7 @@ class KubectlClient(
         pair.second ?.let {
             commands.add("--kubeconfig=${it}")
         }
+        commands.add("--request-timeout=10s")
         container ?.let {
             commands.add("-c")
             commands.add(it)
@@ -45,7 +44,7 @@ class KubectlClient(
             return true
         }
         checked = true
-        return String(File(kubeconfigPath).readBytes()) == currentContent
+        return hostMachine.execute("cat", kubeconfigPath).ok() == currentContent
     }
 
     private fun createKubeconfig(hostMachine: ShellAvailableHostMachine, content: String): String {
@@ -94,7 +93,7 @@ class KubectlClient(
                 clusters:
                 - cluster:
                     server: ${token.url}
-                    insecure-skip-tls-verify: true
+                    insecure-skip-tls-verify: ${!config.validateSSL}
                   name: my-cluster
                 users:
                 - name: token-user

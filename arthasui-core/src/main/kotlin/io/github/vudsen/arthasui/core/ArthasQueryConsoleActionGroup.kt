@@ -132,6 +132,7 @@ class ArthasQueryConsoleActionGroup(
 
             override fun onThrowable(error: Throwable) {
                 cleanUp()
+                super.onThrowable(error)
             }
 
             override fun onFinished() {

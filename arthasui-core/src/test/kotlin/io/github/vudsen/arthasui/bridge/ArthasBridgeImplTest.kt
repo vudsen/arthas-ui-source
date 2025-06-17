@@ -55,7 +55,6 @@ class ArthasBridgeImplTest : BasePlatformTestCase() {
                 jvm,
                 template.getHostMachineConfig(),
                 providerConfig,
-                TestProgressIndicator()
             )
             arthasBridge.addListener(object : ArthasBridgeListener() {
                 override fun onContent(result: String) {

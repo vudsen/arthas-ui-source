@@ -70,9 +70,9 @@ object BridgeTestUtil {
             ),
             mutableListOf(LocalJvmProviderConfig(true, "/opt/java")),
             mutableListOf(),
+            "/opt/arthas-ui"
         )
         val template = service<HostMachineConnectManager>().connect(config) as ShellAvailableHostMachine
-        config.dataDirectory = template.resolveDefaultDataDirectory() + "/test"
         return template
     }
 
@@ -80,7 +80,6 @@ object BridgeTestUtil {
      * 创建容器
      */
     fun setupContainer(image: String, rootDisposable: Disposable, customise: (GenericContainer<*>.() -> Unit)?): GenericContainer<*> {
-        val key = image + rootDisposable.toString()
         val sshContainer = GenericContainer(DockerImageName.parse(image))
 
         customise ?.let { it(sshContainer)  }
