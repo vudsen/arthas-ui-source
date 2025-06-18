@@ -21,11 +21,12 @@ import io.github.vudsen.arthasui.api.extension.JvmProviderManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.common.util.MessagesUtils
-import io.github.vudsen.arthasui.api.util.collectStackTrace
 import java.awt.Dimension
 import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
+
+private typealias Components = Pair<String, FormComponent<JvmProviderConfig>>
 
 class JvmProviderSetupUI(private val parentDisposable: Disposable) {
 
@@ -51,8 +52,10 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable) {
 
     /**
      * 重新创建 [container] 中所有的组件
+     * @param hostMachine 宿主机
+     * @param components 所有的组件。key: 组件名称，value: 组件实例
      */
-    private fun recreateContainer(hostMachine: HostMachine?) {
+    private fun recreateContainer(hostMachine: HostMachine, components: List<Components>) {
         container.removeAll()
 
         if (hostMachine is ShellAvailableHostMachine) {
@@ -63,17 +66,10 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable) {
         }
         container.add(JBTabbedPane().apply {
             tabbedPane = this@apply
-            hostMachine?.let {
-                formTabs.clear()
-                val providers = service<JvmProviderManager>().getProviders()
-                for (provider in providers) {
-                    if (provider.isSupport(it)) {
-                        val configuration = provider.tryCreateDefaultConfiguration(it)
-                        val form = provider.createForm(configuration, parentDisposable)
-                        addTab(provider.getName(), form.getComponent())
-                        formTabs.add(form)
-                    }
-                }
+            formTabs.clear()
+            for (component in components) {
+                addTab(component.first, component.second.getComponent())
+                formTabs.add(component.second)
             }
             maximumSize = Dimension(Integer.MAX_VALUE, this@apply.preferredSize.height)
         })
@@ -121,9 +117,20 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable) {
         if (hostMachine is ShellAvailableHostMachine) {
             state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
         }
+
+        val components = mutableListOf<Components>()
+        val providers = service<JvmProviderManager>().getProviders()
+        for (provider in providers) {
+            if (provider.isSupport(hostMachine)) {
+                val configuration = provider.tryCreateDefaultConfiguration(hostMachine)
+                val form = provider.createForm(configuration, parentDisposable)
+                components.add(Pair(provider.getName(), form))
+            }
+        }
+
         ApplicationManager.getApplication().invokeLater {
             try {
-                recreateContainer(hostMachine)
+                recreateContainer(hostMachine, components)
                 loadingDecorator.stopLoading()
             } catch (e: Exception) {
                 MessagesUtils.showErrorMessageLater("Auto Detect Jvm Provider Failed", e.message, null)

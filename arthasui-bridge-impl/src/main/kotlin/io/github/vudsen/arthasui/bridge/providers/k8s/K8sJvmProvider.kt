@@ -111,8 +111,8 @@ class K8sJvmProvider : JvmProvider {
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
-        val hostMachine = hostMachine as ShellAvailableHostMachine
-        if (hostMachine.execute("kubectl", "version").exitCode == 0) {
+        hostMachine as ShellAvailableHostMachine
+        if (hostMachine.execute("kubectl", "version", "--request-timeout=2s").exitCode == 0) {
             return K8sJvmProviderConfig(true)
         }
         return K8sJvmProviderConfig(false)
