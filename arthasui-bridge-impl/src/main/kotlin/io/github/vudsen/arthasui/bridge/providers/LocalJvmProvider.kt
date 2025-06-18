@@ -113,11 +113,7 @@ class LocalJvmProvider : JvmProvider {
     ): ArthasBridgeFactory {
         val localJvmProviderConfig = jvmProviderConfig as LocalJvmProviderConfig
         val hostMachine = jvm.context.getHostMachineAsShellAvailable()
-        val connectConfig = hostMachine.getConfiguration() as SshHostMachineConnectConfig
-        val toolchainManager = DefaultToolChainManager(
-            hostMachine,
-            ToolChainManagerUtil.findLocalHostMachine(connectConfig.localPkgSourceId)
-        )
+        val toolchainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
 
         val jattachHome = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
         val arthasHome = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
@@ -137,8 +133,7 @@ class LocalJvmProvider : JvmProvider {
         }
 
         return ArthasBridgeFactory {
-            val r = hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
-            println(r)
+            hostMachine.execute("$jattachHome/jattach", jvm.id, "load", "instrument", "false", "$arthasHome/arthas-agent.jar").ok()
             val client = TelnetClient().apply {
                 connectTimeout = 10000
             }

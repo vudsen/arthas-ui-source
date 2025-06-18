@@ -1,6 +1,8 @@
 package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
@@ -17,6 +19,7 @@ import java.awt.Dimension
 import java.awt.event.ActionEvent
 import javax.swing.Action
 import javax.swing.JComponent
+import kotlin.time.Duration.Companion.seconds
 
 class NewHostMachineSetupUI(parentDisposable: Disposable,
                             private val onOk: (HostMachineConfig) -> Unit)
@@ -108,24 +111,21 @@ class NewHostMachineSetupUI(parentDisposable: Disposable,
                 if (currentIndex == 0) {
                     val hostMachineConfig = jvmConnectUI.apply() ?: return
                     state = hostMachineConfig
-                    ProgressManager.getInstance().run(object : Task.Modal(null, "Test Connection", true) {
-
-                        override fun run(p0: ProgressIndicator) {
-                            try {
-                                val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig)
-                                hostMachine.test()
-                                currentIndex++
-                                updateButtonUI()
-                                root.swipe(PAGE2, JBCardLayout.SwipeDirection.FORWARD)
-                                jvmProviderConfigUI.refresh(hostMachine)
-                            } catch (e: Exception) {
-                                if (logger.isDebugEnabled) {
-                                    logger.debug(e.collectStackTrace())
-                                }
-                                MessagesUtils.showErrorMessageLater("Test Connection Failed", e.message, project)
+                    ProgressManager.getInstance().runProcessWithProgressSynchronously({
+                        try {
+                            val hostMachine = service<HostMachineConnectManager>().connect(hostMachineConfig)
+                            hostMachine.test()
+                            currentIndex++
+                            updateButtonUI()
+                            root.swipe(PAGE2, JBCardLayout.SwipeDirection.FORWARD)
+                            jvmProviderConfigUI.refresh(hostMachine)
+                        } catch (e: Exception) {
+                            if (logger.isDebugEnabled) {
+                                logger.debug(e.collectStackTrace())
                             }
+                            MessagesUtils.showErrorMessageLater("Test Connection Failed", e.message, null)
                         }
-                    })
+                    }, "Test Connection", true, null, this@NewHostMachineSetupUI.root.parent as JComponent)
                     return
                 }
                 // currentIndex = 1

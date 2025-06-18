@@ -1,15 +1,22 @@
 package io.github.vudsen.arthasui.bridge.host
 
+import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
+import com.intellij.util.io.delete
 import io.github.vudsen.arthasui.api.HostMachine
+import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl.Companion.logger
 import io.github.vudsen.arthasui.bridge.util.RefreshState
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import java.io.BufferedReader
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import kotlin.io.path.absolutePathString
 
 abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachine {
 
@@ -49,7 +56,11 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
 
     @RefreshState
     override fun mkdirs(path: String) {
-        execute("mkdir", "-p", path)
+        execute("mkdir", "-p", path).let {
+            if (it.exitCode != 0 && it.stdout.contains("Permission denied")) {
+                throw IllegalStateException("Can not create directory `${path}`: ${it.stdout}")
+            }
+        }
     }
 
     @RefreshState
@@ -144,7 +155,7 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
             throw IllegalStateException("Please provide a absolute valid path")
         }
         val brokenFlagPath = destPath.substring(0, i + 1) + "DOWNLOADING_" + destPath.substring(i + 1)
-        val progressIndicator = getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
+        val progressIndicator = ProgressIndicatorStack.currentIndicator()
 
 
         logger.info("Downloading $url to $brokenFlagPath.")
@@ -237,4 +248,28 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         return this
     }
 
+    override fun getOS(): OS {
+        return OS.LINUX
+    }
+
+    override fun mv(src: String, dest: String, recursive: Boolean) {
+        if (recursive) {
+            execute("mv", "-r", src, dest).ok()
+        } else {
+            execute("mv", src, dest).ok()
+        }
+    }
+
+    override fun createFile(path: String, content: String?) {
+        if (content.isNullOrEmpty()) {
+            execute("touch", path).ok()
+            return
+        }
+        createInteractiveShell("sh", "-c", "'cat > $path'").use { shell ->
+            shell.getWriter().let {
+                it.write(content)
+                it.flush()
+            }
+        }
+    }
 }

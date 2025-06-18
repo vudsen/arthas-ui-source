@@ -1,61 +1,77 @@
 package io.github.vudsen.arthasui.bridge.host
 
 import com.intellij.openapi.progress.ProgressIndicator
-import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
-import io.kubernetes.client.Copy
-import java.io.File
-import kotlin.io.path.Path
+import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
+import io.github.vudsen.arthasui.bridge.util.KubectlClient
 
 class K8sPodHostMachine(
     private val jvm: PodJvm,
-    private val hostMachine: K8sHostMachine
+    private val providerConfig: K8sJvmProviderConfig,
+    private val hostMachine: ShellAvailableHostMachine
 ) : AbstractLinuxShellAvailableHostMachine() {
 
+    private val hostMachineConfig = hostMachine.getHostMachineConfig().deepCopy()
+
+    init {
+        if (hostMachine is LocalHostMachineImpl) {
+            hostMachineConfig.dataDirectory = providerConfig.dataDirectory
+        }
+    }
+
+    private val client = KubectlClient(hostMachine, providerConfig, jvm.containerName)
+
     override fun execute(vararg command: String): CommandExecuteResult {
-        return hostMachine.execute(jvm, *command)
+        return client.execute("exec", "-n", jvm.namespace, jvm.id, "--", *command)
     }
 
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
-        return hostMachine.createInteractiveShell(jvm, *command)
+        return client.createInteractiveShell("exec", "-n",jvm.namespace, "-it", jvm.id, "--", *command)
     }
 
+    override fun isArm(): Boolean {
+        return providerConfig.isArm
+    }
+
+    /**
+     * 支持直接传输文件夹
+     */
     override fun transferFile(
         src: String,
         dest: String,
         indicator: ProgressIndicator?
     ) {
-        val file = File(src)
-        if (file.length() == 0L) {
-            return
+        // https://github.com/kubernetes/kubernetes/issues/77310
+        // The src can not contain colon, and it must locate in `c:/`
+        val actualSrc: String = if (src.startsWith("C:\\") || src.startsWith("c:\\")) {
+            src.substring(2).replace('\\', '/')
+        } else {
+            src
         }
         indicator?.let {
             it.pushState()
-            it.text = "Uploading ${file.name} to $dest"
+            it.text = "Copying ${src} to ${dest}..."
         }
         try {
-            // TODO 使用 websocket 手动上传，支持进度条
-            Copy(hostMachine.apiClient).copyFileToPod(jvm.namespace, jvm.id, jvm.containerName, Path(src), Path(dest))
+            client.execute("cp", actualSrc, "${jvm.id}:${dest}", "-n", jvm.namespace).ok()
         } finally {
             indicator?.popState()
         }
-
     }
 
-    override fun getOS(): OS {
-        return OS.LINUX
-    }
 
     override fun getConfiguration(): HostMachineConnectConfig {
-        return hostMachine.getConfiguration()
+        return hostMachineConfig.connect
     }
 
     override fun getHostMachineConfig(): HostMachineConfig {
-        return hostMachine.getHostMachineConfig()
+        return hostMachineConfig
     }
+
 
 }

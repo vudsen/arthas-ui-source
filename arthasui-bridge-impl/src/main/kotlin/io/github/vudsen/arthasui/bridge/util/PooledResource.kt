@@ -2,13 +2,14 @@ package io.github.vudsen.arthasui.bridge.util
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Factory
+import io.github.vudsen.arthasui.api.AutoCloseableWithState
 import io.github.vudsen.arthasui.bridge.HostMachineConnectionManager
 import io.github.vudsen.arthasui.bridge.HostMachineConnectionManager.Companion.ManagedInstance
 import java.lang.ref.WeakReference
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 
-class PooledResource<T : AutoCloseable>(
+class PooledResource<T : AutoCloseableWithState>(
     initialInstance: T?,
     /**
      * 若资源还未被创建，并且调用的方法被忽略时，将会调用该对象的方法
@@ -36,12 +37,20 @@ class PooledResource<T : AutoCloseable>(
         val actualArgs: Array<out Any?> = args ?: emptyArray()
         if (!method.isAnnotationPresent(RefreshState::class.java)) {
             delegate.get() ?.let {
-                return method.invoke(it.resource, *actualArgs)
+                if (it.resource.isClosed()) {
+                    connectionManager.reportClosed(it)
+                } else {
+                    return method.invoke(it.resource, *actualArgs)
+                }
             } ?: return method.invoke(fallback, *actualArgs)
         }
         delegate.get() ?.let {
-            connectionManager.resetTimeout(it)
-            return method.invoke(it.resource, *actualArgs)
+            if (it.resource.isClosed()) {
+                connectionManager.reportClosed(it)
+            } else {
+                connectionManager.resetTimeout(it)
+                return method.invoke(it.resource, *actualArgs)
+            }
         }
         val managedInstance = connectionManager.register(factory.create())
         this.delegate = WeakReference(managedInstance)

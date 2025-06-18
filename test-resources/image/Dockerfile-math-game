@@ -2,6 +2,12 @@
 FROM eclipse-temurin:21.0.7_6-jre-noble
 
 WORKDIR /opt/arthas
+
 ADD math-game.jar /opt/arthas/math-game.jar
+RUN useradd arthas-ui-tester &&  \
+    chown -R arthas-ui-tester:arthas-ui-tester /opt/java/ && \
+    chown -R arthas-ui-tester:arthas-ui-tester /opt/arthas/
+
+USER arthas-ui-tester
 
 CMD ["java", "-jar", "math-game.jar"]

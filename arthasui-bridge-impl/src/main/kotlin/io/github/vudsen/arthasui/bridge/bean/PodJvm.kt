@@ -20,6 +20,14 @@ class PodJvm(
      * 容器名称
      */
     var containerName: String?,
+    /**
+     * 运行用户
+     */
+    var uid: String?,
+    /**
+     * 用户组
+     */
+    var gid: String?
 ) : JVM(id, name, context) {
 
     override fun getIcon(): Icon {

@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.conf.ui
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
@@ -26,7 +27,7 @@ import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
+class JvmProviderSetupUI(private val parentDisposable: Disposable) {
 
     companion object {
         private val logger = Logger.getInstance(JvmProviderSetupUI::class.java)
@@ -62,7 +63,7 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         }
         container.add(JBTabbedPane().apply {
             tabbedPane = this@apply
-            hostMachine ?.let {
+            hostMachine?.let {
                 formTabs.clear()
                 val providers = service<JvmProviderManager>().getProviders()
                 for (provider in providers) {
@@ -114,26 +115,20 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
      */
     fun refresh(hostMachine: HostMachine) {
         loadingDecorator.startLoading(false)
-        ProgressManager.getInstance().run(object : Task.Modal(null, "Auto Detecting Jvm Provider", true)  {
 
-            override fun run(indicator: ProgressIndicator) {
-                try {
-                    transState(hostMachine.getHostMachineConfig())
-                    if (hostMachine is ShellAvailableHostMachine) {
-                        state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
-                    }
-                    recreateContainer(hostMachine)
-                    loadingDecorator.stopLoading()
-                } catch (e: Exception) {
-                    loadingDecorator.stopLoading()
-                    if (logger.isDebugEnabled) {
-                        logger.error(e.collectStackTrace())
-                    }
-                    MessagesUtils.showErrorMessageLater("Auto Detect Jvm Provider Failed", e.message, project)
-                }
+        transState(hostMachine.getHostMachineConfig())
+
+        if (hostMachine is ShellAvailableHostMachine) {
+            state.dataDirectory = hostMachine.resolveDefaultDataDirectory()
+        }
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                recreateContainer(hostMachine)
+                loadingDecorator.stopLoading()
+            } catch (e: Exception) {
+                MessagesUtils.showErrorMessageLater("Auto Detect Jvm Provider Failed", e.message, null)
             }
-
-        })
+        }
     }
 
     fun apply(): HostMachineConfig? {
@@ -141,10 +136,10 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         val result = mutableListOf<JvmProviderConfig>()
         for (i in formTabs.indices) {
             val formTab = formTabs[i]
-            formTab.apply() ?.let {
+            formTab.apply()?.let {
                 result.add(it)
                 tabbedPane?.getTabComponentAt(i)?.foreground = okColor
-            } ?:let {
+            } ?: let {
                 tabbedPane?.getTabComponentAt(i)?.foreground = errorColor
             }
 
@@ -162,9 +157,9 @@ class JvmProviderSetupUI(private val parentDisposable: Disposable)  {
         var result = false
         for (i in formTabs.indices) {
             val formTab = formTabs[i]
-            formTab.apply() ?.let {
+            formTab.apply()?.let {
                 tabbedPane?.getTabComponentAt(i)?.foreground = okColor
-            } ?:let {
+            } ?: let {
                 tabbedPane?.getTabComponentAt(i)?.foreground = errorColor
                 result = true
             }

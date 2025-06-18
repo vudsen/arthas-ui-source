@@ -1,9 +1,10 @@
 package io.github.vudsen.arthasui.core
 
-import ai.grazie.utils.WeakHashMap
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.jetbrains.rd.util.ConcurrentHashMap
 import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
@@ -32,12 +33,12 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
     /**
      * 保存所有链接
      */
-    private val bridges = WeakHashMap<JVM, ArthasBridgeHolder>()
+    private val bridges = ConcurrentHashMap<JVM, ArthasBridgeHolder>()
 
     private fun getHolderAndEnsureAlive(jvm: JVM): ArthasBridgeHolder? {
         bridges[jvm] ?.let {
             if (it.arthasBridge.isClosed()) {
-                bridges.delete(jvm)
+                bridges.remove(jvm)
                 return null
             }
             return it
@@ -46,19 +47,12 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
     }
 
 
-    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig, progressIndicator: ProgressIndicator?): ArthasBridgeHolder {
+    private fun getOrInitHolder(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeHolder {
         var holder = getHolderAndEnsureAlive(jvm)
         if (holder != null) {
             return holder
         }
         log.info("Creating new arthas bridge for $jvm")
-
-        val factory = service<HostMachineConnectManager>()
-        val template = factory.connect(hostMachineConfig)
-
-        progressIndicator ?.let {
-            template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(it))
-        }
 
         val arthasBridgeFactory =
             service<JvmProviderManager>().getProvider(providerConfig).createArthasBridgeFactory(jvm, providerConfig)
@@ -66,7 +60,7 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
 
         arthasBridgeTemplate.addListener(object : ArthasBridgeListener() {
             override fun onClose() {
-                bridges.delete(jvm)
+                bridges.remove(jvm)
             }
         })
         holder = ArthasBridgeHolder(arthasBridgeTemplate, hostMachineConfig)
@@ -80,17 +74,9 @@ class ArthasExecutionManagerImpl() : ArthasExecutionManager {
      * 初始化一个 [ArthasBridgeTemplate]
      */
     override fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate {
-        return getOrInitHolder(jvm, hostMachineConfig, providerConfig, null).arthasBridge
+        return getOrInitHolder(jvm, hostMachineConfig, providerConfig).arthasBridge
     }
 
-    override fun initTemplate(
-        jvm: JVM,
-        hostMachineConfig: HostMachineConfig,
-        providerConfig: JvmProviderConfig,
-        progressIndicator: ProgressIndicator?
-    ): ArthasBridgeTemplate {
-        return getOrInitHolder(jvm, hostMachineConfig, providerConfig, progressIndicator).arthasBridge
-    }
 
     /**
      * 是否已经连接过了

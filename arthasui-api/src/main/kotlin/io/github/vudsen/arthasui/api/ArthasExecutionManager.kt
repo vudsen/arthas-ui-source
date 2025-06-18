@@ -21,7 +21,6 @@ interface ArthasExecutionManager {
      */
     fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig): ArthasBridgeTemplate
 
-    fun initTemplate(jvm: JVM, hostMachineConfig: HostMachineConfig, providerConfig: JvmProviderConfig, progressIndicator: ProgressIndicator?): ArthasBridgeTemplate
 
     /**
      * 是否已经连接过了

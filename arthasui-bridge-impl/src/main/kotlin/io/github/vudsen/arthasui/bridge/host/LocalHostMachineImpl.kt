@@ -14,6 +14,7 @@ import io.github.vudsen.arthasui.api.currentOS
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.bean.StandardInteractiveShell
 import io.github.vudsen.arthasui.bridge.conf.LocalConnectConfig
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -108,7 +109,7 @@ class LocalHostMachineImpl(
     }
 
     override fun isFileNotExist(path: String): Boolean {
-        return File(path).exists()
+        return !File(path).exists()
     }
 
     override fun isDirectoryExist(path: String): Boolean {
@@ -120,7 +121,7 @@ class LocalHostMachineImpl(
     }
 
     override fun listFiles(directory: String): List<String> {
-        return File(directory).listFiles().map { v -> v.name }
+        return File(directory).listFiles()?.map { v -> v.name } ?: emptyList()
     }
 
     override fun download(url: String, destPath: String) {
@@ -132,37 +133,53 @@ class LocalHostMachineImpl(
             logger.warn("Failed to create directory for file: $destPath")
         }
 
-        val progressIndicator = getUserData(HostMachine.PROGRESS_INDICATOR)?.get()
-        progressIndicator?.text = "Downloading $url..."
+        val tempFile = File(destFile.parentFile.absolutePath + "/" + destFile.name + ".tmp")
 
-        destFile.outputStream().use { output ->
-            val connection = URL(url).openConnection() as HttpURLConnection
-            try {
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    throw IllegalStateException(
-                        "Unexpected HTTP status ${connection.responseCode}, body: ${
-                            String(
-                                connection.inputStream.readAllBytes(),
-                                StandardCharsets.UTF_8
-                            )
-                        }"
-                    )
-                }
-                val total = connection.contentLength
+        val progressIndicator = ProgressIndicatorStack.currentIndicator()
+        val baseText = "Downloading $url"
+        progressIndicator ?.let {
+            it.pushState()
+            it.text = baseText
+        }
 
-                connection.inputStream.use { input ->
-                    val buffer = ByteArray(1024)
-                    var bytesRead: Int
-                    var totalBytesRead = 0
-                    while (input.read(buffer).also { bytesRead = it } != -1) {
-                        output.write(buffer, 0, bytesRead)
-                        totalBytesRead += bytesRead
-                        progressIndicator?.fraction = totalBytesRead.toDouble() / total
+        try {
+            tempFile.outputStream().use { output ->
+                val connection = URL(url).openConnection() as HttpURLConnection
+                try {
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                        throw IllegalStateException(
+                            "Unexpected HTTP status ${connection.responseCode}, body: ${
+                                String(
+                                    connection.inputStream.readAllBytes(),
+                                    StandardCharsets.UTF_8
+                                )
+                            }"
+                        )
                     }
+                    val total = connection.contentLength
+                    val totalMb = String.format("%.2f", total * 1.0 / 1024 / 1024)
+
+                    connection.inputStream.use { input ->
+                        val buffer = ByteArray(connection.contentLength.coerceAtMost(1024 * 1024 * 10))
+                        var bytesRead: Int
+                        var totalBytesRead = 0
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            output.write(buffer, 0, bytesRead)
+                            totalBytesRead += bytesRead
+                            ProgressManager.checkCanceled()
+                            progressIndicator ?.let {
+                                it.fraction = totalBytesRead.toDouble() / total
+                                it.text = "$baseText (${String.format("%.2fMB", totalBytesRead * 1.0 / 1024 / 1024)} / ${totalMb}MB)"
+                            }
+                        }
+                    }
+                } finally {
+                    connection.disconnect()
                 }
-            } finally {
-                connection.disconnect()
             }
+            tempFile.renameTo(destFile)
+        } finally {
+            progressIndicator?.popState()
         }
     }
 
@@ -280,6 +297,45 @@ class LocalHostMachineImpl(
             "/opt/arthas-ui"
         }
         return (File(dest)).absolutePath
+    }
+
+    private fun mv0(src: File, dest: File) {
+        if (!src.exists()) {
+            return
+        }
+
+        if (src.isDirectory) {
+            if (!dest.exists()) {
+                dest.mkdirs()
+            }
+
+            src.listFiles()?.forEach { file ->
+                val target = File(dest, file.name)
+                mv0(file, target)
+            }
+
+            src.delete()
+        } else {
+            src.renameTo(dest).takeIf { it } ?: run {
+                // renameTo 失败，尝试复制再删除
+                src.copyTo(dest, overwrite = true)
+                src.delete()
+            }
+        }
+    }
+
+    override fun mv(src: String, dest: String, recursive: Boolean) {
+        mv0(File(src), File(dest))
+    }
+
+    override fun createFile(path: String, content: String?) {
+        if (content == null) {
+            File(path).createNewFile()
+            return
+        }
+        File(path).outputStream().use { os ->
+            os.write(content.toByteArray(StandardCharsets.UTF_8))
+        }
     }
 
     private val myData = HashMap<Key<*>, Any?>()

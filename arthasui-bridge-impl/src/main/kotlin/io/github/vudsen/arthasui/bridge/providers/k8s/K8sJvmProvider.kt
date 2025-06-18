@@ -1,67 +1,76 @@
 package io.github.vudsen.arthasui.bridge.providers.k8s
 
 import com.intellij.openapi.Disposable
-import io.github.vudsen.arthasui.api.ArthasBridgeFactory
-import io.github.vudsen.arthasui.api.HostMachine
-import io.github.vudsen.arthasui.api.JVM
+import io.github.vudsen.arthasui.api.*
 import io.github.vudsen.arthasui.api.bean.JvmSearchResult
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.extension.JvmProvider
+import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.bean.PodJvm
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
-import io.github.vudsen.arthasui.bridge.host.K8sHostMachine
 import io.github.vudsen.arthasui.bridge.host.K8sPodHostMachine
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.K8sJvmProviderForm
+import io.github.vudsen.arthasui.bridge.util.KubectlClient
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import javax.swing.Icon
 
 class K8sJvmProvider : JvmProvider {
 
     override fun getName(): String {
-        return "Namespaces"
+        return "Kubernetes"
     }
 
     override fun searchJvm(
         hostMachine: HostMachine,
         providerConfig: JvmProviderConfig
     ): JvmSearchResult {
-        hostMachine as K8sHostMachine
         providerConfig as K8sJvmProviderConfig
-        return JvmSearchResult(null, hostMachine.listNamespace().map { ns ->
-            K8sNamespaceChildSearcher(hostMachine, providerConfig, ns.metadata.name)
+        hostMachine as ShellAvailableHostMachine
+        val client = KubectlClient(hostMachine, providerConfig)
+
+        val namespaces =
+            client.execute("get", "ns", "-o", "jsonpath='{.items[*].metadata.name}'").ok().trim('\'').split(' ')
+
+        return JvmSearchResult(null, namespaces.map { ns ->
+            K8sNamespaceChildSearcher(client, ns)
         })
     }
 
+
+    /**
+     * 由于用户权限的问题，必须先传到远程宿主机，然后再由远程宿主机授权后，再放进容器里解压
+     */
     override fun createArthasBridgeFactory(
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
         return ArthasBridgeFactory {
-            jvm as PodJvm
-            val hostMachine = jvm.context.template as K8sHostMachine
-            val k8sPodHostMachine = K8sPodHostMachine(jvm, hostMachine)
-
-            val localHostMachine =
-                ToolChainManagerUtil.findLocalHostMachine(hostMachine.getConfiguration().localPkgSourceId)
-                    ?: throw IllegalStateException("Local host machine not exist, please check your configuration.")
+            val hostMachine = jvm.context.template as ShellAvailableHostMachine
+            val k8sPodHostMachine = K8sPodHostMachine(jvm as PodJvm, jvmProviderConfig as K8sJvmProviderConfig, hostMachine)
 
             val toolChainManager = DefaultToolChainManager(
                 k8sPodHostMachine,
-                localHostMachine,
-                ToolChainManagerUtil.mirror
+                hostMachine,
+                ToolChainManagerUtil.mirror,
+                jvm.uid,
+                jvm.gid
             )
 
+            val jattachHome = if (k8sPodHostMachine.isArm()) {
+                toolChainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
+            } else {
+                toolChainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
+            }
+            k8sPodHostMachine.execute("chmod", "ug+x", "${jattachHome}/jattach")
             val arthasHome = toolChainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
-            // TODO: support choose pid.
-            hostMachine.execute(
-                jvm,
-                "${toolChainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)}/jattach",
+            k8sPodHostMachine.execute(
+                "${jattachHome}/jattach",
                 "1",
                 "load",
                 "instrument",
@@ -70,11 +79,8 @@ class K8sJvmProvider : JvmProvider {
             ).ok()
 
             ArthasBridgeImpl(
-                hostMachine.createInteractiveShell(
-                    jvm,
-                    "sh",
-                    "-c",
-                    "java -jar $arthasHome/arthas-client.jar"
+                k8sPodHostMachine.createInteractiveShell(
+                    "java", "-jar", "${arthasHome}/arthas-client.jar"
                 )
             )
         }
@@ -98,12 +104,18 @@ class K8sJvmProvider : JvmProvider {
 
     override fun isJvmInactive(jvm: JVM): Boolean {
         jvm as PodJvm
-        val hostMachine = jvm.context.template as K8sHostMachine
-        return hostMachine.isPodNotExist(jvm.id, jvm.namespace, jvm.containerName)
+        val hostMachine = jvm.context.template as ShellAvailableHostMachine
+        val client = KubectlClient(hostMachine, jvm.context.providerConfig as K8sJvmProviderConfig, jvm.containerName)
+
+        return client.execute("get", "pod/${jvm.name}", "-n", jvm.namespace).exitCode != 0
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {
-        return K8sJvmProviderConfig(true)
+        val hostMachine = hostMachine as ShellAvailableHostMachine
+        if (hostMachine.execute("kubectl", "version").exitCode == 0) {
+            return K8sJvmProviderConfig(true)
+        }
+        return K8sJvmProviderConfig(false)
     }
 
     override fun getIcon(): Icon {
@@ -111,6 +123,6 @@ class K8sJvmProvider : JvmProvider {
     }
 
     override fun isSupport(hostMachine: HostMachine): Boolean {
-        return hostMachine is K8sHostMachine
+        return hostMachine is ShellAvailableHostMachine
     }
 }

@@ -1,16 +1,16 @@
 package io.github.vudsen.arthasui.bridge.template
 
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import io.github.vudsen.test.BridgeTestUtil
-import io.github.vudsen.arthasui.TestProgressIndicator
 import io.github.vudsen.arthasui.api.CloseableHostMachine
-import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.currentOS
+import io.github.vudsen.arthasui.api.host.isFileExist
 import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
+import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import org.junit.Assert
-import java.lang.ref.WeakReference
 
 class HostMachineTemplateTest :  BasePlatformTestCase() {
 
@@ -80,34 +80,41 @@ class HostMachineTemplateTest :  BasePlatformTestCase() {
         hostMachine.execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
         hostMachine.execute("tar",
             "-czf",
-            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/arthas-xx.tar.gz",
+            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/0_0_arthas-xx.tar.gz",
             "-C",
             "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}",
             "test.txt"
         ).ok()
 
         val files = hostMachine.listFiles("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
-        Assert.assertEquals(listOf("arthas-xx.tar.gz", "test.txt"), files)
+        Assert.assertEquals(listOf("0_0_arthas-xx.tar.gz", "test.txt"), files)
 
         val toolchainManager = DefaultToolChainManager(hostMachine, null)
         val path = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
 
-        Assert.assertEquals("/opt/arthas-ui-test/pkg/arthas", path)
-        Assert.assertFalse(hostMachine.isFileNotExist("/opt/arthas-ui-test/pkg/arthas/test.txt"))
+        Assert.assertEquals("/opt/arthas-ui-test/pkg/0_0_arthas", path)
+        Assert.assertTrue(hostMachine.isFileExist("/opt/arthas-ui-test/pkg/0_0_arthas/test.txt"))
     }
 
 
     fun testDownloadWithIndicator() {
         val template = BridgeTestUtil.createSshHostMachine(testRootDisposable)
-        val progressIndicator = TestProgressIndicator()
-        template.putUserData(HostMachine.PROGRESS_INDICATOR, WeakReference(progressIndicator))
-        val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
-        template.mkdirs(template.getHostMachineConfig().dataDirectory)
-        template.download(
-            "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.49.1.0/sqlite-jdbc-3.49.1.0.jar",
-            dest
-        )
-        Assert.assertFalse(template.isFileNotExist(dest))
+
+        ProgressManager.getInstance().runProcessWithProgressSynchronously({
+            ProgressIndicatorStack.push(ProgressManager.getGlobalProgressIndicator())
+            try {
+                val dest = template.getHostMachineConfig().dataDirectory + "/sqlite.jar"
+                template.mkdirs(template.getHostMachineConfig().dataDirectory)
+                template.download(
+                    "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.49.1.0/sqlite-jdbc-3.49.1.0.jar",
+                    dest
+                )
+                Assert.assertFalse(template.isFileNotExist(dest))
+            } finally {
+                ProgressIndicatorStack.pop()
+            }
+        }, "Test", false, null)
+
     }
 
 }

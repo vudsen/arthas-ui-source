@@ -12,7 +12,7 @@ dependencies {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation(libs.kubernetesClient)
+
 
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
