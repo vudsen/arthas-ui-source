@@ -11,7 +11,7 @@ import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 
 object ToolChainManagerUtil {
 
-    val mirror = System.getenv("TOOLCHAIN_MIRROR")
+    val mirror: String? = System.getenv("TOOLCHAIN_MIRROR")
 
     fun findLocalDelegate(id: Long?): ShellAvailableHostMachine? {
         if (id == null) {

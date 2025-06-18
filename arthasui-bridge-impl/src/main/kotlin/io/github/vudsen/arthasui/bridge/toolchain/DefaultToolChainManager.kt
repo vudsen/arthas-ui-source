@@ -36,7 +36,7 @@ open class DefaultToolChainManager(
     /**
      * 下载镜像
      */
-    private var mirror: String = "https://api.github.com",
+    mirror: String? = null,
     /**
      * 当前 uid
      */
@@ -47,6 +47,8 @@ open class DefaultToolChainManager(
     currentGid: String? = null,
 ) :
     ToolchainManager {
+
+    private var mirror = mirror ?: "https://api.github.com"
 
     private val httpClient = HttpClientBuilder.create().build()
 
