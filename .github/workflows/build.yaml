@@ -49,7 +49,7 @@ jobs:
           K8S_TOKEN=`kubectl create token arthas-ui-ci -n arthas-ui-test`
           echo "token=$K8S_TOKEN" >> $GITHUB_OUTPUT
           API_SERVER_URL=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' k3s-latest`
-          echo "apiServerUrl=$API_SERVER_URL" >> $GITHUB_OUTPUT
+          echo "apiServerUrl=https://$API_SERVER_URL:6443" >> $GITHUB_OUTPUT
 
       - name: Run Integration Test
         uses: GabrielBB/xvfb-action@v1
