@@ -15,6 +15,9 @@ object ProgressIndicatorStack {
     }
 
     fun currentIndicator(): ProgressIndicator? {
+        if (stack.isEmpty()) {
+            return null
+        }
         return stack.peek()
     }
 

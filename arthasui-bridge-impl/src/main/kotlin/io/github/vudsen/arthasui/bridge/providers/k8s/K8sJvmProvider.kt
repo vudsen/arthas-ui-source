@@ -56,7 +56,9 @@ class K8sJvmProvider : JvmProvider {
             val toolChainManager = DefaultToolChainManager(
                 k8sPodHostMachine,
                 hostMachine,
-                ToolChainManagerUtil.mirror
+                ToolChainManagerUtil.mirror,
+                jvm.uid,
+                jvm.gid
             )
 
             val jattachHome = if (k8sPodHostMachine.isArm()) {

@@ -19,27 +19,59 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
+/**
+ * 默认的工具链管理。
+ *
+ * 所有的工具链名称，都会以`<用户uid>_<用户gid>开头`(windows 和 mac 除外)，不同的用户，即使是同一个版本的工具链，也会下载多次。
+ */
 open class DefaultToolChainManager(
+    /**
+     * 目标宿主机
+     */
     private val hostMachine: ShellAvailableHostMachine,
+    /**
+     * 下载的本地代理宿主机
+     */
     private val localDownloadProxy: ShellAvailableHostMachine?,
-    mirror: String? = null,
+    /**
+     * 下载镜像
+     */
+    private var mirror: String = "https://api.github.com",
+    /**
+     * 当前 uid
+     */
+    currentUid: String? = null,
+    /**
+     * 当前 gid
+     */
+    currentGid: String? = null,
 ) :
     ToolchainManager {
 
-    private var mirror = mirror ?: "https://api.github.com"
-
     private val httpClient = HttpClientBuilder.create().build()
 
-    var currentUid: String
-    var currentGid: String
+    private val privilegePrefix: String
+
 
     init {
-        if (hostMachine.getOS() == OS.LINUX) {
-            currentUid = hostMachine.execute("id", "-u").tryUnwrap()?.trim() ?: "0"
-            currentGid = hostMachine.execute("id", "-g").tryUnwrap()?.trim() ?: "0"
+        val actualUid: String?
+        val actualGid: String?
+
+        if (currentUid != null && currentGid != null) {
+            actualUid = currentUid
+            actualGid = currentGid
+        } else if (hostMachine.getOS() == OS.LINUX) {
+            actualUid = hostMachine.execute("id", "-u").tryUnwrap()?.trim()
+            actualGid = hostMachine.execute("id", "-g").tryUnwrap()?.trim()
         } else {
-            currentUid = "0"
-            currentGid = "0"
+            actualUid = null
+            actualGid = null
+        }
+
+        privilegePrefix = if (actualUid != null && actualGid != null) {
+            "${actualUid}_${actualGid}_"
+        } else {
+            ""
         }
     }
 
@@ -67,14 +99,14 @@ open class DefaultToolChainManager(
 
     /**
      * 搜索已有的包
-     * @return 包的完整路径
+     * @return 包的绝对路径
      */
     private fun searchPkg(search: String): String? {
         val files = hostMachine.listFiles(getDownloadDirectory())
         for (file in files) {
             if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
-                if (file.startsWith("${currentUid}_${currentGid}_")) {
-                    return file
+                if (file.startsWith(privilegePrefix)) {
+                    return "${getDownloadDirectory()}/$file"
                 }
             }
         }
@@ -119,8 +151,12 @@ open class DefaultToolChainManager(
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
-        val target: String = searchPkg(pkgName) ?:let {
-            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException("No suitable asset found for ${repo}, os is: ${hostMachine.getHostMachine().getOS()}, arm: ${hostMachine.isArm()}")
+        val target: String = searchPkg(pkgName) ?: let {
+            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException(
+                "No suitable asset found for ${repo}, os is: ${
+                    hostMachine.getHostMachine().getOS()
+                }, arm: ${hostMachine.isArm()}"
+            )
             finalDownload(asset)
         }
         hostMachine.mkdirs(home)
@@ -133,7 +169,7 @@ open class DefaultToolChainManager(
     }
 
     private fun resolveFilename(filename: String): String {
-        return "${currentUid}_${currentGid}_${filename}"
+        return "${privilegePrefix}${filename}"
     }
 
     /**
@@ -143,7 +179,7 @@ open class DefaultToolChainManager(
     private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
 
-        val dest =  "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
+        val dest = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
         localDownloadProxy?.let {
             val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
             localDownloadProxy.download(url, local)
@@ -185,12 +221,18 @@ open class DefaultToolChainManager(
                     OS.MAC -> {
                         assets.find { v -> v.name.endsWith("macos.zip") }
                     }
+
                     else -> {
                         throw IllegalStateException("Unsupported OS: ${hostMachine.getHostMachine().getOS()}")
                     }
                 }
             }
-            ToolChain.ARTHAS_BUNDLE -> preparePackage("arthas", "alibaba/arthas") { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
+
+            ToolChain.ARTHAS_BUNDLE -> preparePackage(
+                "arthas",
+                "alibaba/arthas"
+            ) { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
+
             ToolChain.KUBECTL -> prepareKubectl()
         }
     }
@@ -236,6 +278,7 @@ open class DefaultToolChainManager(
                     "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
                 }
             }
+
             OS.MAC -> "https://dl.k8s.io/release/${version}/bin/darwin/amd64/kubectl"
             else -> throw IllegalStateException("Unknown OS")
         }
