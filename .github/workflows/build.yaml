@@ -41,8 +41,8 @@ jobs:
       - name: Setup Environment
         id: k8s
         run: |
+          cat /tmp/output/kubeconfig-latest.yaml
           kubectl apply -f test-resources/k8s-ci-setup.yaml
-          kubectl get pods -A
           INTERNAL_VERSION=`cat gradle.properties | grep platformInternalVersion | cut -d'=' -f2 | tr -d ' '`
           echo "INTERNAL_VERSION=$INTERNAL_VERSION" >> $GITHUB_OUTPUT
           sleep 20
