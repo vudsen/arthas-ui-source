@@ -10,7 +10,6 @@ import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
-import io.github.vudsen.arthasui.bridge.util.RefreshState
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.channel.ChannelExec
 import org.apache.sshd.client.channel.ClientChannelEvent
@@ -114,7 +113,6 @@ class SshLinuxHostMachineImpl(
         logger.info("Connection closed: ${connectConfig.ssh.host}")
     }
 
-    @RefreshState
     override fun execute(vararg command: String): CommandExecuteResult {
         session.createExecChannel(command.joinToOptString(" ")).use { exec ->
             val outputStream = ByteArrayOutputStream(1024)
@@ -135,7 +133,6 @@ class SshLinuxHostMachineImpl(
         }
     }
 
-    @RefreshState
     override fun createInteractiveShell(vararg command: String): InteractiveShell {
         val channel = session.createExecChannel(command.joinToOptString(" "))
         val inputStream = PipedInputStream()
@@ -155,7 +152,6 @@ class SshLinuxHostMachineImpl(
         return connectConfig.os
     }
 
-    @RefreshState
     override fun transferFile(src: String, dest: String, indicator: ProgressIndicator?) {
         val file = File(src)
         if (file.length() == 0L) {

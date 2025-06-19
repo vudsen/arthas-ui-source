@@ -185,12 +185,7 @@ open class DefaultToolChainManager(
 
         val dest = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/${appendPriviligePrefix(filename)}"
         localDownloadProxy?.let {
-            val local = if (it.getOS() != OS.LINUX) {
-                // 下载到本地时不带权限标识, 方便离线安装
-                "${it.getHostMachineConfig().dataDirectory}/${DOWNLOAD_DIRECTORY}/${filename}"
-            } else {
-                "${it.getHostMachineConfig().dataDirectory}/${DOWNLOAD_DIRECTORY}/${appendPriviligePrefix(filename)}"
-            }
+            val local = "${it.getHostMachineConfig().dataDirectory}/${DOWNLOAD_DIRECTORY}/${filename}"
             localDownloadProxy.download(url, local)
             hostMachine
                 .transferFile(local, dest, ProgressIndicatorStack.currentIndicator())

@@ -3,7 +3,6 @@ package io.github.vudsen.test
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Disposer
-import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
@@ -16,7 +15,6 @@ import org.testcontainers.shaded.org.bouncycastle.util.encoders.Base64
 import org.testcontainers.utility.DockerImageName
 import java.io.File
 import java.io.FileOutputStream
-import java.util.WeakHashMap
 
 object BridgeTestUtil {
 
@@ -97,10 +95,14 @@ object BridgeTestUtil {
      */
     private val TGZ_BASE64 = Base64.decode("H4sIAADRCWgAA+3QMQrCQBAF0D3KnkBmN1nvY2EdSEbw+IaAjYVWsXqv+QO/+Uzet7zkM8uJYned5yN3n3ncbUT0aURvo0RrfUylxpmj3h5b3tZay7osX5/wqwcAAAAAAAAAAIA/egGxS8lZACgAAA==")
 
+    /**
+     * 包含一个 `test.txt` 的 zip 文件
+     */
+    private val ZIP_BASE64 = Base64.decode("UEsDBAoAAAAAAGVw01oAAAAAAAAAAAAAAAAIABwAdGVzdC50eHRVVAkAAx6oU2geqFNodXgLAAEEAAAAAAQAAAAAUEsBAh4DCgAAAAAAZXDTWgAAAAAAAAAAAAAAAAgAGAAAAAAAAAAAAKSBAAAAAHRlc3QudHh0VVQFAAMeqFNodXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATgAAAEIAAAAAAA==")
 
 
     /**
-     * 在本地创建一个压缩包
+     * 在本地创建一个 tar.gz 压缩包
      * @param file 目标路径
      * @return 压缩包中的文件
      */
@@ -108,6 +110,19 @@ object BridgeTestUtil {
         file.parentFile.mkdirs()
         FileOutputStream(file).use { fos ->
             fos.write(TGZ_BASE64)
+        }
+        return listOf("test.txt")
+    }
+
+    /**
+     * 在本地创建一个 zip 压缩包
+     * @param file 目标路径
+     * @return 压缩包中的文件
+     */
+    fun createTestZipFile(file: File): List<String> {
+        file.parentFile.mkdirs()
+        FileOutputStream(file).use { fos ->
+            fos.write(ZIP_BASE64)
         }
         return listOf("test.txt")
     }
