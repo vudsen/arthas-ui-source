@@ -154,7 +154,8 @@ class K8sJvmProviderForm(
                         checkBox("Validate SSL").bindSelected(state::validateSSL).align(Align.FILL)
                     }
                     row {
-                        textField().label("Data directory").comment("The data directory in pod").bindText(state::dataDirectory)
+                        label("Data directory")
+                        textField().comment("The data directory in pod").bindText(state::dataDirectory).align(Align.FILL)
                     }
                 }
             }.visibleIf(predicate)
