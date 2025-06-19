@@ -20,6 +20,7 @@ import io.github.vudsen.arthasui.common.util.KMutableProperty2MutablePropertyAda
 import org.jetbrains.yaml.YAMLFileType
 import java.awt.Component
 import java.awt.Dimension
+import javax.swing.BorderFactory
 import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.ListCellRenderer
@@ -141,18 +142,18 @@ class K8sJvmProviderForm(
                         checkBox("Validate SSL").bindSelected(state::validateSSL).align(Align.FILL)
                     }
                     row {
-                        label("Data directory")
+                        label("Data directory").gap(RightGap.SMALL)
                         icon(AllIcons.General.ContextHelp).applyToComponent {
                             HelpTooltip().setDescription("The data directory in pod").installOn(this)
-                        }
+                        }.gap(RightGap.SMALL)
                         textField().bindText(state::dataDirectory).align(Align.FILL)
                     }
                     row {
-                        label("Kubectl version")
+                        label("Kubectl version").gap(RightGap.SMALL)
                         icon(AllIcons.General.ContextHelp).applyToComponent {
                             HelpTooltip().setDescription("The version of kubectl, empty means latest").installOn(this)
-                        }
-                        textField().bindText(state::kubectlVersion)
+                        }.gap(RightGap.SMALL)
+                        textField().bindText(state::kubectlVersion).align(Align.FILL)
                     }.visibleIf(ComboBoxPredicate(comboBox, { v -> v != K8sJvmProviderConfig.AuthorizationType.BUILTIN }))
                 }
             }.visibleIf(predicate)

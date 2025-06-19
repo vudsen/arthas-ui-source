@@ -185,6 +185,7 @@ open class DefaultToolChainManager(
 
         val dest = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/${appendPriviligePrefix(filename)}"
         localDownloadProxy?.let {
+            // 下载到本地时不带权限标识, 方便离线安装
             val local = "${it.getHostMachineConfig().dataDirectory}/${DOWNLOAD_DIRECTORY}/${filename}"
             localDownloadProxy.download(url, local)
             hostMachine
@@ -258,9 +259,9 @@ open class DefaultToolChainManager(
     }
 
 
-    private fun prepareKubectl(version: String?): String {
-        val version: String = resolveKubectlVersion(version)
-        var downloadUrl: String
+    private fun prepareKubectl(expectedVersion: String?): String {
+        val version: String = resolveKubectlVersion(expectedVersion)
+        val downloadUrl: String
         val filename: String
         when (hostMachine.getOS()) {
             OS.WINDOWS -> {
