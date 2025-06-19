@@ -80,7 +80,7 @@ class KubectlClient(
             return Pair("kubectl", null)
         }
         val toolChainManager = ToolChainManagerUtil.createToolChainManager(hostMachine)
-        val kubectl = toolChainManager.getToolChainHomePath(ToolChain.KUBECTL)
+        val kubectl = toolChainManager.getToolChainHomePath(ToolChain.KUBECTL, config.kubectlVersion)
         if (config.authorizationType == K8sJvmProviderConfig.AuthorizationType.KUBE_CONFIG_FILE) {
             return Pair(kubectl, config.kubeConfigFilePath)
         } else if (config.authorizationType == K8sJvmProviderConfig.AuthorizationType.KUBE_CONFIG){

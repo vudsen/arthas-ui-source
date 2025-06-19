@@ -32,6 +32,10 @@ class K8sJvmProviderConfig(
      * 数据目录
      */
     var dataDirectory: String = "/opt/arthas-ui",
+    /**
+     * 要使用哪个 kubectl 版本，为空表示使用最新版本
+     */
+    var kubectlVersion: String = ""
 ) : JvmProviderConfig(TYPE, enabled) {
 
     enum class AuthorizationType(val displayName: String) {
@@ -63,7 +67,7 @@ class K8sJvmProviderConfig(
     }
 
     override fun deepCopy(): K8sJvmProviderConfig {
-        return K8sJvmProviderConfig(enabled, kubeConfigFilePath, kubeConfig, token, validateSSL, authorizationType, isArm, dataDirectory)
+        return K8sJvmProviderConfig(enabled, kubeConfigFilePath, kubeConfig, token, validateSSL, authorizationType, isArm, dataDirectory, kubectlVersion)
     }
 
 }
