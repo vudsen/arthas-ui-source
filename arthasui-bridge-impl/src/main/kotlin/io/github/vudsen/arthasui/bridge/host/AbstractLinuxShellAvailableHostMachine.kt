@@ -11,7 +11,6 @@ import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl.Companion.logger
-import io.github.vudsen.arthasui.bridge.util.RefreshState
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import java.io.BufferedReader
 import java.nio.charset.StandardCharsets
@@ -35,7 +34,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
     }
 
 
-    @RefreshState
     override fun isArm(): Boolean {
         val result = execute("uname", "-a").ok()
         return result.contains("arm", ignoreCase = true) ||
@@ -43,18 +41,15 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
                 result.contains("arm64", ignoreCase = true)
     }
 
-    @RefreshState
     override fun isFileNotExist(path: String): Boolean {
         return execute("test", "-f", path).exitCode != 0
     }
 
 
-    @RefreshState
     override fun isDirectoryExist(path: String): Boolean {
         return execute("test", "-d", path).exitCode == 0
     }
 
-    @RefreshState
     override fun mkdirs(path: String) {
         execute("mkdir", "-p", path).let {
             if (it.exitCode != 0 && it.stdout.contains("Permission denied")) {
@@ -63,7 +58,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         }
     }
 
-    @RefreshState
     override fun listFiles(directory: String): List<String> {
         execute("ls", directory).tryUnwrap() ?.let {
             val result = mutableListOf<String>()
@@ -145,7 +139,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
     }
 
 
-    @RefreshState
     override fun download(url: String, destPath: String) {
         if (!isFileNotExist(destPath)) {
             return
@@ -193,7 +186,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         execute("mv", brokenFlagPath, destPath).ok()
     }
 
-    @RefreshState
     override fun tryUnzip(target: String, destDir: String): Boolean {
         if (target.endsWith(".zip")) {
             execute("unzip", target, "-d", destDir).let {
@@ -209,7 +201,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         return false
     }
 
-    @RefreshState
     override fun grep(
         search: String,
         vararg commands: String
@@ -217,7 +208,6 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         return execute("sh", "-c", "'${commands.joinToString(" ")} | grep ${search}'")
     }
 
-    @RefreshState
     override fun grep(
         searchChain: Array<String>,
         vararg commands: String
@@ -234,12 +224,10 @@ abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachin
         return execute("sh", "-c", command.toString().trim())
     }
 
-    @RefreshState
     override fun env(name: String): String? {
         return execute("bash", "-lc", "'echo \$$name'").ok().trim()
     }
 
-    @RefreshState
     override fun test() {
         execute("uname", "-a").ok()
     }

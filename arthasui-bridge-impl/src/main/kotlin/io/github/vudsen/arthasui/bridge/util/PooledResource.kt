@@ -35,18 +35,12 @@ class PooledResource<T : AutoCloseableWithState>(
         args: Array<out Any?>?
     ): Any? {
         val actualArgs: Array<out Any?> = args ?: emptyArray()
-        if (!method.isAnnotationPresent(RefreshState::class.java)) {
-            delegate.get() ?.let {
-                if (it.resource.isClosed()) {
-                    connectionManager.reportClosed(it)
-                } else {
-                    return method.invoke(it.resource, *actualArgs)
-                }
-            } ?: return method.invoke(fallback, *actualArgs)
-        }
         delegate.get() ?.let {
             if (it.resource.isClosed()) {
                 connectionManager.reportClosed(it)
+            } else if (method.name == "close"){
+                connectionManager.reportClosed(it)
+                return method.invoke(it.resource, *actualArgs)
             } else {
                 connectionManager.resetTimeout(it)
                 return method.invoke(it.resource, *actualArgs)

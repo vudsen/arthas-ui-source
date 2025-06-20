@@ -1,21 +1,17 @@
 package io.github.vudsen.arthasui.bridge.ui
 
+import com.intellij.icons.AllIcons
+import com.intellij.ide.HelpTooltip
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.ex.EditorEx
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
-import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.openapi.ui.TextBrowseFolderListener
-import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.TextAccessor
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ComboBoxPredicate
-import com.intellij.ui.layout.ComponentPredicate
 import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.ui.AbstractFormComponent
 import io.github.vudsen.arthasui.bridge.conf.K8sJvmProviderConfig
@@ -24,6 +20,7 @@ import io.github.vudsen.arthasui.common.util.KMutableProperty2MutablePropertyAda
 import org.jetbrains.yaml.YAMLFileType
 import java.awt.Component
 import java.awt.Dimension
+import javax.swing.BorderFactory
 import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.ListCellRenderer
@@ -66,14 +63,6 @@ class K8sJvmProviderForm(
         editorEx.setHorizontalScrollbarVisible(true)
         editorEx.setVerticalScrollbarVisible(true)
         return textField
-    }
-
-
-    private fun createFileChooser(): TextFieldWithBrowseButton {
-        val fileChooser = TextFieldWithBrowseButton()
-        val fileChooserDescriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
-        fileChooser.addBrowseFolderListener(TextBrowseFolderListener(fileChooserDescriptor))
-        return fileChooser
     }
 
 
@@ -128,12 +117,11 @@ class K8sJvmProviderForm(
                 }.visibleIf(ComboBoxPredicate(comboBox, { v -> v == K8sJvmProviderConfig.AuthorizationType.KUBE_CONFIG }))
                 group("Connect Configuration") {
                     row {
-                        cell(createFileChooser())
-                            .bind(
-                                TextAccessorGetter(),
-                                TextAccessorSetter(),
-                                KMutableProperty2MutablePropertyAdapter(state::kubeConfigFilePath)
-                            ).align(Align.FILL)
+                        textField().label("Kubeconfig path").bind(
+                            TextAccessorGetter(),
+                            TextAccessorSetter(),
+                            KMutableProperty2MutablePropertyAdapter(state::kubeConfigFilePath)
+                        ).align(Align.FILL)
                     }
                 }.visibleIf(
                     ComboBoxPredicate(
@@ -154,9 +142,19 @@ class K8sJvmProviderForm(
                         checkBox("Validate SSL").bindSelected(state::validateSSL).align(Align.FILL)
                     }
                     row {
-                        label("Data directory")
-                        textField().comment("The data directory in pod").bindText(state::dataDirectory).align(Align.FILL)
+                        label("Data directory").gap(RightGap.SMALL)
+                        icon(AllIcons.General.ContextHelp).applyToComponent {
+                            HelpTooltip().setDescription("The data directory in pod").installOn(this)
+                        }.gap(RightGap.SMALL)
+                        textField().bindText(state::dataDirectory).align(Align.FILL)
                     }
+                    row {
+                        label("Kubectl version").gap(RightGap.SMALL)
+                        icon(AllIcons.General.ContextHelp).applyToComponent {
+                            HelpTooltip().setDescription("The version of kubectl, empty means latest").installOn(this)
+                        }.gap(RightGap.SMALL)
+                        textField().bindText(state::kubectlVersion).align(Align.FILL)
+                    }.visibleIf(ComboBoxPredicate(comboBox, { v -> v != K8sJvmProviderConfig.AuthorizationType.BUILTIN }))
                 }
             }.visibleIf(predicate)
 

@@ -149,7 +149,7 @@ open class DefaultToolChainManager(
      */
     private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
-        val home = "${hostMachineConfig.dataDirectory}/pkg/${resolveFilename(pkgName)}"
+        val home = "${hostMachineConfig.dataDirectory}/pkg/${appendPriviligePrefix(pkgName)}"
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
@@ -170,20 +170,23 @@ open class DefaultToolChainManager(
         return home
     }
 
-    private fun resolveFilename(filename: String): String {
+    private fun appendPriviligePrefix(filename: String): String {
         return "${privilegePrefix}${filename}"
     }
 
     /**
      * 下载文件，提供委托实现
+     * @param url 下载路径
+     * @param filename 文件名称
      * @return 文件最终路径
      */
     private fun finalDownload(url: String, filename: String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
 
-        val dest = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/$filename"
+        val dest = "${hostMachineConfig.dataDirectory}/${DOWNLOAD_DIRECTORY}/${appendPriviligePrefix(filename)}"
         localDownloadProxy?.let {
-            val local = it.getHostMachineConfig().dataDirectory + "/${DOWNLOAD_DIRECTORY}/" + filename
+            // 下载到本地时不带权限标识, 方便离线安装
+            val local = "${it.getHostMachineConfig().dataDirectory}/${DOWNLOAD_DIRECTORY}/${filename}"
             localDownloadProxy.download(url, local)
             hostMachine
                 .transferFile(local, dest, ProgressIndicatorStack.currentIndicator())
@@ -199,11 +202,11 @@ open class DefaultToolChainManager(
     private fun finalDownload(
         asset: Asset,
     ): String {
-        return finalDownload(asset.browserDownloadUrl, resolveFilename(asset.name))
+        return finalDownload(asset.browserDownloadUrl, asset.name)
     }
 
 
-    override fun getToolChainHomePath(toolChain: ToolChain): String {
+    override fun getToolChainHomePath(toolChain: ToolChain, version: String?): String {
         initDirectories()
         return when (toolChain) {
             ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") { assets ->
@@ -235,7 +238,7 @@ open class DefaultToolChainManager(
                 "alibaba/arthas"
             ) { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
 
-            ToolChain.KUBECTL -> prepareKubectl()
+            ToolChain.KUBECTL -> prepareKubectl(version)
         }
     }
 
@@ -256,35 +259,31 @@ open class DefaultToolChainManager(
     }
 
 
-    private fun prepareKubectl(): String {
-        val httpGet = HttpGet("https://cdn.dl.k8s.io/release/stable.txt")
-        httpGet.config = RequestConfig.custom()
-            .setConnectTimeout(10000)
-            .setConnectionRequestTimeout(10000)
-            .setSocketTimeout(10000)
-            .build()
-
-        val version: String = httpClient.execute(httpGet).use { response ->
-            val body = EntityUtils.toString(response.entity, StandardCharsets.UTF_8)
-            if (response.statusLine.statusCode != HttpStatus.SC_OK) {
-                throw IllegalStateException("Failed to query latest version of kubernetes, body: $body")
+    private fun prepareKubectl(expectedVersion: String?): String {
+        val version: String = resolveKubectlVersion(expectedVersion)
+        val downloadUrl: String
+        val filename: String
+        when (hostMachine.getOS()) {
+            OS.WINDOWS -> {
+                downloadUrl = "https://dl.k8s.io/release/${version}/bin/windows/amd64/kubectl.exe"
+                filename = "kubectl.exe"
             }
-            body
-        }
-        val downloadUrl = when (hostMachine.getOS()) {
-            OS.WINDOWS -> "https://dl.k8s.io/release/${version}/bin/windows/amd64/kubectl.exe"
             OS.LINUX -> {
                 if (hostMachine.isArm()) {
-                    "https://dl.k8s.io/release/${version}/bin/linux/arm64/kubectl"
+                    downloadUrl = "https://dl.k8s.io/release/${version}/bin/linux/arm64/kubectl"
+                    filename = "kubectl-linux-arm"
                 } else {
-                    "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
+                    downloadUrl = "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
+                    filename = "kubectl-linux"
                 }
             }
 
-            OS.MAC -> "https://dl.k8s.io/release/${version}/bin/darwin/amd64/kubectl"
+            OS.MAC -> {
+                downloadUrl = "https://dl.k8s.io/release/${version}/bin/darwin/amd64/kubectl"
+                filename = "kubectl-darwin"
+            }
             else -> throw IllegalStateException("Unknown OS")
         }
-        val filename = resolveFilename(downloadUrl.substringAfterLast('/'))
         val finalFilePath = "${hostMachine.getHostMachineConfig().dataDirectory}/pkg/$filename"
         if (hostMachine.isFileExist(finalFilePath)) {
             return finalFilePath
@@ -296,6 +295,27 @@ open class DefaultToolChainManager(
             hostMachine.execute("chmod", "u+x", finalFilePath).ok()
         }
         return finalFilePath
+    }
+
+    private fun resolveKubectlVersion(version: String?): String {
+        if (!version.isNullOrBlank()) {
+            return version
+        }
+        val httpGet = HttpGet("https://cdn.dl.k8s.io/release/stable.txt")
+        httpGet.config = RequestConfig.custom()
+            .setConnectTimeout(2000)
+            .setConnectionRequestTimeout(2000)
+            .setSocketTimeout(2000)
+            .build()
+
+        val version: String = httpClient.execute(httpGet).use { response ->
+            val body = EntityUtils.toString(response.entity, StandardCharsets.UTF_8)
+            if (response.statusLine.statusCode != HttpStatus.SC_OK) {
+                throw IllegalStateException("Failed to query latest version of kubernetes, body: $body")
+            }
+            return@use body
+        }
+        return version
     }
 
     private fun fetchLatestData(pkg: String): ApiData {
