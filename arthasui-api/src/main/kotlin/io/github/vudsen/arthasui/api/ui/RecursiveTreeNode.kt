@@ -13,9 +13,10 @@ interface RecursiveTreeNode {
      * 刷新当前根节点.
      *
      * **该方法可能会阻塞线程**, 实现类应该在合适的地方检查 [com.intellij.openapi.progress.ProgressManager.checkCanceled] 的状态以停止任务
+     * @param force 强制刷新，若该值为 false，除了第一次调用会刷新节点，后续操作都不会更新
      * @return 当前节点自己, 需要更新所有子节点的值，每次返回的根节点必须是同一个实例.
      */
-    fun refreshRootNode(): DefaultMutableTreeNode
+    fun refreshRootNode(force: Boolean): DefaultMutableTreeNode
 
     /**
      * 渲染当前节点

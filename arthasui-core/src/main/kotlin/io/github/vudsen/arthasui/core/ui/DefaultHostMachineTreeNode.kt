@@ -29,8 +29,6 @@ open class DefaultHostMachineTreeNode(
 
     protected val ctx: TreeNodeContext
 
-    private var root: JComponent? = null
-
     init {
         val factory = service<HostMachineConnectManager>()
         val hostMachine = factory.connect(config)
@@ -63,18 +61,14 @@ open class DefaultHostMachineTreeNode(
         return result
     }
 
+    override fun getIcon(): Icon {
+        return config.connect.getIcon()
+    }
 
-    override fun render(tree: JTree): JComponent {
-        root?.let { return it }
-        val root = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
-            add(JLabel(config.connect.getIcon()))
-            add(JLabel(config.name).apply {
-                border = BorderFactory.createEmptyBorder(0, 4, 0, 0)
-            })
+    override fun resolveText(): JLabel {
+        return JLabel(config.name).apply {
+            border = BorderFactory.createEmptyBorder(0, 4, 0, 0)
         }
-
-        this.root = root
-        return root
     }
 
     override fun getTopRootNode(): RecursiveTreeNode {
