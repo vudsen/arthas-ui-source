@@ -1,6 +1,7 @@
 package io.github.vudsen.arthasui.bridge.providers
 
 import com.intellij.openapi.Disposable
+import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.bean.UIContext
 import io.github.vudsen.arthasui.api.conf.HostMachineConfig
 import io.github.vudsen.arthasui.api.conf.HostMachineConnectConfig
@@ -46,8 +47,9 @@ class SshHostMachineConnectProvider : HostMachineConnectProvider, Disposable {
         return SshHostMachineConnectConfig::class.java
     }
 
-    override fun isCloseableHostMachine(): Boolean {
-        return true
+
+    override fun getConnectionClassForLazyLoad(): Class<out HostMachine> {
+        return SshLinuxHostMachineImpl::class.java
     }
 
     override fun dispose() {

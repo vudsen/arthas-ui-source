@@ -100,7 +100,6 @@ class PluginTest  {
                 )
                 tree.doubleClickRow(1)
                 tree.doubleClickRow(2)
-                tree.doubleClickRow(2)
                 tree.doubleClickRow(3)
                 testArthasRunning()
 
@@ -119,7 +118,6 @@ class PluginTest  {
         tree.doubleClickRow(row)
         for (spin in 0..20) {
             try {
-                tree.doubleClickRow(row)
                 if (tree.collectExpandedPaths().size != currentSize) {
                     return
                 }

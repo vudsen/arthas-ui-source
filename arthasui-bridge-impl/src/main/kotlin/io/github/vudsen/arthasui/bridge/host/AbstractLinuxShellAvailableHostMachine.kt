@@ -1,10 +1,8 @@
 package io.github.vudsen.arthasui.bridge.host
 
-import ai.grazie.utils.data.ValueDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
-import com.intellij.util.io.delete
 import io.github.vudsen.arthasui.api.HostMachine
 import io.github.vudsen.arthasui.api.OS
 import io.github.vudsen.arthasui.api.bean.CommandExecuteResult
@@ -13,9 +11,6 @@ import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.SshLinuxHostMachineImpl.Companion.logger
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import java.io.BufferedReader
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import kotlin.io.path.absolutePathString
 
 abstract class AbstractLinuxShellAvailableHostMachine : ShellAvailableHostMachine {
 

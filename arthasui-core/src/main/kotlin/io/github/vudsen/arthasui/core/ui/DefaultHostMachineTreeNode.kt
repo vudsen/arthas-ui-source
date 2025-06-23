@@ -31,7 +31,9 @@ open class DefaultHostMachineTreeNode(
 
     init {
         val factory = service<HostMachineConnectManager>()
-        val hostMachine = factory.connect(config)
+        val hostMachine by lazy {
+            factory.connect(config)
+        }
         ctx = TreeNodeContext(hostMachine, this, project, config, tree)
     }
 

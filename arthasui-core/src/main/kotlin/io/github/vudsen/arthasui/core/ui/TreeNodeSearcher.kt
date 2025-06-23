@@ -43,8 +43,8 @@ class TreeNodeSearcher(
         return delegate.getIcon()
     }
 
-    override fun resolveText(): String {
-        return delegate.getName()
+    override fun resolveText(): JLabel {
+        return JLabel(delegate.getName())
     }
 
     override fun equals(other: Any?): Boolean {

@@ -12,7 +12,7 @@ class ToolWindowMouseAdapter(private val toolwindow: ToolWindowTree) : MouseAdap
             if (uo is TreeNodeJVM) {
                 toolwindow.tryOpenQueryConsole()
             } else {
-                toolwindow.launchRefreshNodeTask(uo)
+                toolwindow.launchRefreshNodeTask(uo, false)
             }
         }
     }

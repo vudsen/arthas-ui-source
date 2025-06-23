@@ -16,7 +16,9 @@ interface HostMachineConnectProvider {
     fun getName(): String
 
 
-
+    /**
+     * 创建表达
+     */
     fun createForm(oldEntity: HostMachineConnectConfig?, parentDisposable: Disposable): FormComponent<HostMachineConnectConfig>
 
 
@@ -32,8 +34,8 @@ interface HostMachineConnectProvider {
     fun getConfigClass(): Class<out HostMachineConnectConfig>
 
     /**
-     * 宿主机是否可以被关闭. 当该值返回 true 时，[getConfigClass] 应该返回 [CloseableHostMachine]
+     * 获取最终连接的类, 若返回值非空，表示该 Provider 创建的宿主机需要关闭
      */
-    fun isCloseableHostMachine(): Boolean
+    fun getConnectionClassForLazyLoad(): Class<out HostMachine>?
 
 }

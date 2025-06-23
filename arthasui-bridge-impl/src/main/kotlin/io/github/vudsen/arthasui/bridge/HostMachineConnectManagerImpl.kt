@@ -11,7 +11,6 @@ import io.github.vudsen.arthasui.api.extension.HostMachineConnectProvider
 import io.github.vudsen.arthasui.api.extension.HostMachineConnectManager
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 import io.github.vudsen.arthasui.bridge.host.AbstractLinuxShellAvailableHostMachine
-import io.github.vudsen.arthasui.bridge.host.CloseableHostMachineFallback
 import io.github.vudsen.arthasui.bridge.providers.LocalHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.SshHostMachineConnectProvider
 import io.github.vudsen.arthasui.bridge.providers.tunnel.TunnelServerConnectProvider
@@ -69,14 +68,13 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
         logger.info("Connecting to $config")
         val provider = getProvider(config.connect)
 
-        val connect = provider.connect(config)
-        if (connect is CloseableHostMachine) {
-            return wrapCloseableHostMachine(connect, provider, config)
+        provider.getConnectionClassForLazyLoad()?.let {
+            return wrapCloseableHostMachine(it, provider, config)
         }
-        return connect
+        return provider.connect(config)
     }
 
-    private fun wrapCloseableHostMachine(hostMachine: CloseableHostMachine, provider: HostMachineConnectProvider, config: HostMachineConfig): CloseableHostMachine {
+    private fun wrapCloseableHostMachine(clazz: Class<out HostMachine>, provider: HostMachineConnectProvider, config: HostMachineConfig): CloseableHostMachine {
         cache[config.connect] ?.let {
             logger.info("Return cached instance for connect config ${config}.")
             return it
@@ -84,15 +82,16 @@ class HostMachineConnectManagerImpl : HostMachineConnectManager {
 
         synchronized(config) {
             cache[config.connect] ?.let { return it }
-            val interfaces = if (hostMachine is AbstractLinuxShellAvailableHostMachine) {
-                arrayOf(*hostMachine::class.java.interfaces, ShellAvailableHostMachine::class.java)
+            val superclass = clazz.superclass
+            val interfaces = if (superclass == AbstractLinuxShellAvailableHostMachine::class.java) {
+                arrayOf(*clazz.interfaces, ShellAvailableHostMachine::class.java)
             } else {
-                hostMachine::class.java.interfaces
+                clazz.interfaces
             }
             val instance = Proxy.newProxyInstance(
                 HostMachineConnectManagerImpl::class.java.classLoader,
                 interfaces,
-                PooledResource<CloseableHostMachine>(hostMachine, CloseableHostMachineFallback(config)) {
+                PooledResource<CloseableHostMachine> {
                     return@PooledResource provider.connect(config) as CloseableHostMachine
                 }
             ) as CloseableHostMachine

@@ -7,7 +7,7 @@ class ToolWindowExpandListener(private val toolwindow: ToolWindowTree) : TreeExp
 
     override fun treeExpanded(event: TreeExpansionEvent?) {
         val uo = toolwindow.currentFocusedNode() ?: return
-        toolwindow.launchRefreshNodeTask(uo)
+        toolwindow.launchRefreshNodeTask(uo, false)
     }
 
     override fun treeCollapsed(event: TreeExpansionEvent?) {

@@ -68,7 +68,7 @@ class ToolWindowTree(val project: Project) : Disposable {
     /**
      * 刷新某个一个节点
      */
-    fun launchRefreshNodeTask(node: RecursiveTreeNode) {
+    fun launchRefreshNodeTask(node: RecursiveTreeNode, force: Boolean) {
         if (isRunning) {
             return
         }
@@ -82,7 +82,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             override fun run(indicator: ProgressIndicator) {
                 ProgressIndicatorStack.push(indicator)
                 try {
-                    node.refreshRootNode(false)
+                    node.refreshRootNode(force)
                 } finally {
                     ProgressIndicatorStack.pop()
                 }
@@ -92,8 +92,13 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun onThrowable(error: Throwable) {
-                logger.error(error)
-                Messages.showErrorDialog(project, error.message, "Load Failed")
+                logger.error("Failed to load nodes", error)
+                val actualMsg = if (error.message == null) {
+                    error.cause?.message
+                } else {
+                    error.message
+                }
+                Messages.showErrorDialog(project, actualMsg, "Load Failed")
             }
         })
     }
