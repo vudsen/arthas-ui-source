@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.5.0 - 2025-06-24
+
+- feat: 支持 tunnel server #40
+- refactor: 移除协程，优化代码性能 #41
+- feat: 支持 K8s #42
+- ci: K8s 集成测试 #43
+- ci: UI 测试 #44
+- refactor: 重构 K8s 连接实现 #45
+- fix: 创建默认配置时会在 #46
+- feat: 手动安装支持 #47
+- feat: 优化工具栏交互体验 #48
+
 ## 0.4.2 - 2025-05-07
 
 - fix: 连接时报 unknown error #38
