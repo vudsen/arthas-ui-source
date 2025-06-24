@@ -10,11 +10,6 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 
 class PooledResource<T : AutoCloseableWithState>(
-    initialInstance: T?,
-    /**
-     * 若资源还未被创建，并且调用的方法被忽略时，将会调用该对象的方法
-     */
-    private val fallback: T,
     private val factory: Factory<T>,
 ) : InvocationHandler {
 
@@ -22,12 +17,6 @@ class PooledResource<T : AutoCloseableWithState>(
 
     private val connectionManager = service<HostMachineConnectionManager>()
 
-    init {
-        initialInstance ?.let {
-            val managedInstance = connectionManager.register(it)
-            this.delegate = WeakReference(managedInstance)
-        }
-    }
 
     override fun invoke(
         proxy: Any,

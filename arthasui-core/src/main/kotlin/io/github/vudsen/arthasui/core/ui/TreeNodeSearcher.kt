@@ -25,7 +25,7 @@ class TreeNodeSearcher(
         jvmList.result ?.let {
             val result = ArrayList<AbstractRecursiveTreeNode>(it.size)
             for (jvm in it) {
-                result.add(TreeNodeJVM(ctx.root, providerConfig, jvm, this))
+                result.add(TreeNodeJVM(providerConfig, jvm, ctx))
             }
             return result
         }
@@ -39,6 +39,14 @@ class TreeNodeSearcher(
         return emptyList()
     }
 
+    override fun getIcon(): Icon {
+        return delegate.getIcon()
+    }
+
+    override fun resolveText(): JLabel {
+        return JLabel(delegate.getName())
+    }
+
     override fun equals(other: Any?): Boolean {
         return delegate == other
     }
@@ -49,15 +57,6 @@ class TreeNodeSearcher(
 
     override fun toString(): String {
         return delegate.getName()
-    }
-
-    override fun render(tree: JTree): JComponent {
-        return JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
-            add(JLabel(delegate.getIcon()))
-            add(JLabel(delegate.getName()).apply {
-                border = BorderFactory.createEmptyBorder(0, 8, 0, 0)
-            })
-        }
     }
 
     override fun getTopRootNode(): RecursiveTreeNode {

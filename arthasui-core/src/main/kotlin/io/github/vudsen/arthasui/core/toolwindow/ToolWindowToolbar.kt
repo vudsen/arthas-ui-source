@@ -26,7 +26,7 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
         private val debounce = (ConcurrentSet <CloseableTreeNode>())
 
         override fun getActionUpdateThread(): ActionUpdateThread {
-            return ActionUpdateThread.EDT
+            return ActionUpdateThread.BGT
         }
 
         override fun actionPerformed(e: AnActionEvent) {
@@ -79,9 +79,9 @@ class ToolWindowToolbar(private val toolWindow: ToolWindowTree)  {
 
             override fun actionPerformed(e: AnActionEvent) {
                 toolWindow.currentFocusedNode() ?.let {
-                    toolWindow.launchRefreshNodeTask(it)
+                    toolWindow.launchRefreshNodeTask(it, true)
                 } ?: let {
-                    toolWindow.refreshRootNode()
+                    toolWindow.refreshRootNode(true)
                 }
             }
 

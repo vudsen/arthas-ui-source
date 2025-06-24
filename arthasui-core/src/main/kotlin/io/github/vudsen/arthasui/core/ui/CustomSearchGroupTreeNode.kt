@@ -21,7 +21,7 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
 
     private fun mapToJvmNode(jvm: JVM): TreeNodeJVM {
         val provider = service<JvmProviderManager>().findProviderByJvm(ctx.config.providers, jvm) ?: TODO("Tip user that this type is not configured")
-        return TreeNodeJVM(ctx.root, provider, jvm, this)
+        return TreeNodeJVM(provider, jvm, ctx)
     }
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
@@ -37,16 +37,14 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
         }
     }
 
-
-
-    override fun render(tree: JTree): JComponent {
-        return JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
-            add(JLabel(ArthasUIIcons.Script))
-            add(JLabel(group.name).apply {
-                border = BorderFactory.createEmptyBorder(0, 4, 0, 0)
-            })
-        }
+    override fun getIcon(): Icon {
+        return ArthasUIIcons.Script
     }
+
+    override fun resolveText(): JLabel {
+        return JLabel(group.name)
+    }
+
 
     override fun getTopRootNode(): RecursiveTreeNode {
         return ctx.root

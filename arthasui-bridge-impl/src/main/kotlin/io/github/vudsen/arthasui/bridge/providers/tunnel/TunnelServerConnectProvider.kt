@@ -33,7 +33,8 @@ class TunnelServerConnectProvider : HostMachineConnectProvider {
         return TunnelServerConnectConfig::class.java
     }
 
-    override fun isCloseableHostMachine(): Boolean {
-        return false
+
+    override fun getConnectionClassForLazyLoad(): Class<out HostMachine>? {
+        return null
     }
 }

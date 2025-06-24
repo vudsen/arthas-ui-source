@@ -46,7 +46,7 @@ class ToolWindowTree(val project: Project) : Disposable {
 
     private val updateListener =  {
         ApplicationManager.getApplication().invokeLater {
-            refreshRootNode()
+            refreshRootNode(true)
         }
     }
 
@@ -54,10 +54,11 @@ class ToolWindowTree(val project: Project) : Disposable {
         tree.setCellRenderer(ToolWindowTreeCellRenderer())
         tree.addMouseListener(ToolWindowRightClickHandler(this))
         tree.addMouseListener(ToolWindowMouseAdapter(this))
+        tree.addTreeExpansionListener(ToolWindowExpandListener(this))
 
         service<ArthasUISettingsPersistent>().addUpdatedListener(updateListener)
         tree.minimumSize = Dimension(301, tree.minimumSize.height)
-        refreshRootNode()
+        refreshRootNode(false)
         tree.expandRow(0)
         tree.isRootVisible = false
     }
@@ -67,7 +68,7 @@ class ToolWindowTree(val project: Project) : Disposable {
     /**
      * 刷新某个一个节点
      */
-    fun launchRefreshNodeTask(node: RecursiveTreeNode) {
+    fun launchRefreshNodeTask(node: RecursiveTreeNode, force: Boolean) {
         if (isRunning) {
             return
         }
@@ -75,14 +76,13 @@ class ToolWindowTree(val project: Project) : Disposable {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Load arthas nodes", true) {
 
             override fun onFinished() {
-                super.onFinished()
                 isRunning = false
             }
 
             override fun run(indicator: ProgressIndicator) {
                 ProgressIndicatorStack.push(indicator)
                 try {
-                    node.refreshRootNode()
+                    node.refreshRootNode(force)
                 } finally {
                     ProgressIndicatorStack.pop()
                 }
@@ -92,8 +92,13 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun onThrowable(error: Throwable) {
-                logger.error(error)
-                Messages.showErrorDialog(project, error.message, "Load Failed")
+                logger.error("Failed to load nodes", error)
+                val actualMsg = if (error.message == null) {
+                    error.cause?.message
+                } else {
+                    error.message
+                }
+                Messages.showErrorDialog(project, actualMsg, "Load Failed")
             }
         })
     }
@@ -101,7 +106,7 @@ class ToolWindowTree(val project: Project) : Disposable {
     /**
      * 刷新根节点
      */
-    fun refreshRootNode() {
+    fun refreshRootNode(force: Boolean) {
         val persistent = service<ArthasUISettingsPersistent>()
 
         for (child in rootModel.children()) {
@@ -120,7 +125,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             } else {
                 node = DefaultHostMachineTreeNode(hostMachineConfig, project, tree)
             }
-            rootModel.add(node.refreshRootNode())
+            rootModel.add(node.refreshRootNode(force))
         }
         tree.model = DefaultTreeModel(rootModel)
         tree.updateUI()
@@ -135,42 +140,37 @@ class ToolWindowTree(val project: Project) : Disposable {
         if (node !is TreeNodeJVM) {
             return
         }
-        node.loading = true
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Ensure JVM is alive", true) {
 
             override fun run(indicator: ProgressIndicator) {
-                try {
-                    val provider = service<JvmProviderManager>().getProvider(node.jvm.context.providerConfig)
-                    if (provider.isJvmInactive(node.jvm)) {
-                        ApplicationManager.getApplication().invokeLater {
-                            Messages.showWarningDialog(project, "Jvm ${node.jvm.name} is not active, please refresh and try again!", "Jvm Not Available")
-                        }
-                        return
-                    }
-
-                    val fileEditorManager = FileEditorManager.getInstance(project)
-
-                    fileEditorManager.allEditors.find { e -> e.file.fileType == ArthasFileType && e.file.name == node.jvm.name } ?.let {
-                        ApplicationManager.getApplication().invokeLater {
-                            fileEditorManager.openFile(it.file, true, true)
-                        }
-                        return
-                    }
-
-                    val lightVirtualFile = LightVirtualFile(node.jvm.name, ArthasFileType, "")
-                    lightVirtualFile.putUserData(
-                        ArthasExecutionManager.VF_ATTRIBUTES,
-                        VirtualFileAttributes(
-                            node.jvm,
-                            (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
-                            node.providerConfig)
-                    )
+                val provider = service<JvmProviderManager>().getProvider(node.jvm.context.providerConfig)
+                if (provider.isJvmInactive(node.jvm)) {
                     ApplicationManager.getApplication().invokeLater {
-                        fileEditorManager.openFile(lightVirtualFile, true)
+                        Messages.showWarningDialog(project, "Jvm ${node.jvm.name} is not active, please refresh and try again!", "Jvm Not Available")
                     }
-                } finally {
-                    node.loading = false
+                    return
+                }
+
+                val fileEditorManager = FileEditorManager.getInstance(project)
+
+                fileEditorManager.allEditors.find { e -> e.file.fileType == ArthasFileType && e.file.name == node.jvm.name } ?.let {
+                    ApplicationManager.getApplication().invokeLater {
+                        fileEditorManager.openFile(it.file, true, true)
+                    }
+                    return
+                }
+
+                val lightVirtualFile = LightVirtualFile(node.jvm.name, ArthasFileType, "")
+                lightVirtualFile.putUserData(
+                    ArthasExecutionManager.VF_ATTRIBUTES,
+                    VirtualFileAttributes(
+                        node.jvm,
+                        (node.getTopRootNode() as DefaultHostMachineTreeNode).getConnectConfig(),
+                        node.providerConfig)
+                )
+                ApplicationManager.getApplication().invokeLater {
+                    fileEditorManager.openFile(lightVirtualFile, true)
                 }
             }
 

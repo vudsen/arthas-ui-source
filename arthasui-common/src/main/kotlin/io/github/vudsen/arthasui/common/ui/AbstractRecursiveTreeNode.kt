@@ -1,7 +1,15 @@
 package io.github.vudsen.arthasui.common.ui
 
+import com.intellij.ui.AnimatedIcon
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
+import java.awt.FlowLayout
 import java.util.*
+import javax.swing.BorderFactory
+import javax.swing.Icon
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 /**
@@ -9,9 +17,13 @@ import javax.swing.tree.DefaultMutableTreeNode
  */
 abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
 
-    private val root: DefaultMutableTreeNode by lazy {
-        DefaultMutableTreeNode(this)
+    private val root: FakeExpandableTreeNode by lazy {
+        FakeExpandableTreeNode(this)
     }
+
+    private var isLoading = false
+
+    private var isInitialized = false
 
     /**
      * 刷新子节点，返回所有新的子节点.
@@ -20,9 +32,46 @@ abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
      */
     protected abstract fun refresh(): List<AbstractRecursiveTreeNode>
 
-    override fun refreshRootNode(): DefaultMutableTreeNode {
-        replace(refresh())
+    /**
+     * 获取当前要渲染的图标
+     */
+    protected abstract fun getIcon(): Icon
+
+    /**
+     * 获取要显示的文字
+     */
+    protected abstract fun resolveText(): JLabel
+
+    /**
+     * 需要处理的范围:
+     * 1. 第一次显示时，子节点未加载，用户单击展开图标或双击节点
+     * 2. 用户点击刷新按钮
+     */
+    override fun refreshRootNode(force: Boolean): DefaultMutableTreeNode {
+        if (!force && isInitialized) {
+            return root
+        }
+        isLoading = true
+        try {
+            replace(refresh())
+            isInitialized = true
+        } finally {
+            isLoading = false
+        }
         return root
+    }
+
+
+    override fun render(tree: JTree): JComponent {
+        return JPanel(FlowLayout(FlowLayout.LEFT)).apply {
+            if (isLoading) {
+                add(JLabel(AnimatedIcon.Default.INSTANCE))
+            } else {
+                add(JLabel(getIcon()))
+            }
+            add(resolveText())
+            border = BorderFactory.createEmptyBorder(0, -5, 0, 0)
+        }
     }
 
     /**
@@ -31,6 +80,7 @@ abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
     private fun replace(childValues: List<AbstractRecursiveTreeNode>) {
         if (childValues.isEmpty()) {
             root.removeAllChildren()
+            root.isLeaf = true
             return
         }
         // 对于 [childValues], 找到在 [root] 中相同的对象，然后放到新数组中
@@ -55,6 +105,7 @@ abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
         for (defaultMutableTreeNode in replace) {
             root.add(defaultMutableTreeNode)
         }
+        root.isLeaf = false
     }
 
     abstract override fun equals(other: Any?): Boolean
