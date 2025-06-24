@@ -11,8 +11,6 @@ class ToolWindowMouseAdapter(private val toolwindow: ToolWindowTree) : MouseAdap
         if (e.clickCount == 2) {
             if (uo is TreeNodeJVM) {
                 toolwindow.tryOpenQueryConsole()
-            } else {
-                toolwindow.launchRefreshNodeTask(uo, false)
             }
         }
     }

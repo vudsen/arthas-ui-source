@@ -23,7 +23,7 @@ class TreeNodeJVM(
 
     override fun resolveText(): JLabel {
         val label = JLabel()
-        label.text = jvm.id + shortenTextWithEllipsis(
+        label.text = jvm.id + ' ' + shortenTextWithEllipsis(
             jvm.name,
             4,
             10,
