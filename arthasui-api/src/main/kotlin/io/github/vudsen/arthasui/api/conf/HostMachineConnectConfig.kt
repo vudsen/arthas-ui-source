@@ -18,12 +18,6 @@ abstract class HostMachineConnectConfig(
      */
     abstract fun getOS(): OS
 
-    /**
-     * 是否需要主动关闭
-     */
-    open fun isRequireClose(): Boolean {
-        return false
-    }
 
     abstract override fun equals(other: Any?): Boolean
 

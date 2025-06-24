@@ -40,9 +40,6 @@ class SshHostMachineConnectConfig(
         return os
     }
 
-    override fun isRequireClose(): Boolean {
-        return true
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

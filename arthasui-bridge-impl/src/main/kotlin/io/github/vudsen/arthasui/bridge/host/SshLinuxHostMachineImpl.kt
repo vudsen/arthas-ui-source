@@ -44,6 +44,8 @@ class SshLinuxHostMachineImpl(
 
     private val connectConfig = config.connect as SshHostMachineConnectConfig
 
+    private var interactiveShellActiveCount = 0
+
     companion object {
         val logger = Logger.getInstance(SshLinuxHostMachineImpl::class.java)
 
@@ -108,6 +110,10 @@ class SshLinuxHostMachineImpl(
         return session.isClosed
     }
 
+    override fun isCloseable(): Boolean {
+        return interactiveShellActiveCount == 0
+    }
+
     override fun close() {
         session.close()
         logger.info("Connection closed: ${connectConfig.ssh.host}")
@@ -140,11 +146,14 @@ class SshLinuxHostMachineImpl(
         channel.out = outputStream
 
         channel.isRedirectErrorStream = true
+        interactiveShellActiveCount++
+        channel.addCloseFutureListener { future ->
+            interactiveShellActiveCount--
+        }
         val future = channel.open()
         while (!future.await(1, TimeUnit.SECONDS)) {
             ProgressManager.checkCanceled()
         }
-
         return SshInteractiveShell(channel, inputStream, channel.invertedIn)
     }
 

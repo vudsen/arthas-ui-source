@@ -17,13 +17,11 @@ import com.intellij.ui.treeStructure.Tree
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
 import io.github.vudsen.arthasui.api.extension.JvmProviderManager
-import io.github.vudsen.arthasui.api.ui.CloseableTreeNode
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
-import io.github.vudsen.arthasui.core.ui.DefaultCloseableTreeNode
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
 import java.awt.Dimension
@@ -34,7 +32,6 @@ import javax.swing.tree.DefaultTreeModel
 /**
  * ToolWindow 界面。所有的子节点必须实现 [RecursiveTreeNode]. 根节点可以选择实现:
  *
- * - [CloseableTreeNode] : 用于表示节点可以被关闭
  */
 class ToolWindowTree(val project: Project) : Disposable {
 
@@ -109,22 +106,9 @@ class ToolWindowTree(val project: Project) : Disposable {
     fun refreshRootNode(force: Boolean) {
         val persistent = service<ArthasUISettingsPersistent>()
 
-        for (child in rootModel.children()) {
-            val treeNode = child as DefaultMutableTreeNode
-            val uo = treeNode.userObject
-            if (uo is CloseableTreeNode) {
-                Disposer.dispose(uo)
-            }
-        }
         rootModel.removeAllChildren()
         for (hostMachineConfig in persistent.state.hostMachines) {
-            val node: AbstractRecursiveTreeNode
-            if (hostMachineConfig.connect.isRequireClose()) {
-                node = DefaultCloseableTreeNode(hostMachineConfig, project, tree)
-                Disposer.register(this, node)
-            } else {
-                node = DefaultHostMachineTreeNode(hostMachineConfig, project, tree)
-            }
+            val node: AbstractRecursiveTreeNode = DefaultHostMachineTreeNode(hostMachineConfig, project, tree)
             rootModel.add(node.refreshRootNode(force))
         }
         tree.model = DefaultTreeModel(rootModel)

@@ -14,9 +14,7 @@ import io.github.vudsen.arthasui.api.toolchain.ToolChain
 import io.github.vudsen.arthasui.api.ui.FormComponent
 import io.github.vudsen.arthasui.bridge.ArthasBridgeImpl
 import io.github.vudsen.arthasui.bridge.conf.LocalJvmProviderConfig
-import io.github.vudsen.arthasui.bridge.conf.SshHostMachineConnectConfig
 import io.github.vudsen.arthasui.bridge.factory.ToolChainManagerUtil
-import io.github.vudsen.arthasui.bridge.toolchain.DefaultToolChainManager
 import io.github.vudsen.arthasui.bridge.ui.LocalJvmProviderForm
 import io.github.vudsen.arthasui.common.ArthasUIIcons
 import org.apache.commons.net.telnet.TelnetClient
@@ -161,7 +159,7 @@ class LocalJvmProvider : JvmProvider {
     }
 
     override fun isJvmInactive(jvm: JVM): Boolean {
-        return searchJvm(jvm.context.template, jvm.context.providerConfig).result?.find { v -> v.id == jvm.id } == null
+        return searchJvm(jvm.context.hostMachine, jvm.context.providerConfig).result?.find { v -> v.id == jvm.id } == null
     }
 
     override fun tryCreateDefaultConfiguration(hostMachine: HostMachine): JvmProviderConfig {

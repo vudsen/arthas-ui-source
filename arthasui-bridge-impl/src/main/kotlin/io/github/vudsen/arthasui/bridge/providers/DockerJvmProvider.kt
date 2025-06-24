@@ -117,7 +117,7 @@ class DockerJvmProvider : JvmProvider {
     }
 
     override fun isJvmInactive(jvm: JVM): Boolean {
-        val hostMachine = jvm.context.template
+        val hostMachine = jvm.context.hostMachine
         if (hostMachine !is ShellAvailableHostMachine) {
             return false
         }

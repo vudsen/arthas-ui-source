@@ -35,7 +35,7 @@ class TunnelServerJvmProvider : JvmProvider {
         jvm: JVM,
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
-        return TunnelServerArthasBridgeFactory(jvm.context.template.getHostMachineConfig().connect as TunnelServerConnectConfig, jvm as TunnelServerJvm)
+        return TunnelServerArthasBridgeFactory(jvm.context.hostMachine.getHostMachineConfig().connect as TunnelServerConnectConfig, jvm as TunnelServerJvm)
     }
 
     override fun createForm(
@@ -57,7 +57,7 @@ class TunnelServerJvmProvider : JvmProvider {
         if (jvm !is TunnelServerJvm) {
             return true
         }
-        val hostMachine = jvm.context.template as TunnelServerHostMachine
+        val hostMachine = jvm.context.hostMachine as TunnelServerHostMachine
         val appName = jvm.id.substringBefore('_')
         if (appName.isEmpty()) {
             return true

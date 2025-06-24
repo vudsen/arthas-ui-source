@@ -50,7 +50,7 @@ class K8sJvmProvider : JvmProvider {
         jvmProviderConfig: JvmProviderConfig
     ): ArthasBridgeFactory {
         return ArthasBridgeFactory {
-            val hostMachine = jvm.context.template as ShellAvailableHostMachine
+            val hostMachine = jvm.context.hostMachine as ShellAvailableHostMachine
             val k8sPodHostMachine = K8sPodHostMachine(jvm as PodJvm, jvmProviderConfig as K8sJvmProviderConfig, hostMachine)
 
             val toolChainManager = DefaultToolChainManager(
@@ -104,7 +104,7 @@ class K8sJvmProvider : JvmProvider {
 
     override fun isJvmInactive(jvm: JVM): Boolean {
         jvm as PodJvm
-        val hostMachine = jvm.context.template as ShellAvailableHostMachine
+        val hostMachine = jvm.context.hostMachine as ShellAvailableHostMachine
         val client = KubectlClient(hostMachine, jvm.context.providerConfig as K8sJvmProviderConfig, jvm.containerName)
 
         return client.execute("get", "pod/${jvm.name}", "-n", jvm.namespace).exitCode != 0
