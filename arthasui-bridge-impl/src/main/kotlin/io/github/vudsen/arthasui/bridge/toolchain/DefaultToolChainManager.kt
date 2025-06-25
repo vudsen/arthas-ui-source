@@ -106,7 +106,7 @@ open class DefaultToolChainManager(
     private fun searchPkg(search: String): String? {
         val files = hostMachine.listFiles(getDownloadDirectory())
         for (file in files) {
-            if (file.contains(search) && (file.endsWith("zip") || file.endsWith("tgz") || file.endsWith("tar.gz"))) {
+            if (file.contains(search)) {
                 if (file.startsWith(privilegePrefix)) {
                     return "${getDownloadDirectory()}/$file"
                 }
@@ -123,16 +123,15 @@ open class DefaultToolChainManager(
         if (!target.endsWith(".zip")) {
             throw IllegalStateException("Can't exact $target: no toolchain available.")
         }
-        val home = preparePackage("punzip", "ybirader/pzip") { assets ->
+        val home = preparePackage("punzip", "ybirader/pzip") {
             when (hostMachine.getHostMachine().getOS()) {
                 OS.LINUX -> {
                     if (hostMachine.isArm()) {
-                        assets.find { a -> a.name == "punzip_Linux_arm64.tar.gz" }
+                        "punzip_Linux_arm64.tar.gz"
                     } else {
-                        assets.find { a -> a.name == "punzip_Linux_x86_64.tar.gz" }
+                        "punzip_Linux_x86_64.tar.gz"
                     }
                 }
-
                 else -> {
                     // Linux 和 MacOS 只允许本地连接，可以直接依靠 java 自身功能解压.
                     throw IllegalStateException("Unreachable code.")
@@ -145,19 +144,23 @@ open class DefaultToolChainManager(
 
     /**
      * 准备工具
+     * @param pkgName 最终要保存的包名
+     * @param repo 要使用的仓库
+     * @param pkgNameSupplier 使用要使用的包，当等于返回值的字符串时，将会使用该包
      * @return 工具的 home 目录
      */
-    private fun preparePackage(pkgName: String, repo: String, pickAsset: (assets: List<Asset>) -> Asset?): String {
+    private fun preparePackage(pkgName: String, repo: String, pkgNameSupplier: () -> String): String {
         val hostMachineConfig = hostMachine.getHostMachineConfig()
         val home = "${hostMachineConfig.dataDirectory}/pkg/${appendPriviligePrefix(pkgName)}"
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
-        val target: String = searchPkg(pkgName) ?: let {
-            val asset = pickAsset(fetchLatestData(repo).assets) ?: throw IllegalStateException(
+        val expected = appendPriviligePrefix(pkgNameSupplier())
+        val target: String = searchPkg(expected) ?: let {
+            val asset = fetchLatestData(repo).assets.find { asset -> asset.name == expected } ?: throw IllegalStateException(
                 "No suitable asset found for ${repo}, os is: ${
                     hostMachine.getHostMachine().getOS()
-                }, arm: ${hostMachine.isArm()}"
+                }, arm: ${hostMachine.isArm()}, expected package name:: ${expected}"
             )
             finalDownload(asset)
         }
@@ -209,24 +212,21 @@ open class DefaultToolChainManager(
     override fun getToolChainHomePath(toolChain: ToolChain, version: String?): String {
         initDirectories()
         return when (toolChain) {
-            ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") { assets ->
+            ToolChain.JATTACH_BUNDLE -> preparePackage("jattach", "jattach/jattach") {
                 when (hostMachine.getHostMachine().getOS()) {
                     OS.LINUX -> {
                         if (hostMachine.isArm()) {
-                            assets.find { v -> v.name.endsWith("arm64.tgz") }
+                            return@preparePackage "jattach-linux-arm64.tgz"
                         } else {
-                            assets.find { v -> v.name.endsWith("x64.tgz") }
+                            return@preparePackage "jattach-linux-x64.tgz"
                         }
                     }
-
                     OS.WINDOWS -> {
-                        assets.find { v -> v.name.endsWith("windows.zip") }
+                        return@preparePackage "jattach-windows.zip"
                     }
-
                     OS.MAC -> {
-                        assets.find { v -> v.name.endsWith("macos.zip") }
+                        return@preparePackage "jattach-macos.zip"
                     }
-
                     else -> {
                         throw IllegalStateException("Unsupported OS: ${hostMachine.getHostMachine().getOS()}")
                     }
@@ -236,7 +236,7 @@ open class DefaultToolChainManager(
             ToolChain.ARTHAS_BUNDLE -> preparePackage(
                 "arthas",
                 "alibaba/arthas"
-            ) { assets -> assets.find { v -> v.name == "arthas-bin.zip" } }
+            ) { "arthas-bin.zip" }
 
             ToolChain.KUBECTL -> prepareKubectl(version)
         }

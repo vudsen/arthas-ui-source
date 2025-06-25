@@ -14,6 +14,7 @@ import io.github.vudsen.arthasui.api.bean.InteractiveShell
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
 import kotlinx.coroutines.*
+import java.io.IOException
 import java.io.Reader
 import java.io.Writer
 import java.util.concurrent.CopyOnWriteArrayList
@@ -70,7 +71,7 @@ class ArthasBridgeImpl(
         }
         logger.info("Start init the arthas bridge.")
         val result = try {
-            parse0(DefaultFrameDecoder())
+            parse0(DefaultFrameDecoder(), true)
         } catch (e: Exception) {
             logger.warn("Init bridge failed: ${e.message}")
             stop()
@@ -112,13 +113,15 @@ class ArthasBridgeImpl(
         writer.flush()
     }
 
-    private fun parse0(decoder: ArthasFrameDecoder): ArthasResultItem {
+    private fun parse0(decoder: ArthasFrameDecoder, checkCancel: Boolean): ArthasResultItem {
         var data: ArthasResultItem? = null
         val spin = SpinHelper()
         while (true) {
             var len: Int
             while (true) {
-                ProgressManager.checkCanceled()
+                if (checkCancel) {
+                    ProgressManager.checkCanceled()
+                }
                 ensureNotStop()
                 if (reader.ready()) {
                     len = reader.read(readBuffer)
@@ -246,7 +249,7 @@ class ArthasBridgeImpl(
         val pos = command.indexOf(" ")
         if (pos == -1) {
             writeCommand(command)
-            return parse0(DefaultFrameDecoder())
+            return parse0(DefaultFrameDecoder(), true)
         }
 
         val item = when (command.substring(0, pos).trim()) {
@@ -258,7 +261,7 @@ class ArthasBridgeImpl(
 
             else -> {
                 writeCommand(command)
-                return parse0(DefaultFrameDecoder())
+                return parse0(DefaultFrameDecoder(), true)
             }
         }
         return item
@@ -304,12 +307,12 @@ class ArthasBridgeImpl(
         logger.info("Trying to cancel command: $lastExecuted")
         writeCommand(EOT, false)
         // 读取剩余所有内容
-        parse0(DefaultFrameDecoder())
+        parse0(DefaultFrameDecoder(), false)
     }
 
     private fun ognl(command: String): ArthasResultItem {
         writeCommand(command)
-        return parse0(OgnlFrameDecoder())
+        return parse0(OgnlFrameDecoder(), true)
     }
 
 
@@ -334,14 +337,15 @@ class ArthasBridgeImpl(
         stopFlag = true
         executionLock.lock()
         try {
-            exitCode ?.let {
+            exitCode?.let {
                 return it
             }
             if (arthasProcess.isAlive()) {
                 try {
                     writer.write("stop\n")
                     writer.flush()
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
             var len: Int
             while (reader.read(readBuffer).also { len = it } != -1) {
@@ -351,6 +355,11 @@ class ArthasBridgeImpl(
             val code = arthasProcess.exitCode() ?: 0
             exitCode = code
             return code
+        } catch (e: IOException) {
+            if (arthasProcess.isAlive()) {
+                arthasProcess.close()
+            }
+            return arthasProcess.exitCode() ?: 0
         } finally {
             notifyClosed()
             executionLock.unlock()
