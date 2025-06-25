@@ -11,6 +11,7 @@ import io.github.vudsen.arthasui.common.parser.OgnlFrameDecoder
 import io.github.vudsen.arthasui.common.bean.StringResult
 import io.github.vudsen.arthasui.api.ArthasResultItem
 import io.github.vudsen.arthasui.api.bean.InteractiveShell
+import io.github.vudsen.arthasui.api.exception.AppException
 import io.github.vudsen.arthasui.common.lang.ArthasStreamBuffer
 import io.github.vudsen.arthasui.common.util.SpinHelper
 import kotlinx.coroutines.*
@@ -293,7 +294,7 @@ class ArthasBridgeImpl(
             return execute0(newCommand)
         } catch (e: CancellationException) {
             cleanOutput()
-            throw e
+            throw AppException(e)
         } finally {
             executionLock.unlock()
         }

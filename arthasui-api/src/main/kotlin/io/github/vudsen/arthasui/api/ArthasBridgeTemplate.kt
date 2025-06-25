@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.api
 import com.intellij.openapi.application.ApplicationManager
 import kotlinx.coroutines.CancellationException
 import java.lang.reflect.InvocationHandler
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.concurrent.CompletableFuture
@@ -28,7 +29,11 @@ class ArthasBridgeTemplate(private val factory: ArthasBridgeFactory) :
 
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>): Any {
             val bridge = getOrInitOriginalBridge()
-            return method.invoke(bridge, *args)
+            try {
+                return method.invoke(bridge, *args)
+            } catch (e: InvocationTargetException) {
+                throw e.targetException
+            }
         }
     }
 

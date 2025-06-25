@@ -1,7 +1,5 @@
 package io.github.vudsen.arthasui.api
 
-import io.github.vudsen.arthasui.api.exception.BridgeException
-import kotlin.jvm.Throws
 
 /**
  * Arthas 桥接
@@ -12,7 +10,6 @@ interface ArthasBridge {
      * 执行命令.
      * @return 执行后的结果
      */
-    @Throws(BridgeException::class)
     fun execute(command: String): ArthasResultItem
 
     /**

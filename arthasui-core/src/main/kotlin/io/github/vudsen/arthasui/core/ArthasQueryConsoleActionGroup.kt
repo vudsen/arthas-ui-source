@@ -12,10 +12,10 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.progress.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowId
-import io.github.vudsen.arthasui.api.ArthasBridgeListener
-import io.github.vudsen.arthasui.api.ArthasBridgeTemplate
 import io.github.vudsen.arthasui.api.ArthasExecutionManager
 import io.github.vudsen.arthasui.api.bean.VirtualFileAttributes
+import io.github.vudsen.arthasui.api.exception.AppException
+import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.core.ui.ExecutionGutterIconRenderer
 import io.github.vudsen.arthasui.run.ArthasConfigurationType
@@ -132,7 +132,9 @@ class ArthasQueryConsoleActionGroup(
 
             override fun onThrowable(error: Throwable) {
                 cleanUp()
-                super.onThrowable(error)
+                if (MessagesUtils.isNotAppException(error)) {
+                    super.onThrowable(error)
+                }
             }
 
             override fun onFinished() {
