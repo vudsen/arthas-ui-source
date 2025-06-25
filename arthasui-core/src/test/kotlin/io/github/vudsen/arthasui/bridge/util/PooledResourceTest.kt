@@ -78,7 +78,7 @@ class PooledResourceTest : BasePlatformTestCase() {
         val manager = service<HostMachineConnectionManager>()
         val old = manager.timeoutMilliseconds
         try {
-            manager.timeoutMilliseconds = 1000 * 2
+            manager.timeoutMilliseconds = 1000
             val machine = createPooledResource()
             // 测试刚创建时，是否关闭为 true
             Assert.assertFalse(machine.isClosed())
