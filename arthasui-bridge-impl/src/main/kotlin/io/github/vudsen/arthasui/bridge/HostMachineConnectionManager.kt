@@ -3,6 +3,7 @@ package io.github.vudsen.arthasui.bridge
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
+import com.intellij.util.io.await
 import io.github.vudsen.arthasui.api.AutoCloseableWithState
 import io.github.vudsen.arthasui.common.util.LRUCache
 import java.util.concurrent.ScheduledFuture
@@ -161,6 +162,13 @@ class HostMachineConnectionManager {
         } finally {
             lock.unlock()
         }
+    }
+
+    /**
+     * 给单元测试用，等待下一个事件完成
+     */
+    fun waitNextEvent() {
+        future?.get()
     }
 
 }

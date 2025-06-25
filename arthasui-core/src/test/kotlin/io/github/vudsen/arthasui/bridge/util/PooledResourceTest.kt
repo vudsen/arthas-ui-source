@@ -78,23 +78,25 @@ class PooledResourceTest : BasePlatformTestCase() {
         val manager = service<HostMachineConnectionManager>()
         val old = manager.timeoutMilliseconds
         try {
-            manager.timeoutMilliseconds = 1000
+            manager.timeoutMilliseconds = 200
             val machine = createPooledResource()
             // 测试刚创建时，是否关闭为 true
             Assert.assertFalse(machine.isClosed())
             machine.test()
-            Thread.sleep(3000)
+            manager.waitNextEvent()
             // 测试是否被自动关闭了
             Assert.assertTrue(machine.isClosed())
             // 设置不可关闭
             machine.setCloseable(false)
             machine.test()
-            Thread.sleep(3000)
+            manager.waitNextEvent()
             // 不应该被关闭
             Assert.assertFalse(machine.isClosed())
             // 恢复可关闭
             machine.setCloseable(true)
-            Thread.sleep(2500)
+            manager.waitNextEvent()
+            // setCloseable 刷新了上次使用时间，需要重新等待
+            manager.waitNextEvent()
             // 应该被关闭
             Assert.assertTrue(machine.isClosed())
         } finally {
