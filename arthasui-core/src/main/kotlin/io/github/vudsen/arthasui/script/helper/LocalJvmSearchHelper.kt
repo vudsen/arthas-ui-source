@@ -25,7 +25,7 @@ class LocalJvmSearchHelper(private val template: HostMachine, private val provid
      */
     @Suppress("unused")
     fun findByPort(port: Int, name: String?): List<JVM> {
-        val hostMachine = ctx.template as ShellAvailableHostMachine
+        val hostMachine = ctx.hostMachine as ShellAvailableHostMachine
         if (hostMachine.getOS() == OS.WINDOWS) {
             val result = hostMachine.execute("cmd", "/c", "\"netstat -ano | findstr :${port}\"").ok().split('\n')
             return result.map {
@@ -67,7 +67,7 @@ class LocalJvmSearchHelper(private val template: HostMachine, private val provid
      */
     @Suppress("unused")
     fun findByCommandLineArgs(search: String, name: String?): List<JVM> {
-        val hostMachine = ctx.template as ShellAvailableHostMachine
+        val hostMachine = ctx.hostMachine as ShellAvailableHostMachine
         val output: String = hostMachine.grep(search, "${providerConfig.javaHome}/bin/jps", "-lvm").let {
             if (it.exitCode == 0) {
                 return@let it.stdout

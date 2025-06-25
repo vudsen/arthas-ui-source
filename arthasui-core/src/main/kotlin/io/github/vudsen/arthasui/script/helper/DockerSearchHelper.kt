@@ -25,7 +25,7 @@ class DockerSearchHelper(template: HostMachine, providerConfig: JvmInDockerProvi
      */
     @Suppress("unused")
     fun findByImage(image: String, name: String?): List<JVM> {
-        val output = (ctx.template as ShellAvailableHostMachine).grep(
+        val output = (ctx.hostMachine as ShellAvailableHostMachine).grep(
             "\"Image\": \"${image}\"",
             *SEARCH_IMAGE_AND_NAME,
         ).ok()
@@ -48,7 +48,7 @@ class DockerSearchHelper(template: HostMachine, providerConfig: JvmInDockerProvi
      */
     @Suppress("unused")
     fun findByImageAndNamePrefix(image: String, prefix: String, name: String?): List<JVM> {
-        val output = (ctx.template as ShellAvailableHostMachine).grep(arrayOf(image, prefix), *SEARCH_IMAGE_AND_NAME).ok()
+        val output = (ctx.hostMachine as ShellAvailableHostMachine).grep(arrayOf(image, prefix), *SEARCH_IMAGE_AND_NAME).ok()
 
         val parseOutput = DockerJvmProvider.parseOutput(output, ctx)
         name ?.let {

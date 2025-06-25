@@ -54,7 +54,7 @@ class DefaultToolChainManagerTest :  BasePlatformTestCase() {
             )
             Assert.assertEquals(
                 "hello world",
-                remote.execute("cat", toolChainManager.getToolChainHomePath(ToolChain.KUBECTL)).ok()
+                remote.execute("cat", toolChainManager.getToolChainHomePath(ToolChain.KUBECTL, "1.32.1")).ok()
             )
         } finally {
             File(local.getHostMachineConfig().dataDirectory).deleteRecursively()

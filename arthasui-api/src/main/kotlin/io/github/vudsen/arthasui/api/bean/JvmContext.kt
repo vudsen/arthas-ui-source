@@ -5,10 +5,13 @@ import io.github.vudsen.arthasui.api.conf.JvmProviderConfig
 import io.github.vudsen.arthasui.api.host.ShellAvailableHostMachine
 
 data class JvmContext(
-    val template: HostMachine,
+    /**
+     *
+     */
+    val hostMachine: HostMachine,
     val providerConfig: JvmProviderConfig,
 ) {
     fun getHostMachineAsShellAvailable(): ShellAvailableHostMachine {
-        return template as ShellAvailableHostMachine
+        return hostMachine as ShellAvailableHostMachine
     }
 }
