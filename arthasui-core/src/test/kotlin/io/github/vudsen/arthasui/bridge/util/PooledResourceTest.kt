@@ -83,20 +83,18 @@ class PooledResourceTest : BasePlatformTestCase() {
             // 测试刚创建时，是否关闭为 true
             Assert.assertFalse(machine.isClosed())
             machine.test()
-            manager.waitNextEvent()
+            manager.waitAllEventsDone()
             // 测试是否被自动关闭了
             Assert.assertTrue(machine.isClosed())
             // 设置不可关闭
             machine.setCloseable(false)
             machine.test()
-            manager.waitNextEvent()
+            Thread.sleep(1000)
             // 不应该被关闭
             Assert.assertFalse(machine.isClosed())
             // 恢复可关闭
             machine.setCloseable(true)
-            manager.waitNextEvent()
-            // setCloseable 刷新了上次使用时间，需要重新等待
-            manager.waitNextEvent()
+            manager.waitAllEventsDone()
             // 应该被关闭
             Assert.assertTrue(machine.isClosed())
         } finally {
