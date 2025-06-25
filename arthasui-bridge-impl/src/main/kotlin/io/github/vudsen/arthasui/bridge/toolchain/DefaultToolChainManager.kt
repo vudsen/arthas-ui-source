@@ -155,8 +155,8 @@ open class DefaultToolChainManager(
         if (hostMachine.isDirectoryExist(home)) {
             return home
         }
-        val expected = appendPriviligePrefix(pkgNameSupplier())
-        val target: String = searchPkg(expected) ?: let {
+        val expected = pkgNameSupplier()
+        val target: String = searchPkg(appendPriviligePrefix(expected)) ?: let {
             val asset = fetchLatestData(repo).assets.find { asset -> asset.name == expected } ?: throw IllegalStateException(
                 "No suitable asset found for ${repo}, os is: ${
                     hostMachine.getHostMachine().getOS()
