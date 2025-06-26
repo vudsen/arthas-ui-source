@@ -114,20 +114,20 @@ class RemoteSshHostMachineImplTest : BasePlatformTestCase() {
         hostMachine.execute("touch", "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/test.txt").ok()
         hostMachine.execute("tar",
             "-czf",
-            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/0_0_arthas-xx.tar.gz",
+            "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}/0_0_jattach-linux-x64.tgz",
             "-C",
             "/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}",
             "test.txt"
         ).ok()
 
         val files = hostMachine.listFiles("/opt/arthas-ui-test/${DefaultToolChainManager.DOWNLOAD_DIRECTORY}")
-        Assert.assertEquals(listOf("0_0_arthas-xx.tar.gz", "test.txt"), files)
+        Assert.assertEquals(listOf("0_0_jattach-linux-x64.tgz", "test.txt"), files)
 
         val toolchainManager = DefaultToolChainManager(hostMachine, null)
-        val path = toolchainManager.getToolChainHomePath(ToolChain.ARTHAS_BUNDLE)
+        val path = toolchainManager.getToolChainHomePath(ToolChain.JATTACH_BUNDLE)
 
-        Assert.assertEquals("/opt/arthas-ui-test/pkg/0_0_arthas", path)
-        Assert.assertTrue(hostMachine.isFileExist("/opt/arthas-ui-test/pkg/0_0_arthas/test.txt"))
+        Assert.assertEquals("/opt/arthas-ui-test/pkg/0_0_jattach", path)
+        Assert.assertTrue(hostMachine.isFileExist("/opt/arthas-ui-test/pkg/0_0_jattach/test.txt"))
     }
 
 
