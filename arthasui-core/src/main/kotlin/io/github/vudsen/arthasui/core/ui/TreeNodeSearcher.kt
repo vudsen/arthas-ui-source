@@ -25,7 +25,7 @@ class TreeNodeSearcher(
         jvmList.result ?.let {
             val result = ArrayList<AbstractRecursiveTreeNode>(it.size)
             for (jvm in it) {
-                result.add(TreeNodeJVM(providerConfig, jvm, ctx))
+                result.add(TreeNodeJVM(providerConfig, jvm, ctx, this))
             }
             return result
         }
