@@ -10,7 +10,6 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.treeStructure.Tree
@@ -21,7 +20,6 @@ import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
-import io.github.vudsen.arthasui.api.exception.AppException
 import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
@@ -81,7 +79,7 @@ class ToolWindowTree(val project: Project) : Disposable {
             override fun run(indicator: ProgressIndicator) {
                 ProgressIndicatorStack.push(indicator)
                 try {
-                    node.refreshRootNode(force)
+                    node.refreshNode(force)
                 } finally {
                     ProgressIndicatorStack.pop()
                 }
@@ -113,7 +111,7 @@ class ToolWindowTree(val project: Project) : Disposable {
         rootModel.removeAllChildren()
         for (hostMachineConfig in persistent.state.hostMachines) {
             val node: AbstractRecursiveTreeNode = DefaultHostMachineTreeNode(hostMachineConfig, project, tree)
-            rootModel.add(node.refreshRootNode(force))
+            rootModel.add(node.refreshNode(force))
         }
         tree.model = DefaultTreeModel(rootModel)
         tree.updateUI()
