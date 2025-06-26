@@ -7,6 +7,7 @@ import io.github.vudsen.arthasui.bridge.HostMachineConnectionManager
 import io.github.vudsen.arthasui.bridge.HostMachineConnectionManager.Companion.ManagedInstance
 import java.lang.ref.WeakReference
 import java.lang.reflect.InvocationHandler
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 /**
@@ -47,6 +48,17 @@ class PooledResource<T : AutoCloseableWithState>(
         method: Method,
         args: Array<out Any?>?
     ): Any? {
+        try {
+            return invoke0(args, method)
+        } catch (e: InvocationTargetException) {
+            throw e.targetException
+        }
+    }
+
+    private fun PooledResource<T>.invoke0(
+        args: Array<out Any?>?,
+        method: Method
+    ): Any? {
         val actualArgs: Array<out Any?> = args ?: emptyArray()
 
         var instance = delegate.get()
@@ -63,6 +75,7 @@ class PooledResource<T : AutoCloseableWithState>(
                     return method.invoke(instance.resource, *actualArgs)
                 }
             }
+
             "close" -> {
                 if (instance == null) {
                     firstInvokeFlag = true
@@ -72,6 +85,7 @@ class PooledResource<T : AutoCloseableWithState>(
                     return method.invoke(instance.resource, *actualArgs)
                 }
             }
+
             else -> {
                 if (instance == null || instance.resource.isClosed()) {
                     val managedInstance = connectionManager.register(factory.create())

@@ -21,6 +21,8 @@ import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import io.github.vudsen.arthasui.core.ui.TreeNodeJVM
 import io.github.vudsen.arthasui.api.conf.ArthasUISettingsPersistent
+import io.github.vudsen.arthasui.api.exception.AppException
+import io.github.vudsen.arthasui.common.util.MessagesUtils
 import io.github.vudsen.arthasui.common.util.ProgressIndicatorStack
 import io.github.vudsen.arthasui.core.ui.DefaultHostMachineTreeNode
 import io.github.vudsen.arthasui.language.arthas.psi.ArthasFileType
@@ -89,7 +91,9 @@ class ToolWindowTree(val project: Project) : Disposable {
             }
 
             override fun onThrowable(error: Throwable) {
-                logger.error("Failed to load nodes", error)
+                if (MessagesUtils.isNotAppException(error)) {
+                    logger.error("Failed to load nodes", error)
+                }
                 val actualMsg = if (error.message == null) {
                     error.cause?.message
                 } else {

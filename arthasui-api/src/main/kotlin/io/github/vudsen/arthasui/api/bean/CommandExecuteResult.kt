@@ -1,5 +1,7 @@
 package io.github.vudsen.arthasui.api.bean
 
+import io.github.vudsen.arthasui.api.exception.AppException
+
 /**
  * 命令执行结果. **标准错误流应该重定向到标准输出上一起显示**
  */
@@ -14,7 +16,7 @@ data class CommandExecuteResult(
      */
     fun ok(): String {
         if (exitCode != 0) {
-            throw IllegalStateException("Command execute failed: $exitCode, stdout: $stdout")
+            throw AppException("Command execute failed: $exitCode, stdout: $stdout")
         }
         return stdout
     }
