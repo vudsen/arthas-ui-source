@@ -47,7 +47,7 @@ abstract class AbstractRecursiveTreeNode : RecursiveTreeNode {
      * 1. 第一次显示时，子节点未加载，用户单击展开图标或双击节点
      * 2. 用户点击刷新按钮
      */
-    override fun refreshRootNode(force: Boolean): DefaultMutableTreeNode {
+    override fun refreshNode(force: Boolean): DefaultMutableTreeNode {
         if (!force && isInitialized) {
             return root
         }

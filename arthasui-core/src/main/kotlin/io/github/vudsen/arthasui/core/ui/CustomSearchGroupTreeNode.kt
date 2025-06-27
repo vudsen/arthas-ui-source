@@ -21,7 +21,7 @@ class CustomSearchGroupTreeNode(val group: JvmSearchGroup, private val ctx: Tree
 
     private fun mapToJvmNode(jvm: JVM): TreeNodeJVM {
         val provider = service<JvmProviderManager>().findProviderByJvm(ctx.config.providers, jvm) ?: TODO("Tip user that this type is not configured")
-        return TreeNodeJVM(provider, jvm, ctx)
+        return TreeNodeJVM(provider, jvm, ctx, this)
     }
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {

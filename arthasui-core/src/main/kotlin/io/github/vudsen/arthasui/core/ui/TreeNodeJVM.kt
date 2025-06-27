@@ -6,15 +6,23 @@ import io.github.vudsen.arthasui.api.JVM
 import io.github.vudsen.arthasui.api.ui.RecursiveTreeNode
 import io.github.vudsen.arthasui.common.ui.AbstractRecursiveTreeNode
 import javax.swing.*
+import javax.swing.tree.DefaultMutableTreeNode
 
 class TreeNodeJVM(
     val providerConfig: JvmProviderConfig,
     val jvm: JVM,
-    val ctx: TreeNodeContext
+    val ctx: TreeNodeContext,
+    val parent: AbstractRecursiveTreeNode
 ) : AbstractRecursiveTreeNode() {
 
     override fun refresh(): List<AbstractRecursiveTreeNode> {
         return emptyList()
+    }
+
+    override fun refreshNode(force: Boolean): DefaultMutableTreeNode {
+        // 刷新 JVM 节点时同时刷新整个列表
+        parent.refreshNode(force)
+        return super.refreshNode(force)
     }
 
     override fun getIcon(): Icon {
