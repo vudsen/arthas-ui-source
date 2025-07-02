@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.1 - 2025-06-27
+
+- fix: attach 到 JVM 之后不做操作会自动断开连接 #50
+- fix: 执行 watch、trace 等命令时可能会导致输出解析异常 #51
+- feat: 刷新 JVM 节点时同时刷新整个列表 #52
+
 ## 0.5.0 - 2025-06-24
 
 - feat: 支持 tunnel server #40
